@@ -96,6 +96,26 @@ class TechGraph:
             )
         return [(r["s"], r["d"], r["y"]) for r in rows]
 
+    # ---- optional tables (absent in older stores) ---------------------
+    def patents_as_of(self, year: int) -> dict[str, int]:
+        """Cumulative patents per field granted through `year` (an as-of count; the end-of-data total would leak the future)."""
+        try:
+            rows = self.q("MATCH (y:FieldYear) WHERE y.year <= $y RETURN y.code AS c, sum(y.n) AS n", {"y": year})
+        except Exception:
+            return {}
+        return {r["c"]: int(r["n"]) for r in rows}
+
+    def stalled(self, year: int, min_years: int = config.STALLED_MIN_YEARS) -> list[tuple[str, str, int]]:
+        """(a, b, firstCoYear) for pairs co-classified for at least `min_years` years and still under the combination threshold in `year`."""
+        try:
+            rows = self.q(
+                "MATCH (a:Field)-[r:CO_CLASSIFIED]->(b:Field) WHERE r.firstYear <= $y "
+                "RETURN a.code AS a, b.code AS b, r.firstYear AS y", {"y": year - min_years})
+        except Exception:
+            return []
+        done = {(min(a, b), max(a, b)) for a, b, _ in self.combined(year)}
+        return [(r["a"], r["b"], r["y"]) for r in rows if (min(r["a"], r["b"]), max(r["a"], r["b"])) not in done]
+
     # ---- ancestry -------------------------------------------------------
     def _reach(self, code: str, as_of: int | None, up: bool, max_depth: int) -> dict[str, int]:
         """Breadth-first walk over BUILDS_ON, one 1-hop Cypher query per level.

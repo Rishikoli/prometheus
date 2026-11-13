@@ -85,7 +85,11 @@ def bootstrap_diff(scores: dict[str, list[float]], labels: list[int], ref: str =
 
 
 def run(g, weights: dict, cutoffs=config.TEST_CUTOFFS, horizon=config.HORIZON, use_genome=True,
-        n_boot: int = N_BOOT, log=print) -> dict:
+        n_boot: int = N_BOOT, proxy: str = "degree", log=print) -> dict:
+    """proxy: 'degree' (A2: product of combination partners), 'patents' (A2b: product of cumulative patent counts as of the cutoff,
+    never the end-of-data total) or 'both' (A2b: pairs in the bottom half under BOTH proxies; both are references)."""
+    if proxy not in ("degree", "patents", "both"):
+        raise ValueError(f"unknown size proxy {proxy!r}")
     prepared, skipped = prepare(g, cutoffs, horizon, use_genome)
     res = {}
     for y in cutoffs:
@@ -93,47 +97,71 @@ def run(g, weights: dict, cutoffs=config.TEST_CUTOFFS, horizon=config.HORIZON, u
             continue
         p = prepared[y]
         n = len(p["labels"])
-        sub = pa_bottom_half(p["table"]["pa"])
+        refs: dict[str, list[float]] = {}
+        if proxy in ("degree", "both"):
+            refs["pa"] = p["table"]["pa"]
+        if proxy in ("patents", "both"):
+            cnt = g.patents_as_of(y)
+            if not cnt:
+                raise ValueError("this store has no per-year patent counts (FieldYear); rebuild it with a current `prometheus pipeline` and `build`")
+            refs["patents"] = [float(cnt.get(a, 0)) * float(cnt.get(b, 0)) for a, b in p["cands"]]
+        halves = [set(pa_bottom_half(v)) for v in refs.values()]
+        sub = sorted(set.intersection(*halves))
         labels = [p["labels"][i] for i in sub]
         full = method_scores(p["table"], weights, seed=y)  # scores over ALL candidates, weights frozen
-        scores = {m: [full[m][i] for i in sub] for m in REPORTED if m in full}
+        scores = {m: [full[m][i] for i in sub] for m in REPORTED if m in full and m != "pa"}
+        for name, v in refs.items():
+            scores[name] = [v[i] for i in sub]
         cis = bootstrap_ci(scores, labels, n_boot)
-        dci = bootstrap_diff(scores, labels, "pa", n_boot)
-        auc_pa = auc(scores["pa"], labels)
-        log(f"cutoff {y}: {len(sub)} of {n} candidates in the PA bottom half, {sum(labels)} positives")
+        diffs = {name: bootstrap_diff(scores, labels, name, n_boot) for name in refs}
+        aucs = {m: auc(sc, labels) for m, sc in scores.items()}
+        log(f"cutoff {y}: {len(sub)} of {n} candidates in the bottom half ({proxy}), {sum(labels)} positives")
         res[y] = {"cutoff": y, "candidates_all": n, "candidates_subset": len(sub), "positives_all": sum(p["labels"]),
-                  "positives_subset": sum(labels), "base_rate_subset": sum(labels) / len(sub),
-                  "methods": {m: {"auc": auc(scores[m], labels), "ci95": list(cis[m])} for m in scores},
-                  "diff_vs_pa": {m: {"diff": auc(scores[m], labels) - auc_pa, "ci95": list(dci[m])} for m in dci}}
-    return {"definition": "A2 beyond size: pairs PA ranks in the bottom half; weights frozen from backtest.json",
-            "weights": weights, "horizon": horizon, "n_boot": n_boot, "skipped_cutoffs": skipped,
-            "meta": g.meta(), "cutoffs": res}
+                  "positives_subset": sum(labels), "base_rate_subset": (sum(labels) / len(sub)) if sub else None,
+                  "methods": {m: {"auc": aucs[m], "ci95": list(cis[m])} for m in scores},
+                  **{f"diff_vs_{name}": {m: {"diff": aucs[m] - aucs[name], "ci95": list(ci)} for m, ci in diffs[name].items()}
+                     for name in refs}}
+    defs = {"degree": "A2 beyond size: pairs PA (degree product) ranks in the bottom half; weights frozen from backtest.json",
+            "patents": "A2b: pairs in the bottom half by the product of cumulative patent counts as of the cutoff; weights frozen from backtest.json",
+            "both": "A2b: pairs in the bottom half under BOTH degree product and patent-count product; weights frozen from backtest.json"}
+    return {"definition": defs[proxy], "proxy": proxy, "weights": weights, "horizon": horizon, "n_boot": n_boot,
+            "skipped_cutoffs": skipped, "meta": g.meta(), "cutoffs": res}
 
 
 def _f(x):
     return "n/a" if x is None else f"{x:.3f}"
 
 
+REF_NAMES = {"pa": "PA (degree product)", "patents": "patent-count product"}
+
+
 def render_markdown(r: dict) -> str:
-    L = ["# A2: beyond size (exploratory, no pass/fail threshold)", "",
-         f"Source `{r['meta'].get('source')}`, slice `{r['meta'].get('slice')}`. Subset: the candidate pairs that preferential "
-         "attachment ranks in the bottom half. Weights are the ones tuned on 1990/1995/2000 and are not refitted: "
-         f"`{json.dumps(r['weights'])}`. AUC with a 95% bootstrap interval over pairs ({r['n_boot']} resamples); pairs share "
-         "fields, so the intervals are narrower than the real uncertainty.", ""]
+    proxy = r.get("proxy", "degree")
+    title = {"degree": "A2: beyond size (exploratory, no pass/fail threshold)",
+             "patents": "A2b: beyond size, patent-count proxy (exploratory, no pass/fail threshold)",
+             "both": "A2b: beyond size, bottom half under both proxies (exploratory, no pass/fail threshold)"}[proxy]
+    subset = {"degree": "the candidate pairs that preferential attachment (degree product) ranks in the bottom half",
+              "patents": "the candidate pairs in the bottom half by the product of the two fields' cumulative patent counts as of the cutoff",
+              "both": "the candidate pairs in the bottom half under both the degree product and the patent-count product"}[proxy]
+    L = [f"# {title}", "",
+         f"Source `{r['meta'].get('source')}`, slice `{r['meta'].get('slice')}`. Subset: {subset}. Weights are the ones tuned on "
+         f"1990/1995/2000 and are not refitted: `{json.dumps(r['weights'])}`. AUC with a 95% bootstrap interval over pairs "
+         f"({r['n_boot']} resamples); pairs share fields, so the intervals are narrower than the real uncertainty.", ""]
     for y, c in r["cutoffs"].items():
         L += [f"## Cutoff {y}", f"{c['candidates_subset']:,} of {c['candidates_all']:,} candidate pairs, "
-              f"**{c['positives_subset']} positives** in the subset (base rate {c['base_rate_subset']:.3f}; "
+              f"**{c['positives_subset']} positives** in the subset (base rate {_f(c['base_rate_subset'])}; "
               f"{c['positives_all']} positives overall).", "", "| Method | AUC | 95% interval |", "|---|---|---|"]
         for m, v in c["methods"].items():
             L.append(f"| {m} | {_f(v['auc'])} | {_f(v['ci95'][0])} to {_f(v['ci95'][1])} |")
-        L += ["", "Paired difference in AUC against PA on the same pairs (same resamples, 95% interval):", "",
-              "| Method | AUC minus PA AUC | 95% interval |", "|---|---|---|"]
-        for m, v in c["diff_vs_pa"].items():
-            L.append(f"| {m} | {v['diff']:+.3f} | {v['ci95'][0]:+.3f} to {v['ci95'][1]:+.3f} |")
+        for name in (k[len("diff_vs_"):] for k in c if k.startswith("diff_vs_")):
+            L += ["", f"Paired difference in AUC against the {REF_NAMES.get(name, name)} on the same pairs (same resamples, 95% interval):", "",
+                  "| Method | AUC minus reference | 95% interval |", "|---|---|---|"]
+            for m, v in c[f"diff_vs_{name}"].items():
+                L.append(f"| {m} | {v['diff']:+.3f} | {v['ci95'][0]:+.3f} to {v['ci95'][1]:+.3f} |")
         L.append("")
     L += ["## Reading this", "",
           "- AUC 0.5 means no better than a coin flip at telling later-combining pairs from the rest within this subset.",
-          "- `pa` is a reference: it ranked these pairs in the bottom half, so its AUC here is not a prediction target.",
+          "- A reference's own AUC here is not a prediction target: it ranked these pairs in the bottom half.",
           "- Exploratory: defined after seeing the NO-GO in the main backtest.", ""]
     return "\n".join(L)
 
@@ -141,7 +169,8 @@ def render_markdown(r: dict) -> str:
 def write(result: dict, out_dir) -> tuple[Path, Path]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    md, js = out / "beyond_size.md", out / "beyond_size.json"
+    suffix = "" if result.get("proxy", "degree") == "degree" else "_" + result["proxy"]
+    md, js = out / f"beyond_size{suffix}.md", out / f"beyond_size{suffix}.json"
     md.write_text(render_markdown(result))
     js.write_text(json.dumps(result, indent=2, default=str))
     return md, js

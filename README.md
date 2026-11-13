@@ -32,7 +32,7 @@ The headline gate measured the one place where the methods are indistinguishable
 **2. Exploratory findings (defined after seeing the NO-GO; not pre-registered).**
 - **A2, beyond size.** On the pairs PA ranks in the *bottom* half, the hybrid (weights frozen from 1990 to 2000) has AUC 0.82 to
   0.86, and beats PA on those same pairs by +0.23, +0.17 and +0.09 AUC at 2005, 2010 and 2014 (95% paired bootstrap intervals
-  +0.18 to +0.28, +0.13 to +0.20, +0.06 to +0.12). The advantage is real but shrinks with each later cutoff.
+  +0.18 to +0.28, +0.13 to +0.20, +0.06 to +0.12). The advantage is real but shrinks with each later cutoff. It also holds with patent counts as the size proxy and on a narrowed slice (see A2b below).
 - **A4, forecaster beyond size.** Fresh language-model agents, using only Relate's read-only MCP query tools on sealed,
   blinded capsules, forecast ten pairs each for 1995, 2005 and 2010 among the pairs PA does not rank as easy. They hit **9 of 30**
   against 1.5 expected by chance (about six times), and about the same as the graph predictor (10 of 30). Roughly double the
@@ -238,6 +238,7 @@ PatentsView release dated 2026-02, 9.45M patents. Held-out cutoffs 2005, 2010, 2
 | deeptech, pair threshold 2 | 123 | 4.27 | 4.02 | 1.06 | NO-GO |
 | deeptech, pair threshold 5 | 123 | 4.79 | 4.44 | 1.08 | NO-GO |
 | all fields, pair threshold 3 | 635 | 8.73 | 8.43 | 1.04 | NO-GO |
+| narrowed deeptech (`G10L`, `B25J`), pair threshold 3 | 110 | 3.74 | 3.52 | 1.06 | NO-GO |
 
 The graph signals have real skill (AUC about 0.84 against 0.50 for random), but preferential attachment (big fields combine with big fields) already gets most of it, so the hybrid does not clear the declared gate. The genome vector is weak (AUC 0.54 to 0.70). Per-cutoff numbers for the main run are in [What we found](#what-we-found-real-patentsview-data-945-million-us-patents-1976-to-2025); full tables for every method and run are in `results/`.
 
@@ -293,6 +294,29 @@ Both were chosen **after** the main run and its NO-GO, so they are exploratory a
   becomes `B25J` (manipulators and robots). It is chosen by the CPC titles, not by which fields grew; but it was prompted by results, so the
   headline stays the original `deeptech` slice with minimum pair threshold 3. Reported: the gate, the per-cutoff table and A2 with its
   own tuned weights. The original slice file is not edited.
+
+### A2b and narrowed-slice results (run 13 Nov 2026, exploratory, declared above before running)
+
+**A2b: a second size proxy.** `prometheus beyond data/prometheus.rl --weights-from results/backtest.json --proxy patents` (and `--proxy both`).
+Same frozen weights and paired bootstrap as A2. Hybrid AUC minus the reference's AUC on the same pairs, with a 95% interval:
+
+| Cutoff | Subset | Positives | Hybrid AUC | Reference AUC | Hybrid minus reference |
+|---|---|---|---|---|---|
+| 2005 | bottom half by patent counts | 143 of 2,443 | 0.843 | 0.620 | **+0.224** (+0.186 to +0.264) |
+| 2010 | bottom half by patent counts | 223 of 2,325 | 0.837 | 0.665 | **+0.172** (+0.142 to +0.203) |
+| 2014 | bottom half by patent counts | 194 of 2,182 | 0.836 | 0.697 | **+0.139** (+0.105 to +0.171) |
+| 2005 | bottom half under both proxies | 85 of 1,964 | 0.866 | PA 0.631, patents 0.584 | +0.235 vs PA, +0.282 vs patents |
+| 2010 | bottom half under both proxies | 115 of 1,875 | 0.825 | PA 0.642, patents 0.604 | +0.183 vs PA, +0.221 vs patents |
+| 2014 | bottom half under both proxies | 101 of 1,759 | 0.826 | PA 0.739, patents 0.666 | +0.088 vs PA, +0.161 vs patents |
+
+Every interval excludes zero (the smallest is +0.049, hybrid vs PA, 2014 on the intersection). By the rule declared in advance, the "beyond size" wording does not shrink:
+it holds against patent counts as well as against degree. Two cautions that stay: both are crude size proxies, and the lead against PA keeps shrinking toward the later cutoffs.
+Full tables: `results/beyond_size/beyond_size_patents.md` and `beyond_size_both.md`.
+
+**Narrowed slice** (`deeptech_narrow`: `G10` becomes `G10L`, `B25` becomes `B25J`; 110 fields instead of 123, 3,725 combined pairs). Same procedure, its own tuned weights.
+The gate is **NO-GO again** (hybrid lift 3.74 against 3.52, ratio 1.06), and the ceiling is the same story: by 2010 PA reaches 3.33 of a possible 3.66.
+A2 on this slice: hybrid minus PA is **+0.232** (+0.184 to +0.281) at 2005, **+0.186** (+0.149 to +0.223) at 2010 and **+0.100** (+0.071 to +0.132) at 2014.
+So removing the musical instruments and hand tools changes neither the verdict nor the beyond-size finding. Tables: `results/narrow/`.
 
 ### A3 result (run 13 Nov 2026)
 

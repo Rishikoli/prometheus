@@ -105,7 +105,7 @@ def cmd_beyond(a):
     from . import beyond
     weights = _weights(a.weights_from)
     with _g(a.store) as g:
-        res = beyond.run(g, weights, horizon=a.horizon, use_genome=not a.no_genome)
+        res = beyond.run(g, weights, horizon=a.horizon, use_genome=not a.no_genome, proxy=a.proxy)
     md, js = beyond.write(res, a.out)
     print(beyond.render_markdown(res))
     print(f"wrote {md} and {js}")
@@ -235,7 +235,10 @@ def main(argv=None):
     s = sub.add_parser("beyond", help="A2: AUC on the pairs preferential attachment ranks in the bottom half")
     s.add_argument("store"); s.add_argument("--weights-from", required=True, help="backtest.json (frozen weights; never refitted)")
     s.add_argument("--out", default="results/beyond_size"); s.add_argument("--horizon", type=int, default=config.HORIZON)
-    s.add_argument("--no-genome", action="store_true"); s.set_defaults(fn=cmd_beyond)
+    s.add_argument("--no-genome", action="store_true")
+    s.add_argument("--proxy", choices=["degree", "patents", "both"], default="degree",
+                   help="size proxy: degree product (A2), cumulative patent counts as of the cutoff (A2b), or the bottom half under both (A2b)")
+    s.set_defaults(fn=cmd_beyond)
 
     s = sub.add_parser("genome", help="store genome vectors and a vector index in the store (writes to it)")
     s.add_argument("store"); s.add_argument("--as-of", type=int); s.set_defaults(fn=cmd_genome)

@@ -225,6 +225,24 @@ def aggregate(
     )
     n_comb = con.execute("SELECT count(*) FROM combined").fetchone()[0]
     log(f"      {n_comb:,} combined pairs")
+    # Extra tables for the stalled-pair overlay and the patent-count size proxy. Both are as-of-able: a first year, and per-year counts
+    # (cumulative sums through a cutoff), never an end-of-data total.
+    con.execute(
+        """
+        CREATE TABLE co_assigned AS
+        SELECT x.a, x.b, greatest(x.first_year, fa.first_year, fb.first_year) AS first_year
+        FROM (SELECT a, b, min(year) AS first_year FROM pair_year GROUP BY a, b) x
+        JOIN fields fa ON fa.code = x.a JOIN fields fb ON fb.code = x.b
+        """
+    )
+    con.execute(
+        """
+        CREATE TABLE field_year AS
+        SELECT i.subclass AS code, p.year AS year, count(DISTINCT i.patent_id) AS n
+        FROM cpc_inv i JOIN pat p USING (patent_id)
+        WHERE i.subclass IN (SELECT code FROM fields) GROUP BY 1, 2
+        """
+    )
 
     # ---- citations -----------------------------------------------------
     kc = _columns(con, cites_tsv)
@@ -280,6 +298,14 @@ def aggregate(
     con.execute(
         f"COPY (SELECT a, b, count, first_year FROM combined ORDER BY a, b) "
         f"TO {_lit(out / 'combined_with.csv')} (HEADER, DELIMITER ',')"
+    )
+    con.execute(
+        f"COPY (SELECT a, b, first_year FROM co_assigned ORDER BY a, b) "
+        f"TO {_lit(out / 'co_assigned.csv')} (HEADER, DELIMITER ',')"
+    )
+    con.execute(
+        f"COPY (SELECT code, year, n FROM field_year ORDER BY code, year) "
+        f"TO {_lit(out / 'field_year.csv')} (HEADER, DELIMITER ',')"
     )
     con.close()
     if not keep_work:

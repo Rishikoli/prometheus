@@ -1,0 +1,38 @@
+{
+  "source": "patentsview",
+  "data_end_year": 2025,
+  "min_year": 1976,
+  "min_field_patents_per_year": 5,
+  "min_pair_patents": 3,
+  "min_builds_citations": 5,
+  "slice": "deeptech_narrow",
+  "slice_prefixes": [
+    "A61B",
+    "A61N",
+    "B25J",
+    "B60L",
+    "B64",
+    "C07H",
+    "C07K",
+    "C12",
+    "C25",
+    "C40",
+    "G01",
+    "G02",
+    "G05",
+    "G06",
+    "G10L",
+    "G16",
+    "H01",
+    "H02",
+    "H03",
+    "H10"
+  ],
+  "slice_exclude": [
+    "Y"
+  ],
+  "patents": 9454161,
+  "fields": 110,
+  "combined_pairs": 3725,
+  "builds_links": 8440
+}

@@ -119,3 +119,29 @@ def test_bundled_slice_loads_and_matches():
     rule = slicemod.load("deeptech")
     assert rule.matches("G06N") and rule.matches("H10D") and not rule.matches("A01B") and not rule.matches("Y02E")
     assert slicemod.load("all") is None
+
+
+def test_extra_tables_for_stalled_pairs_and_patent_counts(raw, tmp_path):
+    run(raw, tmp_path / "out")
+    fy = {(r["code"], int(r["year"])): int(r["n"]) for r in read(tmp_path / "out" / "field_year.csv")}
+    assert fy[("AAAA", 1990)] == 2 and fy[("AAAA", 1991)] == 2  # per-year counts, not an end-of-data total
+    assert sum(n for (c, _), n in fy.items() if c == "AAAA") == 8
+    co = {(r["a"], r["b"]): int(r["first_year"]) for r in read(tmp_path / "out" / "co_assigned.csv")}
+    assert co[("AAAA", "BBBB")] == 1992  # first patent carrying both inventive classes
+    # one AAAA+CCCC patent (1994) is not a combination, but it is co-classified: that is what "stalled" is made of;
+    # the 'additional' row on 5000034 (1992) is ignored, and CCCC does not exist before 1993
+    assert co[("AAAA", "CCCC")] == 1994
+
+
+def test_store_loads_extras_and_computes_stalled(raw, tmp_path):
+    from prometheus import build
+    from prometheus.graph import TechGraph
+    run(raw, tmp_path / "out", min_pair_patents=2)
+    build.build(tmp_path / "out", tmp_path / "t.rl")
+    with TechGraph(tmp_path / "t.rl") as g:
+        cum = g.patents_as_of(1991)
+        assert cum["AAAA"] == 4 and cum["BBBB"] == 2 and "CCCC" not in cum  # only patents granted through 1991
+        assert g.patents_as_of(1994)["AAAA"] == 8
+        stalled = {(a, b) for a, b, _ in g.stalled(1997, min_years=3)}
+        assert ("AAAA", "CCCC") in stalled and ("AAAA", "BBBB") not in stalled  # AAAA+BBBB combined, AAAA+CCCC has one patent
+        assert g.stalled(1995, min_years=3) == []  # co-classified since 1994: not yet three years

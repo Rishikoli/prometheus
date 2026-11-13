@@ -52,3 +52,9 @@ LOW_POSITIVES = 30
 # A field's genome is its inheritance from this many "founder" fields (the most
 # built-upon ones that exist at the chosen year).
 GENOME_FOUNDERS = 64
+
+# ---- display only ------------------------------------------------------------
+
+# A pair is "stalled" in a year when at least one patent has carried both classes for this many years or more
+# and the pair is still under the combination threshold. Shown as an overlay; it never enters a score.
+STALLED_MIN_YEARS = 3

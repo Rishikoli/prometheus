@@ -4,6 +4,8 @@ Graph model
   (:Field {code, title, firstYear, nPatents})
   (:Field)-[:BUILDS_ON     {count, firstYear}]->(:Field)   src builds on dst
   (:Field)-[:COMBINED_WITH {count, firstYear}]->(:Field)   stored once, a < b; query undirected
+  (:Field)-[:CO_CLASSIFIED {firstYear}]->(:Field)          at least one patent carries both classes (a < b); optional
+  (:FieldYear {code, year, n})                              patents of a field granted in one year (sum through a cutoff for an as-of count); optional
   (:Meta {source, dataEndYear, slice, thresholds...})      provenance of this store
 
 `firstYear` on every edge is what makes time travel work: a snapshot "as of year Y" is
@@ -86,6 +88,17 @@ def build(csv_dir, out_path, source: str | None = None, overwrite: bool = True) 
     n_builds = load_edges("builds_on.csv", "src", "dst", "BUILDS_ON")
     n_comb = load_edges("combined_with.csv", "a", "b", "COMBINED_WITH")
 
+    n_co = n_fy = 0
+    if (csv_dir / "co_assigned.csv").exists():
+        for rows in _chunks({"a": r["a"], "b": r["b"], "firstYear": int(r["first_year"])} for r in _read(csv_dir / "co_assigned.csv")):
+            cur.execute("UNWIND $rows AS r MATCH (a:Field {code: r.a}), (b:Field {code: r.b}) "
+                        "CREATE (a)-[:CO_CLASSIFIED {firstYear: r.firstYear}]->(b)", {"rows": rows})
+            n_co += len(rows)
+    if (csv_dir / "field_year.csv").exists():
+        for rows in _chunks({"code": r["code"], "year": int(r["year"]), "n": int(float(r["n"]))} for r in _read(csv_dir / "field_year.csv")):
+            cur.execute("UNWIND $rows AS r CREATE (:FieldYear {code: r.code, year: r.year, n: r.n})", {"rows": rows})
+            n_fy += len(rows)
+
     last_edge_year = max([int(r["first_year"]) for r in _read(csv_dir / "combined_with.csv")] or [0])
     cur.execute(
         "CREATE (:Meta {source: $source, dataEndYear: $end, slice: $slice, "
@@ -102,4 +115,5 @@ def build(csv_dir, out_path, source: str | None = None, overwrite: bool = True) 
     )
     conn.flush()
     conn.close()
-    return {"fields": n_fields, "builds_on": n_builds, "combined_with": n_comb, "path": str(out)}
+    return {"fields": n_fields, "builds_on": n_builds, "combined_with": n_comb, "path": str(out),
+            **({"co_classified": n_co, "field_years": n_fy} if (n_co or n_fy) else {})}

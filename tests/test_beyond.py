@@ -62,3 +62,42 @@ def test_a4_threshold_brief_and_restricted_grading(toy_csv, tmp_path):
     assert r["candidates"] == len(elig)
     full = grade.grade(tmp_path / "f.json", tmp_path / "c05.rl", 1995)
     assert full["pairs_valid"] == 5 and full["candidates"] == len(snap.candidates())
+
+
+def test_a2b_patent_proxy_uses_as_of_counts_and_both_is_an_intersection(toy_csv, tmp_path):
+    import csv
+    import shutil
+
+    from prometheus import build
+    d = tmp_path / "csv"
+    shutil.copytree(toy_csv, d)
+    fields = list(csv.DictReader(open(d / "fields.csv")))
+    with open(d / "field_year.csv", "w", newline="") as f:  # a per-year count that grows with age, so as-of counts differ from totals
+        w = csv.writer(f)
+        w.writerow(["code", "year", "n"])
+        for r in fields:
+            for y in range(int(r["first_year"]), 2025):
+                w.writerow([r["code"], y, 5 + int(r["code"][-3:]) % 7])
+    build.build(d, tmp_path / "t.rl")
+    with TechGraph(tmp_path / "t.rl") as g:
+        weights = _weights(g)
+        early, late = g.patents_as_of(1990), g.patents_as_of(2000)
+        assert all(late.get(c, 0) >= v for c, v in early.items()) and sum(late.values()) > sum(early.values())  # as-of, cumulative
+        pat = beyond.run(g, weights, cutoffs=CUTS, n_boot=30, proxy="patents", log=lambda *a: None)
+        both = beyond.run(g, weights, cutoffs=CUTS, n_boot=30, proxy="both", log=lambda *a: None)
+        deg = beyond.run(g, weights, cutoffs=CUTS, n_boot=30, proxy="degree", log=lambda *a: None)
+    for y in pat["cutoffs"]:
+        cp, cb, cd = pat["cutoffs"][y], both["cutoffs"][y], deg["cutoffs"][y]
+        assert cp["candidates_subset"] == cp["candidates_all"] // 2 and "patents" in cp["methods"] and "diff_vs_patents" in cp
+        assert "pa" in cb["methods"] and "patents" in cb["methods"] and "diff_vs_pa" in cb and "diff_vs_patents" in cb
+        assert cb["candidates_subset"] <= min(cp["candidates_subset"], cd["candidates_subset"])  # an intersection can only be smaller
+        assert "pa" in cd["methods"] and "patents" not in cd["methods"]
+    md, js = beyond.write(pat, tmp_path / "out")
+    assert md.name == "beyond_size_patents.md" and js.exists()
+
+
+def test_a2b_needs_per_year_counts(toy_store):
+    import pytest as _pytest
+    with TechGraph(toy_store) as g:
+        with _pytest.raises(ValueError, match="per-year patent counts"):
+            beyond.run(g, {"cn": 1.0}, cutoffs=CUTS, n_boot=5, proxy="patents", log=lambda *a: None)
