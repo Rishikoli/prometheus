@@ -26,6 +26,9 @@ a{color:inherit}
 header{display:grid;grid-template-columns:1fr 340px;gap:40px;padding:20px 32px 6px;align-items:start}
 h1{margin:0;font:600 28px/1.1 var(--serif)}
 .sub{margin:6px 0 0;color:var(--ink-2)}
+.views{margin:8px 0 0;display:flex;gap:18px}
+.views a{text-decoration:none;padding:2px 0;border-bottom:2px solid transparent}
+.views a[aria-current=page]{font-weight:600;border-bottom-color:var(--ink)}
 .link{background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
 main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:40px;padding:6px 32px 0}
 #stage{position:relative;margin:0 auto;overflow:visible}
@@ -66,7 +69,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   <div>
     <h1>Prometheus</h1>
     <p class="sub" id="sub">&nbsp;</p>
-    <p class="sub"><a href="/" id="totree">View as tree</a> &nbsp; <a href="/landscape" id="tolandscape">View as landscape</a></p>
+    <nav class="views" aria-label="Views"><a href="/landscape" id="tolandscape">Landscape</a><a href="/" id="totree">Tree</a><a href="/matrix" aria-current="page">Matrix</a></nav>
   </div>
   <div><p id="verdict" class="sub" style="color:var(--ink);margin-top:2px"></p></div>
 </header>

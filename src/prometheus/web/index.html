@@ -26,6 +26,9 @@ button,input{font:inherit;color:inherit}
 header{display:grid;grid-template-columns:1fr 340px;gap:40px;padding:20px 32px 6px;align-items:start}
 h1{margin:0;font:600 28px/1.1 var(--serif)}
 .sub{margin:6px 0 0;color:var(--ink-2)}
+.views{margin:8px 0 0;display:flex;gap:18px}
+.views a{text-decoration:none;padding:2px 0;border-bottom:2px solid transparent}
+.views a[aria-current=page]{font-weight:600;border-bottom-color:var(--ink)}
 #verdict{margin:2px 0 0}
 .link{background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
 #check{margin:0 32px;padding:10px 0 18px;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
@@ -83,6 +86,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-of
   <div>
     <h1>Prometheus</h1>
     <p class="sub" id="sub">&nbsp;</p>
+    <nav class="views" aria-label="Views"><a href="/landscape" id="tolandscape">Landscape</a><a href="/" aria-current="page">Tree</a><a href="/matrix" id="tomatrix">Matrix</a></nav>
   </div>
   <div>
     <p id="verdict" class="sub" style="color:var(--ink);margin-top:2px"></p>
@@ -99,8 +103,6 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-of
         <button data-mode="deps" aria-pressed="false">Dependencies</button>
         <button data-mode="breaks" aria-pressed="false">What breaks</button>
       </div>
-      <a class="link" id="tolandscape" href="/landscape" style="color:inherit">View as landscape</a>
-      <a class="link" id="tomatrix" href="/matrix" style="color:inherit">View as matrix</a>
       <div class="seg" id="scores"><span class="lab">Score:</span>
         <button data-score="beyond" aria-pressed="true">Beyond size</button>
         <button data-score="hybrid" aria-pressed="false">Graph score</button>

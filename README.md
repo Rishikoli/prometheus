@@ -153,7 +153,7 @@ arcs; fire means a predicted pair and nothing else. The prediction check, includ
 | Show what happened | up to 2014: gaps that combined within ten years are solid, the rest hollow grey |
 | Details (top right) | the per-cutoff backtest table and a chart of graph vs size alone, all pairs and beyond-size |
 
-**Landscape view (3D).** `View as landscape` opens `/landscape` (WebGL, Three.js bundled, so it works offline): the matrix as terrain.
+**Landscape view (3D).** The `Landscape` link in the top bar opens `/landscape` (WebGL, Three.js bundled, so it works offline): the matrix as terrain.
 Every point on the surface is a pair of fields, in the same genome order as the matrix, with the clustering tree along the front and left
 edges. The low ground is pairs that already combined, shaded blue by age; fire-coloured peaks are ranked gaps. Two honest settings:
 **Smooth** (default) blurs the surface over about two neighbouring fields, so a hill means many high-ranked gaps among related fields and
@@ -164,10 +164,10 @@ browser has no WebGL the page says so and still lists the numbers and the top ga
 
 ![The landscape view, 2010, one pair selected](docs/screenshots/landscape_2010_pair.png)
 
-**Matrix view.** `View as matrix` (top of the controls) opens `/matrix`, the same year slider, score toggle and evidence panel on a
+**Matrix view.** The `Matrix` link in the top bar opens `/matrix`, the same year slider, score toggle and evidence panel on a
 grid of every field pair, ordered by shared foundations with the clustering tree on both edges. Blue cells already combined (darker is
 newer); fire cells are the 1,500 pairs the graph ranks highest. The tree shows about 25 arcs; the matrix shows where size and the
-graph disagree across all of them, so it carries the beyond-size finding more honestly. `View as tree` goes back, keeping the year.
+graph disagree across all of them, so it carries the beyond-size finding more honestly. `Tree` goes back, keeping the year. The tree stays the front page.
 
 Deep links: `#year=1998`, `#year=2005&gap=1`, `#mode=deps&field=G06F`, `#mode=breaks&field=H01L`, `#year=2005&happened=1&gap=2&details=1`.
 Screenshots at 1985, 1998 and 2010 are in `docs/screenshots/`; the design and the choices made while building it are in

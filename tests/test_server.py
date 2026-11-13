@@ -33,7 +33,7 @@ def test_server_api_and_no_peeking(toy_store):
         status, body = _get(port, "/")
         assert status == 200 and b"Prometheus" in body and b"/d3.min.js" in body
         status, mx = _get(port, "/matrix")
-        assert status == 200 and b"View as tree" in mx and b"/d3.min.js" in mx
+        assert status == 200 and b"aria-current=\"page\">Matrix" in mx and b"/d3.min.js" in mx
         status, ls = _get(port, "/landscape")
         assert status == 200 and b"View as" not in ls and b"/three.min.js" in ls and b"/OrbitControls.js" in ls
         for path, marker in (("/three.min.js", b"three.js"), ("/OrbitControls.js", b"orbitcontrols")):
