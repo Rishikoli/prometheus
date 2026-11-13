@@ -3,9 +3,9 @@ import shutil
 
 import pytest
 
-from techtree import backtest, build, genome, toy
-from techtree.graph import TechGraph
-from techtree.predict import (Snapshot, average_ranks, breakthrough, hybrid, percentile, rank_order,
+from prometheus import backtest, build, genome, toy
+from prometheus.graph import TechGraph
+from prometheus.predict import (Snapshot, average_ranks, breakthrough, hybrid, percentile, rank_order,
                               signal_table, tie_breaker, top_gaps)
 
 

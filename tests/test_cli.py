@@ -1,6 +1,6 @@
 import json
 
-from techtree.cli import main
+from prometheus.cli import main
 
 
 def test_end_to_end_on_toy_data(tmp_path, capsys):

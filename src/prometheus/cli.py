@@ -1,4 +1,4 @@
-"""Command line for PROMETHEUS: `techtree --help`."""
+"""Command line for PROMETHEUS: `prometheus --help`."""
 from __future__ import annotations
 
 import argparse
@@ -182,7 +182,7 @@ def cmd_grade(a):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(prog="techtree", description=__doc__)
+    p = argparse.ArgumentParser(prog="prometheus", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
 
     s = sub.add_parser("toy", help="write SYNTHETIC toy CSVs (not patent data)")

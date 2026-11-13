@@ -17,6 +17,6 @@ capsules/toy/
 g_*.tsv
 *.zip
 data/tmp*/
-# large, rebuilt by `techtree pipeline --slice all` + `techtree build`
+# large, rebuilt by `prometheus pipeline --slice all` + `prometheus build`
 data/all.rl
 data/csv_all/

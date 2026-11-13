@@ -1,5 +1,5 @@
-from techtree import backtest, beyond
-from techtree.graph import TechGraph
+from prometheus import backtest, beyond
+from prometheus.graph import TechGraph
 
 CUTS = (1995, 2000, 2005)
 
@@ -40,8 +40,8 @@ def test_structured_toy_beats_placebo(toy_store, placebo_store):
 def test_a4_threshold_brief_and_restricted_grading(toy_csv, tmp_path):
     import json
 
-    from techtree import capsule, grade
-    from techtree.predict import Snapshot
+    from prometheus import capsule, grade
+    from prometheus.predict import Snapshot
 
     capsule.build_capsule(toy_csv, 1995, tmp_path / "c95.rl", seed=0)
     capsule.build_capsule(toy_csv, 2005, tmp_path / "c05.rl", seed=0)

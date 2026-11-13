@@ -6,9 +6,9 @@ were produced by the commands shown; read them from the page, do not improvise n
 ## Before you start (once)
 
 ```bash
-cd tech-tree-time-machine && source .venv/bin/activate
+cd prometheus && source .venv/bin/activate
 export PATH=$HOME/.local/bin:$PATH            # for the `relate` CLI
-techtree serve data/techtree.rl --weights-from results/backtest.json --open   # http://127.0.0.1:8765/
+prometheus serve data/prometheus.rl --weights-from results/backtest.json --open   # http://127.0.0.1:8765/
 ```
 
 The page needs no internet (D3 is bundled). Have two terminal tabs ready: one for the server, one in

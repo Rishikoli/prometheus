@@ -1,6 +1,6 @@
 import pytest
 
-from techtree import build, toy
+from prometheus import build, toy
 
 
 @pytest.fixture(scope="session")

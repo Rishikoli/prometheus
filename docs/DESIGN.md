@@ -143,7 +143,7 @@ Other controls
 States
 - Empty margin note: "Click a field or a dashed arc to see why two fields might combine."
 - Loading: the tree appears as ink branches first; arcs fade in once loaded. Never show a spinner over the plate.
-- Error: say what failed and what to do ("The data file could not be read. Check that `techtree serve` was started with a .rl file.").
+- Error: say what failed and what to do ("The data file could not be read. Check that `prometheus serve` was started with a .rl file.").
 - A field that is not alive in the selected year: leaf dimmed, tooltip "Not in the data yet (needs 5 patents a year)".
 
 ## 7. Margin note (right column)
@@ -231,6 +231,6 @@ Checked against the repository on 13 Nov 2026. These are points to settle before
    needs a fallback (for example CPC section letters).
 5. **"Show what happened" and held-out data.** It needs the data end to be at least 10 years after the slider year. On the real store
    (ends 2025) it is available through 2015.
-6. **CLI name.** The error text in section 6 uses `techtree serve` (the command that exists), not `prometheus serve`.
+6. **CLI name.** The error text in section 6 uses `prometheus serve` (the command that exists), not `prometheus serve`.
 7. **The 1976 caveat appears in two places** (section 2 and the tooltip rule for 1976 pairs). Keep both: the tree shows no ages, and
    any pair first combined in 1976 means "already combined when the data starts", not "combined in 1976".

@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from techtree.graph import TechGraph
-from techtree.predict import Snapshot, _cn_aa
+from prometheus.graph import TechGraph
+from prometheus.predict import Snapshot, _cn_aa
 
 QUERIES = sorted((Path(__file__).parent.parent / "queries").glob("*.cypher"))
 

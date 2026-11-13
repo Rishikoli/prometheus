@@ -1,4 +1,4 @@
-"""Read-side access to a techtree store.
+"""Read-side access to a prometheus store.
 
 Every question is a Cypher query over the one small graph. "As of year Y" is always the
 filter `r.firstYear <= Y` on the edges (and `f.firstYear <= Y` on the fields), so any

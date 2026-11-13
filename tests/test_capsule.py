@@ -3,9 +3,9 @@ import re
 
 import pytest
 
-from techtree import capsule, grade
-from techtree.graph import TechGraph
-from techtree.predict import Snapshot
+from prometheus import capsule, grade
+from prometheus.graph import TechGraph
+from prometheus.predict import Snapshot
 
 
 @pytest.fixture(scope="module")

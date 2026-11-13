@@ -47,7 +47,7 @@ def build(csv_dir, out_path, source: str | None = None, overwrite: bool = True) 
     source = source or meta_in.get("source", "patentsview")
     for name in ("fields.csv", "builds_on.csv", "combined_with.csv"):
         if not (csv_dir / name).exists():
-            raise FileNotFoundError(f"{csv_dir / name} is missing; run `techtree pipeline` or `techtree toy` first")
+            raise FileNotFoundError(f"{csv_dir / name} is missing; run `prometheus pipeline` or `prometheus toy` first")
     if out.exists():
         if not overwrite:
             raise FileExistsError(out)

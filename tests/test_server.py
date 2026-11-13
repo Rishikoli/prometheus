@@ -4,7 +4,7 @@ import urllib.error
 import urllib.request
 from http.server import HTTPServer
 
-from techtree import server
+from prometheus import server
 
 
 def _get(port, path):

@@ -70,7 +70,7 @@ def load(path_or_name: str | Path | None) -> SliceRule | None:
     if p.exists():
         return from_dict(json.loads(p.read_text()))
     try:
-        text = resources.files("techtree.slices").joinpath(f"{path_or_name}.json").read_text()
+        text = resources.files("prometheus.slices").joinpath(f"{path_or_name}.json").read_text()
     except (FileNotFoundError, ModuleNotFoundError):
         raise SliceError(f"slice '{path_or_name}' is neither a file nor a bundled slice") from None
     return from_dict(json.loads(text))

@@ -69,12 +69,12 @@ the graph predictor, and grades it against the 2005 capsule.
 2. Build the small field-level files, then the store:
 
 ```bash
-techtree pipeline --patent data/raw/g_patent.tsv --cpc data/raw/g_cpc_current.tsv \
+prometheus pipeline --patent data/raw/g_patent.tsv --cpc data/raw/g_cpc_current.tsv \
                   --cites data/raw/g_us_patent_citation.tsv --titles data/raw/g_cpc_title.tsv \
                   --out data/csv --slice deeptech --memory-limit 8GB --temp-dir /path/with/free/disk
-techtree build data/csv data/techtree.rl
-techtree genome data/techtree.rl
-techtree backtest data/techtree.rl --out results
+prometheus build data/csv data/prometheus.rl
+prometheus genome data/prometheus.rl
+prometheus backtest data/prometheus.rl --out results
 ```
 
 The pipeline reads column names from the file headers. If one differs from what is expected, it stops and prints the
@@ -82,7 +82,7 @@ columns it found.
 
 ## How Relate is used, and why
 
-**Storage mode: a single `.rl` file** (`data/techtree.rl`), plus one small `.rl` per year in `capsules/`. A judge can
+**Storage mode: a single `.rl` file** (`data/prometheus.rl`), plus one small `.rl` per year in `capsules/`. A judge can
 open any of them with the Relate CLI or the Python package, no server needed. A single file is the right fit because the
 store is written once by a pipeline and then only read; one file is easy to ship, inspect and diff by size, and a capsule
 is naturally "one file per moment in time". The persistent data lives in `data/` and `capsules/`.
@@ -108,8 +108,8 @@ is naturally "one file per moment in time". The persistent data lives in `data/`
 | Bridge fields for a gap | two-hop Cypher | `queries/bridge_fields.cypher` |
 | Ancestry | one 1-hop query per level (avoids path explosion) | `queries/ancestors_step.cypher` |
 | Knock-out cascade | Cypher aggregation over a parameter map | `queries/knockout_step.cypher` |
-| Nearest relatives | vector property and vector index | `techtree relatives` |
-| Sealed capsules | one single-file store per year, served read-only over MCP | `techtree capsule` |
+| Nearest relatives | vector property and vector index | `prometheus relatives` |
+| Sealed capsules | one single-file store per year, served read-only over MCP | `prometheus capsule` |
 
 A test checks that the Cypher common-neighbour query and the in-memory scorer agree on every pair, and every file in
 `queries/` is executed by the test suite.
@@ -117,24 +117,24 @@ A test checks that the Cypher common-neighbour query and the in-memory scorer ag
 ## The commands
 
 ```
-techtree toy | pipeline | build | info          make or load data
-techtree gaps STORE --as-of 2000                top predicted combinations as of a year
-techtree evidence STORE A B --as-of 2000        bridge fields and shared prerequisites for a pair
-techtree ancestors | descendants STORE CODE     what a field builds on / what builds on it
-techtree knockout STORE CODE [--as-of Y]        dependency exposure if a field were removed
-techtree breakthrough STORE A B --as-of Y       what the model would score if a pair combined (read-only)
-techtree backtest STORE                         grade the predictor, write results/backtest.md
-techtree genome | relatives | order             genome vectors, nearest relatives, dendrogram order
-techtree capsule | baseline-forecast | grade    sealed capsules and grading
-techtree serve STORE                            local read-only web page: heatmap, year slider, evidence
-techtree beyond STORE --weights-from F          A2: AUC on pairs preferential attachment ranks in the bottom half
-techtree pa-threshold CAPSULE [--write-brief F]  A4: eligibility threshold (and brief) for a capsule
+prometheus toy | pipeline | build | info          make or load data
+prometheus gaps STORE --as-of 2000                top predicted combinations as of a year
+prometheus evidence STORE A B --as-of 2000        bridge fields and shared prerequisites for a pair
+prometheus ancestors | descendants STORE CODE     what a field builds on / what builds on it
+prometheus knockout STORE CODE [--as-of Y]        dependency exposure if a field were removed
+prometheus breakthrough STORE A B --as-of Y       what the model would score if a pair combined (read-only)
+prometheus backtest STORE                         grade the predictor, write results/backtest.md
+prometheus genome | relatives | order             genome vectors, nearest relatives, dendrogram order
+prometheus capsule | baseline-forecast | grade    sealed capsules and grading
+prometheus serve STORE                            local read-only web page: heatmap, year slider, evidence
+prometheus beyond STORE --weights-from F          A2: AUC on pairs preferential attachment ranks in the bottom half
+prometheus pa-threshold CAPSULE [--write-brief F]  A4: eligibility threshold (and brief) for a capsule
 ```
 
 ## Explore it (the heatmap)
 
 ```bash
-techtree serve data/techtree.rl --weights-from results/backtest.json --open
+prometheus serve data/prometheus.rl --weights-from results/backtest.json --open
 ```
 
 A local page (standard-library server, D3 vendored in the package so it works offline, no build step) over the store, opened read-only. A year slider
@@ -161,13 +161,13 @@ Deep links work: `#year=2005&layer=beyond&gap=1`.
 - The harness is itself tested: on toy data with planted structure it says GO, and on a placebo with no structure it says
   NO-GO (`tests/test_predict_backtest.py`). If the placebo ever said GO, the harness would be inventing skill.
 
-All settings are in `src/techtree/config.py`. Change them before looking at results, not after.
+All settings are in `src/prometheus/config.py`. Change them before looking at results, not after.
 
 ## The field slice
 
 `--slice deeptech` keeps only fields in chosen CPC classes (AI and computing, semiconductors, biotechnology, medical devices,
 energy storage and power, robotics, photonics and sensing) and drops the cross-sectional Y tagging classes
-(`src/techtree/slices/deeptech.json`). It is chosen by **class prefix written down in advance**, never by which fields grew
+(`src/prometheus/slices/deeptech.json`). It is chosen by **class prefix written down in advance**, never by which fields grew
 fast, because choosing the winners would leak the answer into the backtest. Check the prefixes against the CPC titles and edit
 the file **before** the first backtest. Fields are subclasses, so a topic that lives inside a larger subclass (as far as I
 know, quantum computing is one) cannot be isolated. Run the backtest on `--slice all` too and compare.
@@ -175,8 +175,8 @@ know, quantum computing is one) cannot be isolated. Run the backtest on `--slice
 ## Sealed capsules and the forecaster
 
 ```bash
-techtree capsule data/csv --as-of 1995 --out capsules/1995.rl --seed 0
-techtree capsule data/csv --as-of 2005 --out capsules/2005.rl --seed 0
+prometheus capsule data/csv --as-of 1995 --out capsules/1995.rl --seed 0
+prometheus capsule data/csv --as-of 2005 --out capsules/2005.rl --seed 0
 ```
 
 A capsule holds only fields and edges with `firstYear` up to its year, with codes and titles replaced by opaque ids
@@ -188,7 +188,7 @@ generated `capsules/1995.mcp.json` to your MCP client, give the agent `capsules/
 `forecast.json`, then:
 
 ```bash
-techtree grade forecast.json --against capsules/2005.rl --as-of 1995
+prometheus grade forecast.json --against capsules/2005.rl --as-of 1995
 ```
 
 The grader rejects pairs that are unknown or already combined, counts how many forecasts came with their Cypher, and compares the
@@ -233,13 +233,13 @@ Each run gets its own folder outside the repo, holding only that capsule, its br
 The `.map.json` files (opaque id to real CPC code) stay in `capsules/` and must never be visible to the forecaster.
 
 ```bash
-techtree capsule data/csv --as-of 1995 --out capsules/1995.rl --seed 0     # same seed so ids match; also 2005 2010 2015 2020
+prometheus capsule data/csv --as-of 1995 --out capsules/1995.rl --seed 0     # same seed so ids match; also 2005 2010 2015 2020
 # one folder per forecast:  ~/prometheus-forecaster/1995/{1995.rl, BRIEF.md, mcp.json}
 # start a FRESH agent there (Claude Desktop with only that mcp.json entry, or `claude --mcp-config mcp.json` in that folder)
 # give it only BRIEF.md; save its JSON answer as forecast_1995.json
-techtree grade forecast_1995.json --against capsules/2005.rl --as-of 1995
-techtree grade forecast_2005.json --against capsules/2015.rl --as-of 2005
-techtree grade forecast_2010.json --against capsules/2020.rl --as-of 2010
+prometheus grade forecast_1995.json --against capsules/2005.rl --as-of 1995
+prometheus grade forecast_2005.json --against capsules/2015.rl --as-of 2005
+prometheus grade forecast_2010.json --against capsules/2020.rl --as-of 2010
 ```
 
 The agent sees two Relate MCP tools, `get_schema` and `read_cypher`; writes are refused. The forecaster must be a fresh agent:
@@ -271,7 +271,7 @@ of ten pairs: an experiment, with no claim of foresight.
 
 ### A2 result: beyond size (run 13 Nov 2026, exploratory)
 
-`techtree beyond data/techtree.rl --weights-from results/backtest.json`. Candidates are the pairs that preferential
+`prometheus beyond data/prometheus.rl --weights-from results/backtest.json`. Candidates are the pairs that preferential
 attachment ranks in the bottom half; hybrid weights are the ones tuned on 1990/1995/2000 and never refitted; hybrid
 percentiles are taken over all candidates. AUC with a 95% bootstrap interval over pairs (2,000 resamples). Pairs share fields,
 so the intervals are narrower than the true uncertainty. Full tables: `results/beyond_size/beyond_size.md`.
@@ -300,13 +300,13 @@ removed. Its eligibility rule and grading were fixed before any A4 forecast was 
 
 - **Candidate set.** Per capsule, pairs not yet combined with deg(a) * deg(b) <= T, where deg is the number of
   `COMBINED_WITH` partners in the capsule and T is the lower median of that product over all candidate pairs
-  (`techtree pa-threshold`). A fixed number, not a tie-broken rank, so the agent can verify eligibility itself.
+  (`prometheus pa-threshold`). A fixed number, not a tie-broken rank, so the agent can verify eligibility itself.
   T = 450 (1995 capsule; 2,614 eligible of 5,201), 738 (2005; 2,449 of 4,887), 945 (2010; 2,332 of 4,650).
 - **Agents.** Fresh agents, one per capsule (1995, 2005, 2010), ten pairs each, graded against the capsule ten years later
-  (2005, 2015, 2020). The brief is the A3 brief plus one paragraph stating the eligibility rule (`techtree pa-threshold
+  (2005, 2015, 2020). The brief is the A3 brief plus one paragraph stating the eligibility rule (`prometheus pa-threshold
   --write-brief`); the spawning prompt is the A3 prompt, unchanged apart from paths. The exact text is saved in
   `results/forecaster_a4/` before the agents run.
-- **Grading.** `techtree grade ... --pa-max T --weights-from results/backtest.json`: only eligible pairs are candidates, and the
+- **Grading.** `prometheus grade ... --pa-max T --weights-from results/backtest.json`: only eligible pairs are candidates, and the
   graph predictor uses the frozen weights (genome included) over the same candidates. Reported: forecaster hits, random
   expected on the eligible set, the graph predictor's top ten, and PA's top ten within the eligible set (a reference only).
   Ineligible pairs are rejected and only those are replaced, with the replacement stated.
@@ -363,7 +363,7 @@ other than common neighbours was not tested.
 |---|---|
 | Pipeline, store, queries, predictor, backtest, genome, capsules, grading, CLI | built; tested on toy data and a fixture |
 | Real PatentsView run, real backtest numbers | done 2026-11-13, see [Real-data results](#real-data-results) |
-| Heatmap screen with year slider, three colourings and evidence panel (`techtree serve`) | built; checked on the real store |
+| Heatmap screen with year slider, three colourings and evidence panel (`prometheus serve`) | built; checked on the real store |
 | Lineage and knock-out views on the page | built; the tree is nearly flat on real data because 109 of 123 fields are left-censored at 1976 |
 | MCP agent against a capsule | A3 (saturated, cannot separate methods) and A4 (beyond size: 9/30 vs 1.5 random, 4/30 PA control) run |
 | Paper-side edges (OpenAlex) and lead time | not started; planned as a two-day spike |
@@ -372,7 +372,7 @@ other than common neighbours was not tested.
 ## Layout
 
 ```
-src/techtree/   pipeline.py build.py graph.py predict.py backtest.py genome.py capsule.py grade.py slice.py toy.py cli.py
+src/prometheus/   pipeline.py build.py graph.py predict.py backtest.py genome.py capsule.py grade.py slice.py toy.py cli.py
 queries/        the Cypher behind each feature, one file each, run by the tests
 tests/          58 tests (pipeline fixture, Cypher vs Python, no-peeking, placebo, capsule sealing, grading, CLI)
 docs/           DATA.md (getting the data), AI_USE.md (how AI was used)

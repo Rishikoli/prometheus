@@ -1,4 +1,4 @@
-"""`techtree serve STORE`: a local, read-only web page over one store.
+"""`prometheus serve STORE`: a local, read-only web page over one store.
 
 Standard library only. The store is opened read-only; every number on the page comes from
 a query on it (existence and first year only, so a year on the slider cannot see later years).

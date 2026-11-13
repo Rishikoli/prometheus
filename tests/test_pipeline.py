@@ -3,7 +3,7 @@ import csv
 
 import pytest
 
-from techtree import pipeline, slice as slicemod
+from prometheus import pipeline, slice as slicemod
 
 # id, grant year, [(sequence, subclass, type)]
 PATENTS = [
