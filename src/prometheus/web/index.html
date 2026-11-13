@@ -58,6 +58,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-of
 .legend i{display:inline-block;width:22px;height:0;border-top:2px solid;vertical-align:middle;margin-right:6px}
 .legend i.dash{border-top-style:dashed}
 .legend i.box{width:10px;height:10px;border:0;background:currentColor;border-radius:5px}
+details{margin-top:8px;color:var(--ink-2);font-size:12px;max-width:640px}
+summary{cursor:pointer}
+details p{margin:6px 0}
 .tnote{margin:8px 0 0;color:var(--ink-2);font-size:12px;max-width:640px}
 #note{min-width:0}
 #note h2{font:400 20px/1.2 var(--serif);margin:0 0 4px}
@@ -111,6 +114,13 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-of
     </div>
     <div class="legend" id="legend"></div>
     <p class="tnote" id="tnote"></p>
+    <details id="howtree"><summary>What is this tree?</summary>
+      <p><b>A field</b> is a patent technology class (a CPC subclass such as H01M, batteries). 123 are shown, one dot each, bigger for more patents.</p>
+      <p><b>The tree</b> groups fields by their foundations: two fields sit close together when they build on (cite) the same older fields. It is a
+      family tree of shared foundations, <b>not</b> of descent, and it shows no ages, because most fields already existed when the data starts in 1976.</p>
+      <p><b>Solid arcs</b> join two fields that have already combined (at least 3 patents carry both classes). Darker blue is newer; the slider
+      moves the year, so the picture builds up. <b>Dashed fire arcs</b> are pairs that have not combined but that the graph ranks high. A dashed arc is a
+      ranking, not a probability: the prediction check at the top says how far to trust it.</p></details>
   </section>
   <aside id="note" aria-live="polite"></aside>
 </main>

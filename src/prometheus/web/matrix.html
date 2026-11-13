@@ -42,6 +42,9 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:40px;padding:6px
 button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .legend{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:8px;color:var(--ink-2);font-size:12px}
 .legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle}
+details{margin-top:8px;color:var(--ink-2);font-size:12px;max-width:640px}
+summary{cursor:pointer}
+details p{margin:6px 0}
 .tnote{margin:8px 0 0;color:var(--ink-2);font-size:12px;max-width:640px}
 #note{min-width:0}
 #note h2{font:400 20px/1.2 var(--serif);margin:0 0 4px}
@@ -86,6 +89,11 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
     </div>
     <div class="legend" id="legend"></div>
     <p class="tnote" id="tnote"></p>
+    <details><summary>How to read the matrix</summary>
+      <p>Every cell is one pair of fields (the grid is symmetric, so each pair appears twice). Fields run along both edges in order of shared
+      foundations, so related fields sit together; the clustering tree is on the top and left. Blue cells already combined, darker if newer.
+      Fire cells have not combined but are among the pairs the graph ranks highest; a darker fire step is a higher third of the selected score.
+      A fire cell is a ranking, not a probability. Blank cells are pairs that have not combined and are not among those shown.</p></details>
   </section>
   <aside id="note" aria-live="polite"></aside>
 </main>

@@ -317,7 +317,10 @@ function render(){
 }
 function crossSection(){
   const el=$("#xs");
-  if(!S.sel){el.innerHTML=`<h3>Cross-section</h3><p class="mute">Select a pair to slice the landscape along the first field: its partners, in field order.</p>`;return}
+  if(!S.sel){el.innerHTML=`<h3>Cross-section</h3><p class="mute">Select a pair to slice the landscape along the first field: its partners, in field order.</p><details><summary>What is the cross-section?</summary><p>The landscape is a grid of pairs. This takes one row of it: the selected field, with every other field along
+      the bottom in order of shared foundations. Each bar is one pair. <b>Blue</b>: already combined (lighter if older). <b>Orange</b>: a ranked candidate, taller for a higher
+      rank under the selected score. A short grey stub is neither. The line marks the partner you selected. A run of tall orange bars side by side means the field is ranked likely to
+      combine with a whole family of related fields, not just one. Bars show true values, not the smoothed surface.</p></details>`;return}
   // Bars use each pair's true value, not the smoothed surface: combined = a fixed low bar, a ranked gap = its rank under the selected score.
   const a=S.sel.a,b=S.sel.b,ia=idx[a],w=520,h=96,bw=w/N;let bars="";
   for(let i=0;i<N;i++){if(i===ia)continue;const k=ia*N+i,kind=KIND[k];let c="--hair",v=.04;
@@ -328,7 +331,10 @@ function crossSection(){
   el.innerHTML=`<h3>Cross-section: ${esc(a)} across all partners</h3><svg viewBox="0 0 ${w} ${h+34}" role="img" aria-label="Partners of ${esc(a)}: already combined, ranked candidates, and the selected partner ${esc(b)}">${bars}
     <line x1="${xb}" x2="${xb}" y1="0" y2="${h}" stroke="var(--ink)" stroke-width="1.5"/><text x="${xb}" y="${h+14}" font-size="12" text-anchor="${anchor}" fill="var(--ink)">${esc(b)}</text>
     <text x="${w}" y="${h+30}" font-size="12" text-anchor="end" fill="var(--ink-2)">fields in order of shared foundations</text></svg>
-    <p class="mute" style="margin:2px 0 0">Blue bars: partners ${esc(a)} already combined with. Orange bars: its ranked candidates, taller for a higher rank. The line marks ${esc(b)}.</p>`}
+    <p class="mute" style="margin:2px 0 0">Blue bars: partners ${esc(a)} already combined with. Orange bars: its ranked candidates, taller for a higher rank. The line marks ${esc(b)}.</p><details><summary>What is the cross-section?</summary><p>The landscape is a grid of pairs. This takes one row of it: the selected field, with every other field along
+      the bottom in order of shared foundations. Each bar is one pair. <b>Blue</b>: already combined (lighter if older). <b>Orange</b>: a ranked candidate, taller for a higher
+      rank under the selected score. A short grey stub is neither. The line marks the partner you selected. A run of tall orange bars side by side means the field is ranked likely to
+      combine with a whole family of related fields, not just one. Bars show true values, not the smoothed surface.</p></details>`}
 function history_(){
   const y=S.year,bounds=[[META.start,1980],[1981,1990],[1991,2000],[2001,2010],[2011,META.end]],cnt=bounds.map(()=>0);
   ST.combined.forEach(([a,b,fy])=>{if(fy>y)return;const k=bounds.findIndex(([lo,hi])=>fy<=hi);cnt[k<0?cnt.length-1:k]++});
