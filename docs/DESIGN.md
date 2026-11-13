@@ -25,8 +25,9 @@ slider moves. Pairs that have not combined yet but are likely to are dashed fire
 
 ## 3. Tokens
 
-Colour (checked with the data-viz palette validator against the paper colour: both ramps pass, steps are distinguishable, the
-lightest step has at least 2:1 contrast, and history vs fire stay separable under red-green colour blindness):
+Colour (checked with the data-viz palette validator against the paper colour: the ramps pass, steps are distinguishable, the
+lightest step of each has at least 2:1 contrast, and history vs fire stay separable under red-green colour blindness. The grey ramp
+was validated separately on the paper colour; contrast on paper is 2.2, 3.9, 7.2 and 14.5:1):
 ```css
 :root {
   --paper:   #EEF1EC;  /* page and plate: cool grey-green, not cream */
@@ -34,14 +35,22 @@ lightest step has at least 2:1 contrast, and history vs fire stay separable unde
   --ink-2:   #4B5750;  /* secondary text */
   --hair:    #C9D0C8;  /* hairlines, only where two kinds of content meet */
   --wedge:   #E5E9E2;  /* every second domain wedge on the rim (no hue) */
-  /* history of combinations: one hue, oldest lightest -> newest darkest */
+  /* history of combinations: one hue, by AGE relative to the slider year; oldest lightest -> newest darkest */
   --hist-1: #80A3CF; --hist-2: #5589C2; --hist-3: #3470AF; --hist-4: #235791; --hist-5: #143E6B;
-  /* gaps: one hue, weaker -> stronger rank */
-  --fire-1: #EE8F6A; --fire-2: #E4572E; --fire-3: #BF3A16; --fire-4: #8E2208;
+  /* gaps: one hue, three steps (terciles of the selected score). The lighter #EE8F6A was dropped: 2.1:1 on paper */
+  --fire-2: #E4572E; --fire-3: #BF3A16; --fire-4: #8E2208;
+  /* what breaks: its own ramp, grey, light -> dark exposure. Never fire: fire means "predicted pair" only */
+  --grey-1: #9AA59E; --grey-2: #6E7A73; --grey-3: #46524B; --grey-4: #16211C;
 }
 ```
-- History shading: five equal bins of the data's year range, labelled by decade in the legend.
-- Gap shading: quartiles of the selected score among the gaps currently drawn.
+- History shading is by **age relative to the slider year**, not by absolute year, so the newest arcs are always the darkest.
+  Age 0 to 3 years: `--hist-5`; 4 to 6: `--hist-4`; 7 to 10: `--hist-3` (these three all have at least 4.5:1 on paper). Older than 10 years:
+  `--hist-2` (11 to 20) and `--hist-1` (over 20), drawn at 25% opacity and 0.7 px so they read as faint texture where they
+  overlap. The legend names the age bands ("combined in the last 3 years", and so on); the tooltip gives the exact year. A pair
+  first combined in 1976 is labelled "already combined when the data starts (1976)", never as a 1976 event.
+- Gap shading: terciles of the selected score among the gaps currently drawn, mapped to `--fire-2`, `--fire-3`, `--fire-4`.
+- Fire is used **only** for predicted (not yet combined) pairs. "Show what happened" keeps that rule: an arc that came true was still a
+  predicted pair. "What breaks" uses the grey ramp instead.
 - No other hues. Domains are told apart by rim position and direct labels, never by colour. If domain colours are wanted later, use the
   first seven validated slots of the data-viz default palette except orange, and re-run the validator.
 - Not alive yet in the selected year: leaf at 25% ink, label dimmed.
@@ -90,10 +99,10 @@ Shape and stroke
 |---|---|
 | Field | A leaf on the circle: dot (size by log patents), code in the sans, 12 px, rotated radially. Full title on hover |
 | Dendrogram | Radial branches in ink, 1 px. Built from the genome clustering (`genome.cluster` order and merges) |
-| Domain | A wedge on the rim (alternate `--wedge` and paper) with the domain name set along the arc, from the slice file's domain names |
-| Combined pair | A bundled arc between two leaves, d3 `curveBundle` beta 0.85. Colour = year the pair first combined (history ramp) |
+| Domain | A wedge on the rim (alternate `--wedge` and paper) with the domain name set along the arc, from the slice file's domain names. With `--slice all` (no domains) fall back to the CPC sections with their official names: A Human necessities; B Performing operations, transporting; C Chemistry, metallurgy; D Textiles, paper; E Fixed constructions; F Mechanical engineering, lighting, heating, weapons, blasting; G Physics; H Electricity |
+| Combined pair | A bundled arc between two leaves, d3 `curveBundle` beta 0.85. Colour = age at the slider year (history ramp, section 3) |
 | Recent combinations | Arcs combined within 10 years before the slider year: full colour, 1.4 px. Older ones: 25% opacity, 0.7 px, so they read as bedrock |
-| Gap | Dashed fire arc. Only the top 15 by the selected score, plus all candidates of the selected field (max 10) |
+| Gap | Dashed fire arc, three steps by tercile. Only the top 15 by the selected score, plus all candidates of the selected field (max 10) |
 | Selected | Ink arcs and a ring on the leaves; everything else drops to 35% |
 
 Do not draw all combined arcs at full strength: more than 4,000 arcs is a hairball. The two-level opacity above is part of the design.
@@ -113,15 +122,17 @@ A segmented control under the plate. Switching modes changes only what is drawn 
    (arcs outward, dotted ink), from `ancestors`, `descendants` and the BUILDS_ON graph. Direction is shown by a short arrowhead, and
    the margin note lists the first two steps in each direction.
 3. **What breaks**: needs a selected field. Colours the leaves by how exposed they are if that field disappeared (`knockout`),
-   on the fire ramp. Every exposure shows how many supporting links it rests on, and fields with fewer than the minimum support
-   are drawn grey with a note, so small sparse fields do not look like findings.
+   on the **grey** ramp (`--grey-1` to `--grey-4`; never fire). Every exposure shows how many supporting links it rests on (the count of
+   BUILDS_ON links as of the slider year, not citation totals). Fields with fewer than the minimum support are drawn in an outline-only
+   style with a note, so small sparse fields do not look like findings.
 
 Other controls
 - **Year slider**: drag, arrow keys, and Play (one year per 400 ms; stops at the data end). Marks at 2005, 2010 and 2014.
 - **Score**: Beyond size (default), Graph score, Size alone. Changes the ranking of the gaps drawn and listed. The margin note shows both
   ranks for a gap: size rank and graph rank.
-- **Show what happened** (off by default; available only when the slider year is at least 10 years before the data end): gap arcs
-  become solid fire if the pair combined within 10 years, and hollow grey dashes if not. The margin note counts both. The
+- **Show what happened** (off by default; available only for slider years up to **2014**, the last backtest cutoff, which keeps the
+  ten-year window inside 2024 and away from a partial 2025; disabled after that, with the tooltip "needs ten years of later data"):
+  gap arcs become solid fire if the pair combined within 10 years, and hollow grey dashes if not. The margin note counts both. The
   breakthrough button stays hidden while the prediction check is a NO-GO.
 - **Pair evidence** (click a gap arc or a row in Top gaps): the bridge fields and shared prerequisites light up on the tree as ink
   rings; the margin note names them (`bridge_fields`, `shared_prerequisites`).
@@ -154,8 +165,9 @@ If the check ever passes, the sentence changes and the breakthrough button appea
 | Modes | Combinations, Dependencies, What breaks |
 | Score | Beyond size, Graph score, Size alone |
 | Toggle | Show what happened |
-| Legend (history) | Combined in: 1976 to 85, 1986 to 95, and so on |
-| Legend (gap) | Not combined yet, ranked by the selected score |
+| Legend (history) | Combined in the last 3 years, 4 to 6 years ago, 7 to 10 years ago, over 10 years ago |
+| Legend (gap) | Not combined yet, ranked by the selected score (top third, middle, lower) |
+| Legend (what breaks) | Exposure if the selected field disappeared, light to dark |
 | Tree note | The tree groups fields with similar foundations. It is not a family of descent. |
 | Dependencies empty | Select a field to see what it builds on and what builds on it. |
 | What-breaks empty | Select a field to see which others lose the most if it disappeared. |
@@ -180,6 +192,14 @@ recomputed is the only other animation, and it follows a user action. Nothing an
   `shared_prerequisites`, `top_gaps`, `Snapshot`. Add `/api/tree?year=` only if the per-year tree is built. Server stays read-only.
 - Do not change predictors, weights, thresholds or the gate. Do not fetch anything from the network at runtime.
 
+## 12b. Decisions for v1 (author, 13 Nov 2026)
+- Fixed tree only (one tree from all data, with the visible note under the plate). The per-year tree and `/api/tree` are v2.
+- Server additions for v1: `/api/check` (reads only `results/backtest.json` and `results/beyond_size/beyond_size.json`, nothing else) and a
+  supporting-link count in the knock-out output (the number of BUILDS_ON links as of the year; no totals).
+- Rename the package, command and store file to `prometheus` before building the page, in one commit, so the page is not edited twice.
+- Build order: rename and tests; server additions; tree page v1 (arcs, slider, three modes); margin note, evidence and the
+  prediction-check panel; states, keyboard use and reduced motion; screenshots at 1985, 1998 and 2010.
+
 ## 13. Done when
 1. Screenshots at 1985, 1998 and 2010 show the tree, a visible build-up of arcs, fire only on gaps, and the NO-GO sentence.
 2. For each element ask: would it look the same on a page about something else? If yes, change it.
@@ -189,7 +209,7 @@ recomputed is the only other animation, and it follows a user action. Nothing an
 
 ---
 
-## Reviewer notes (added when this file was created; the design above is unchanged)
+## Reviewer notes (added when this file was created; points 1, 2, 3, 4 and 5 were settled by the author on 13 Nov 2026 and are now in the sections above)
 
 Checked against the repository on 13 Nov 2026. These are points to settle before building, not changes to the design.
 
