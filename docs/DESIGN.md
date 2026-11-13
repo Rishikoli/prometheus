@@ -225,6 +225,15 @@ Differences, with the reason:
   controls. It shares the tokens, fonts, slider, score toggle, evidence panel and prediction-check sentence, uses the age ramp for
   combined cells and fire only for predicted pairs, and is a separate page (`matrix.html`) with no new server logic beyond the route.
   It colours the server's top 1,500 pairs by the hybrid, so a pair size ranks high but the graph does not is not shown there.
+- **A 3D landscape was added as a third view** at `/landscape` (decided 13 Nov 2026, after a concept mockup showed a terrain view).
+  Mapping, fixed so every vertex is a real pair: x and z are the 123 fields in genome order; combined pairs are low ground shaded by age
+  (newer slightly higher); not-yet-combined ranked pairs rise by their rank under the selected score; fire is only for those. The first
+  version drew each ranked pair as a needle and read as a porcupine, not terrain, so the default surface is blurred (two passes of a
+  5-tap kernel, about two fields) and the toggle "Each pair" keeps the raw spikes. Smooth heights and the fire/blue mix are relative to the
+  tallest hill that year, so they say where ranked gaps cluster, not how large a score is. The cross-section and history panels use true
+  values, never the blur. Pointer picking snaps to the ranked pair nearest the ray's hit point on the surface, because row spacing is a
+  pixel or two on the far side. Not taken from the mockup: its numbers (they do not match the data), a "combination count" palette
+  (it would use totals through 2025 in an as-of view), and a "Flow" view (undefined).
 - **Not built:** the per-year tree (`/api/tree`) and the breakthrough button (hidden while the check is a NO-GO, as designed).
 
 Observed limit: the bundled-tree layout puts every year's arcs in the same corridors, so 1985, 1998 and 2010 look alike at a

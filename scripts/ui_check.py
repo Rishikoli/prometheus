@@ -11,7 +11,7 @@ res=[];
 def ok(name,cond,extra=""):
     res.append((name,bool(cond),extra)); print(("PASS " if cond else "FAIL ")+name+(" | "+str(extra) if extra else ""))
 with sync_playwright() as p:
-    b=p.chromium.launch(executable_path=(sys.argv[1] if len(sys.argv)>1 else "/usr/bin/google-chrome"),headless=True,args=["--no-sandbox"])
+    b=p.chromium.launch(executable_path=(sys.argv[1] if len(sys.argv)>1 else "/usr/bin/google-chrome"),headless=True,args=["--no-sandbox","--enable-webgl","--ignore-gpu-blocklist"])
     ctx=b.new_context(viewport={"width":1440,"height":900})
     pg=ctx.new_page()
     errs=[];reqs=[]
@@ -116,6 +116,53 @@ with sync_playwright() as p:
     ext=[u for u in mreqs if not u.startswith(BASE) and not u.startswith("data:")]
     ok("matrix: no request leaves localhost", len(ext)==0, ext[:3])
     ok("matrix: no console errors", len(merrs)==0, merrs[:3])
+    # ---- landscape (3D) view ----
+    lp=ctx.new_page(); lerrs=[]; lreqs=[]
+    lp.on("console",lambda m: lerrs.append(m.text) if m.type=="error" else None)
+    lp.on("pageerror",lambda e: lerrs.append("PAGEERROR "+str(e)))
+    lp.on("request",lambda r: lreqs.append(r.url))
+    lp.goto(BASE+"landscape#year=2005"); lp.wait_for_selector("#cv",timeout=60000)
+    lp.wait_for_function("typeof ST!=='undefined' && ST && document.querySelectorAll('#note li').length>0",timeout=60000); lp.wait_for_timeout(1500)
+    ok("landscape: WebGL renderer created", lp.evaluate("!!renderer && renderer.domElement.width>0"))
+    api_state=lp.evaluate("fetch('/api/state?year=2005').then(r=>r.json()).then(d=>({c:d.combined.length,n:d.candidates}))")
+    diag=lp.inner_text("#diag").replace(",","")
+    ok("landscape: diagnostics match the API", str(api_state["c"]) in diag and str(api_state["n"]) in diag, (api_state, diag.replace("\n"," ")[:90]))
+    ok("landscape: year numeral shows 2005", lp.inner_text("#yr")=="2005")
+    ok("landscape: combination history table has rows ending in 2005", lp.locator("#hist tbody tr").count()>=3 and "2005" in lp.inner_text("#hist tbody tr:last-child td"), lp.locator("#hist tbody tr").count())
+    hmax_smooth=lp.evaluate("Math.max(...HT)")
+    lp.click("[data-surf=pairs]"); lp.wait_for_timeout(800); hmax_pairs=lp.evaluate("Math.max(...HT)")
+    ok("landscape: Each pair gives taller single spikes than Smooth", hmax_pairs>0 and abs(hmax_pairs-hmax_smooth)>0.5, (round(hmax_smooth,1),round(hmax_pairs,1)))
+    lp.click("[data-surf=smooth]"); lp.wait_for_timeout(800)
+    y_before=lp.evaluate("camera.position.y"); lp.click("[data-cam=top]"); lp.wait_for_timeout(300)
+    ok("landscape: Top down moves the camera overhead", lp.evaluate("camera.position.y")>y_before+30, (round(y_before),round(lp.evaluate('camera.position.y'))))
+    lp.click("[data-cam=oblique]"); lp.wait_for_timeout(300)
+    pt=lp.evaluate("(()=>{const g=topGaps()[0];const p=cellScreen(g.a,g.b);return {x:p.x,y:p.y,a:g.a,b:g.b}})()")
+    lp.mouse.move(pt["x"],pt["y"]); lp.wait_for_timeout(300)
+    tip=lp.inner_text("#tip") if lp.is_visible("#tip") else ""
+    ok("landscape: hovering a peak shows a pair and its ranks", "×" in tip and "graph #" in tip, tip.replace("\n"," ")[:80])
+    lp.mouse.click(pt["x"],pt["y"]); lp.wait_for_timeout(1800)
+    ok("landscape: clicking a peak selects a pair with evidence", lp.evaluate("!!S.sel && !!EV"), lp.inner_text("#note h2"))
+    ok("landscape: callout and cross-section appear for the selection", lp.is_visible("#callout") and lp.locator("#xs svg rect").count()>50, lp.locator("#xs svg rect").count())
+    lp.keyboard.press("Escape"); lp.wait_for_timeout(300)
+    ok("landscape: Esc clears", lp.inner_text("#note h2")=="Landscape")
+    lp.evaluate("pick(topGaps()[1].a,topGaps()[1].b)"); lp.wait_for_timeout(1500)
+    ok("landscape: Top gaps rows select a pair (keyboard route)", lp.evaluate("!!S.sel"))
+    lp.keyboard.press("Escape")
+    lp.focus("#year"); lp.keyboard.press("ArrowRight"); lp.wait_for_timeout(1500)
+    ok("landscape: slider ArrowRight advances a year", lp.evaluate("S.year")==2006 and lp.inner_text("#yr")=="2006")
+    lp.click("#play"); lp.wait_for_timeout(2400); y=lp.evaluate("S.year"); lp.click("#play")
+    ok("landscape: Play advances years", y>=2008, y)
+    lp.click("[data-score=size]"); lp.wait_for_timeout(800)
+    ok("landscape: score toggle re-ranks", lp.evaluate("S.score")=="size")
+    ext=[u for u in lreqs if not u.startswith(BASE) and not u.startswith("data:")]
+    ok("landscape: no request leaves localhost", len(ext)==0, ext[:3])
+    ok("landscape: no console errors", len(lerrs)==0, lerrs[:3])
+    href=lp.get_attribute("#totree","href"); ok("landscape: tree link keeps year", href.startswith("/#year="), href)
+    # no WebGL: the page must still show numbers and lists, and say so
+    nb=p.chromium.launch(executable_path=(sys.argv[1] if len(sys.argv)>1 else "/usr/bin/google-chrome"),headless=True,args=["--no-sandbox","--disable-gpu","--disable-3d-apis","--disable-webgl"])
+    np_=nb.new_page(); nerr=[]; np_.on("pageerror",lambda e: nerr.append(str(e))); np_.goto(BASE+"landscape#year=2005"); np_.wait_for_timeout(6000)
+    ok("landscape without WebGL: says so and still lists gaps", np_.is_visible("#nogl") and np_.locator("#note li").count()>=5 and not nerr, nerr[:2])
+    nb.close()
     # reduced motion + resize
     c2=b.new_context(viewport={"width":1280,"height":800},reduced_motion="reduce"); p2=c2.new_page(); e2=[]
     p2.on("pageerror",lambda e: e2.append(str(e))); p2.goto(BASE); p2.wait_for_selector(".leaf",timeout=60000); p2.wait_for_timeout(2500)

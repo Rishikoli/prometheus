@@ -25,6 +25,7 @@ MIN_SUPPORT = 3
 CPC_SECTIONS = {"A": "Human necessities", "B": "Performing operations, transporting", "C": "Chemistry, metallurgy",
                 "D": "Textiles, paper", "E": "Fixed constructions",
                 "F": "Mechanical engineering, lighting, heating, weapons", "G": "Physics", "H": "Electricity"}
+STATIC_JS = {"/d3.min.js": "d3.min.js", "/three.min.js": "three.min.js", "/OrbitControls.js": "OrbitControls.js"}
 FONTS = {"newsreader-latin-400-normal.woff2", "newsreader-latin-600-normal.woff2",
          "instrument-sans-latin-400-normal.woff2", "instrument-sans-latin-600-normal.woff2"}
 
@@ -172,8 +173,10 @@ def make_handler(svc: Service):
                     return self._send((WEB / "matrix.html").read_bytes(), "text/html; charset=utf-8")
                 if u.path.startswith("/fonts/") and u.path[7:] in FONTS:  # whitelist: no path traversal
                     return self._send((WEB / "fonts" / u.path[7:]).read_bytes(), "font/woff2")
-                if u.path == "/d3.min.js":  # vendored (ISC licence), so the page works offline
-                    return self._send((WEB / "d3.min.js").read_bytes(), "application/javascript; charset=utf-8")
+                if u.path in STATIC_JS:  # vendored (D3 ISC, three.js MIT), so the pages work offline
+                    return self._send((WEB / STATIC_JS[u.path]).read_bytes(), "application/javascript; charset=utf-8")
+                if u.path == "/landscape":  # the 3D view: the matrix as terrain, peaks are ranked gaps
+                    return self._send((WEB / "landscape.html").read_bytes(), "text/html; charset=utf-8")
                 with svc.lock:
                     if u.path == "/api/meta":
                         return self._json(svc.meta())

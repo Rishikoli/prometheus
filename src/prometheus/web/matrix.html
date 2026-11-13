@@ -66,7 +66,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   <div>
     <h1>Prometheus</h1>
     <p class="sub" id="sub">&nbsp;</p>
-    <p class="sub"><a href="/" id="totree">View as tree</a></p>
+    <p class="sub"><a href="/" id="totree">View as tree</a> &nbsp; <a href="/landscape" id="tolandscape">View as landscape</a></p>
   </div>
   <div><p id="verdict" class="sub" style="color:var(--ink);margin-top:2px"></p></div>
 </header>
@@ -157,7 +157,7 @@ function render(){
   $("#srgaps").innerHTML=tg.map(g=>{const r=rankText(g);return `<tr><td>${esc(g.a)}</td><td>${esc(g.b)}</td><td>${r.graph}</td><td>${r.size}</td></tr>`}).join("");
   $("#legend").innerHTML=`<span>Combined:</span>`+[["over 10 years ago",1],["7 to 10 years ago",2],["4 to 6",3],["last 3 years",4]].map(([t,i])=>`<span><i style="background:var(${HIST[i]})"></i>${t}</span>`).join("")
     +`<span>Not combined yet, ranked by the selected score:</span>`+[["lower",0],["middle",1],["top third",2]].map(([t,i])=>`<span><i style="background:var(${FIRE[i]})"></i>${t}</span>`).join("");
-  $("#totree").href="/#year="+S.year+"&score="+S.score;
+  $("#totree").href="/#year="+S.year+"&score="+S.score;$("#tolandscape").href="/landscape#year="+S.year+"&score="+S.score;
   $("#tnote").textContent=`Fields are ordered by shared foundations, so related fields sit together. Every candidate pair is a cell; the page colours the ${ST.gaps.length.toLocaleString()} the graph ranks highest. Not a tree of descent.`;
 }
 async function pick(a,b){S.sel={a,b};EV=null;render();try{EV=await api(`/api/evidence?a=${a}&b=${b}&year=${S.year}`)}catch(e){EV=null}render()}

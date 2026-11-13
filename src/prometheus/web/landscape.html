@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prometheus: landscape</title>
+<link rel="icon" href="data:,">
+<style>
+@font-face{font-family:"Newsreader";font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/newsreader-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Newsreader";font-weight:600;font-style:normal;font-display:swap;src:url(/fonts/newsreader-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Instrument Sans";font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/instrument-sans-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Instrument Sans";font-weight:600;font-style:normal;font-display:swap;src:url(/fonts/instrument-sans-latin-600-normal.woff2) format("woff2")}
+:root{
+  --paper:#EEF1EC;--ink:#16211C;--ink-2:#4B5750;--hair:#C9D0C8;--wedge:#E5E9E2;--slab:#D3D9D1;
+  --hist-1:#80A3CF;--hist-2:#5589C2;--hist-3:#3470AF;--hist-4:#235791;--hist-5:#143E6B;
+  --fire-2:#E4572E;--fire-3:#BF3A16;--fire-4:#8E2208;
+  --serif:"Newsreader",Georgia,serif;--sans:"Instrument Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink)}
+body{font:400 14px/1.45 var(--sans);font-variant-numeric:tabular-nums}
+button,input,summary{font:inherit;color:inherit}
+a{color:inherit}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#toy{display:none;padding:6px 32px;background:var(--ink);color:var(--paper);font-weight:600}
+header{display:grid;grid-template-columns:1fr 340px;gap:40px;padding:20px 32px 6px;align-items:start}
+h1{margin:0;font:600 28px/1.1 var(--serif)}
+.sub{margin:6px 0 0;color:var(--ink-2)}
+.views{margin:8px 0 0;display:flex;gap:18px}
+.views a{text-decoration:none;padding:2px 0;border-bottom:2px solid transparent}
+.views a[aria-current=page]{font-weight:600;border-bottom-color:var(--ink)}
+.link{background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
+main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:40px;padding:6px 32px 0}
+#stage{position:relative;height:min(560px,calc(100vh - 330px));min-height:380px;background:var(--paper)}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#cv:active{cursor:grabbing}
+#cv:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+#yr{position:absolute;right:6px;top:-2px;font:400 96px/1 var(--serif);color:var(--ink);opacity:.9;pointer-events:none}
+#callout{position:absolute;display:none;pointer-events:none;background:var(--paper);border:1px solid var(--ink);padding:5px 8px;font-size:12px;max-width:250px;transform:translate(-50%,-100%)}
+#callout b{font-weight:600}
+#nogl{display:none;padding:24px 0}
+.controls{display:flex;flex-wrap:wrap;gap:10px 28px;align-items:baseline;margin-top:8px}
+.seg{display:flex;gap:16px;align-items:baseline}
+.seg .lab{color:var(--ink-2)}
+.seg button{background:none;border:0;padding:2px 0;cursor:pointer;border-bottom:2px solid transparent}
+.seg button[aria-pressed=true]{font-weight:600;border-bottom-color:var(--ink)}
+button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:8px;color:var(--ink-2);font-size:12px}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle}
+details{margin-top:8px;color:var(--ink-2);font-size:12px;max-width:640px}
+summary{cursor:pointer}
+.lower{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;margin-top:18px;padding-top:12px;border-top:1px solid var(--hair)}
+.lower h3,#note h3{font:600 14px var(--sans);margin:0 0 6px}
+#hist{border-collapse:collapse;width:100%}
+#hist th,#hist td{text-align:right;padding:3px 8px 3px 0;font-weight:400}
+#hist th{color:var(--ink-2)}#hist th:first-child,#hist td:first-child{text-align:left}
+#xs svg{display:block;width:100%;height:auto;overflow:visible}
+#note{min-width:0}
+#note h2{font:400 20px/1.2 var(--serif);margin:16px 0 4px}
+#note h3{margin:16px 0 4px}
+#note p{margin:4px 0;max-width:60ch}
+#note ul{list-style:none;margin:0;padding:0}
+#note li{margin:3px 0}
+#note .code{font-weight:600}
+#note .mute,.mute{color:var(--ink-2)}
+#note .row{cursor:pointer;display:block;width:100%;text-align:left;background:none;border:0;padding:3px 0}
+#note .row:hover .t{text-decoration:underline}
+#diag{border-collapse:collapse;width:100%;margin-bottom:6px}
+#diag td{padding:2px 0}#diag td:last-child{text-align:right}
+.timeline{display:grid;grid-template-columns:1fr auto;gap:6px 24px;align-items:center;padding:14px 32px 24px;margin-top:6px}
+.slider{position:relative;padding-bottom:16px}
+.slider input[type=range]{width:100%;margin:0;accent-color:var(--ink)}
+.slider .tk{position:absolute;bottom:0;font-size:12px;color:var(--ink-2);transform:translateX(-50%)}
+.slider .tk:before{content:"";position:absolute;left:50%;top:-8px;height:6px;border-left:1px solid var(--ink-2)}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--paper);padding:5px 8px;border-radius:2px;font-size:12px;max-width:300px;display:none;z-index:5}
+#err{display:none;margin:24px 32px;padding:12px 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+@media (max-width:1279px){header,main,.lower{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="toy" role="status">Synthetic data. The machinery is real; the technologies are not.</div>
+<header>
+  <div>
+    <h1>Prometheus</h1>
+    <p class="sub" id="sub">&nbsp;</p>
+    <nav class="views" aria-label="Views"><a href="/landscape" aria-current="page">Landscape</a><a href="/" id="totree">Tree</a><a href="/matrix" id="tomatrix">Matrix</a></nav>
+  </div>
+  <div><p id="verdict" class="sub" style="color:var(--ink);margin-top:2px"></p></div>
+</header>
+<div id="err"></div>
+<main>
+  <section>
+    <div id="stage">
+      <canvas id="cv" aria-label="3D landscape of field pairs. Use the Top gaps list to select a pair with the keyboard."></canvas>
+      <div id="yr" aria-hidden="true"></div>
+      <div id="callout"></div>
+    </div>
+    <div id="nogl">This view needs WebGL, which this browser did not provide. The <a href="/matrix">matrix</a> and the <a href="/">tree</a> show the same data without it.</div>
+    <div class="controls">
+      <div class="seg" id="scores"><span class="lab">Score:</span>
+        <button data-score="beyond" aria-pressed="true">Beyond size</button>
+        <button data-score="hybrid" aria-pressed="false">Graph score</button>
+        <button data-score="size" aria-pressed="false">Size alone</button>
+      </div>
+      <div class="seg" id="surf"><span class="lab">Surface:</span>
+        <button data-surf="smooth" aria-pressed="true" title="Hills show where ranked gaps cluster among related fields">Smooth</button>
+        <button data-surf="pairs" aria-pressed="false" title="Every ranked pair as its own spike">Each pair</button>
+      </div>
+      <div class="seg" id="cams"><span class="lab">View:</span>
+        <button data-cam="oblique" aria-pressed="true">Oblique</button>
+        <button data-cam="top" aria-pressed="false">Top down</button>
+      </div>
+      <span class="mute" style="font-size:12px">Drag to rotate, scroll to zoom, right-drag to pan.</span>
+    </div>
+    <div class="legend" id="legend"></div>
+    <details><summary>How to read</summary>
+      <p>Each point on the surface is one pair of fields. Fields run along both edges in order of shared foundations, with the clustering tree on the
+      front and left. The low blue ground is pairs that already combined, darker where they combined more recently. Orange peaks are pairs that
+      have not combined but that the graph ranks high. On <b>Smooth</b> the surface is blurred over about two neighbouring fields, so a hill means
+      many high-ranked gaps among related fields, and heights are relative to the tallest hill that year. On <b>Each pair</b> every ranked pair is its own
+      spike, taller for a higher rank under the selected score. The surface is symmetric: pair A and B appears twice. Hover or click snaps to the
+      nearest ranked pair. A peak is a ranking, not a probability.</p></details>
+    <div class="lower">
+      <div id="xs" aria-live="polite"></div>
+      <div id="histwrap"></div>
+    </div>
+  </section>
+  <aside id="note" aria-live="polite"></aside>
+</main>
+<div class="timeline">
+  <div class="slider"><input id="year" type="range" aria-label="Year"><span id="ticks"></span></div>
+  <button class="link" id="play">Play</button>
+</div>
+<table class="sr-only"><caption>Top gaps this year</caption>
+  <thead><tr><th>Field A</th><th>Field B</th><th>Graph rank</th><th>Size rank</th></tr></thead><tbody id="srgaps"></tbody></table>
+<div id="tip"></div>
+<script src="/three.min.js"></script>
+<script src="/OrbitControls.js"></script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const api=async p=>{const r=await fetch(p);if(!r.ok){let m=r.status;try{m=(await r.json()).error}catch(e){}throw new Error(m)}return r.json()};
+const clip=(s,n)=>{s=(s||"").trim();if(s.length<=n)return s;const c=s.slice(0,n+1),i=c.lastIndexOf(" ");return (i>n*.5?c.slice(0,i):s.slice(0,n)).replace(/[ ,;]+$/,"")+"…"};
+const titleCase=s=>{s=(s||"").trim().toLowerCase();return s.charAt(0).toUpperCase()+s.slice(1)};
+const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const HIST=["--hist-1","--hist-2","--hist-3","--hist-4","--hist-5"],FIRE=["--fire-2","--fire-3","--fire-4"],CUTOFFS=[2005,2010,2014];
+const S={year:2005,score:"beyond",sel:null,play:null,cam:"oblique",smooth:true};
+let META,ST,CHECK,EV,tok=0,N=0,idx={},byCode={};
+/* three */
+const W=100,HMAX=20;
+let renderer,scene,camera,controls,mesh,geo,posA,colA,H,HT,KIND,GAP,pin,tweening=false,dirtyN=false;
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
+const col=n=>new THREE.Color(css(n));
+
+const scoreOf=g=>S.score==="beyond"?g.beyond:S.score==="hybrid"?g.hybrid:g.size;
+const find=(a,b)=>ST&&ST.gaps.find(g=>(g.a===a&&g.b===b)||(g.a===b&&g.b===a));
+const ageBand=a=>a<=3?4:a<=6?3:a<=10?2:a<=20?1:0;
+const rankText=g=>({graph:g.rank,size:Math.round((1-g.size)*ST.candidates)+1,n:ST.candidates});
+const topGaps=()=>[...ST.gaps].sort((a,b)=>scoreOf(b)-scoreOf(a)).slice(0,10);
+const xAt=i=>(i/(N-1)-.5)*W;
+
+function initGL(){
+  const cv=$("#cv");
+  try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true})}catch(e){return false}
+  renderer.setClearColor(new THREE.Color(css("--paper")),1);renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));
+  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(34,1,1,600);
+  scene.add(new THREE.AmbientLight(0xffffff,.58));const dl=new THREE.DirectionalLight(0xffffff,.62);dl.position.set(-60,70,45);scene.add(dl);
+  const n2=N*N;posA=new Float32Array(n2*3);colA=new Float32Array(n2*3);H=new Float32Array(n2);HT=new Float32Array(n2);KIND=new Uint8Array(n2);GAP=new Array(n2);
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const k=j*N+i;posA[3*k]=xAt(i);posA[3*k+2]=xAt(j)}
+  const ind=new Uint32Array((N-1)*(N-1)*6);let t=0;
+  for(let j=0;j<N-1;j++)for(let i=0;i<N-1;i++){const a=j*N+i,b=a+1,c=a+N,d=c+1;ind[t++]=a;ind[t++]=c;ind[t++]=b;ind[t++]=b;ind[t++]=c;ind[t++]=d}
+  geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(posA,3));geo.setAttribute("color",new THREE.BufferAttribute(colA,3));geo.setIndex(new THREE.BufferAttribute(ind,1));
+  mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide}));scene.add(mesh);
+  // base slab, so the surface reads as a block of ground
+  const slab=new THREE.Mesh(new THREE.BoxGeometry(W+.6,3,W+.6),new THREE.MeshLambertMaterial({color:new THREE.Color(css("--slab"))}));slab.position.y=-1.55;scene.add(slab);
+  addDendrograms();
+  pin=new THREE.Group();scene.add(pin);
+  controls=new THREE.OrbitControls(camera,cv);controls.enableDamping=!REDUCED;controls.dampingFactor=.08;controls.maxPolarAngle=Math.PI*.49;controls.minDistance=35;controls.maxDistance=260;
+  cv.tabIndex=0;controls.listenToKeyEvents(cv);   // arrow keys orbit only while the canvas has focus, so the slider keeps its own arrows
+  setCam(S.cam,true);resize();addEventListener("resize",resize);
+  cv.addEventListener("pointermove",onMove);cv.addEventListener("pointerleave",()=>$("#tip").style.display="none");
+  let down=null;cv.addEventListener("pointerdown",e=>down=[e.clientX,e.clientY]);
+  cv.addEventListener("pointerup",e=>{if(down&&Math.hypot(e.clientX-down[0],e.clientY-down[1])<5)onClick(e);down=null});
+  (function loop(){requestAnimationFrame(loop);stepTween();controls.update();renderer.render(scene,camera);updateCallout()})();
+  return true;
+}
+function addDendrograms(){
+  if(!META.merges.length)return;
+  const pos={},h={},M=META.merges.length,seg=[];META.order.forEach((c,i)=>{pos[c]=xAt(i);h[c]=0});
+  META.merges.forEach((m,k)=>{const id="#"+k,hh=Math.pow((k+1)/M,.75)*16;pos[id]=(pos[m[0]]+pos[m[1]])/2;h[id]=hh;
+    seg.push([pos[m[0]],h[m[0]],pos[m[0]],hh],[pos[m[0]],hh,pos[m[1]],hh],[pos[m[1]],hh,pos[m[1]],h[m[1]]])});
+  const front=[],left=[],o=W/2+2;
+  seg.forEach(s=>{front.push(s[0],.05,o+s[1],s[2],.05,o+s[3]);left.push(-o-s[1],.05,s[0],-o-s[3],.05,s[2])});
+  [front,left].forEach(a=>{const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(new Float32Array(a),3));
+    scene.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:new THREE.Color(css("--ink")),transparent:true,opacity:.55})))});
+}
+function resize(){const st=$("#stage"),w=st.clientWidth,h=st.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+function setCam(c,instant){S.cam=c;document.querySelectorAll("[data-cam]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.cam===c));
+  if(c==="top")camera.position.set(0,165,.01);else camera.position.set(0,78,122);
+  controls.target.set(0,0,0);camera.lookAt(0,0,0);controls.update()}
+
+/* ---------- data to terrain ---------- */
+function tiers(){const vs=ST.gaps.map(scoreOf).sort((a,b)=>a-b),t1=vs[Math.floor(vs.length/3)],t2=vs[Math.floor(2*vs.length/3)];
+  ST.gaps.forEach(g=>{const v=scoreOf(g);g._tier=v>=t2?2:v>=t1?1:0})}
+const sstep=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
+function blur(src,passes){ // separable [1 4 6 4 1]/16, clamped at the edges
+  const k=[1/16,4/16,6/16,4/16,1/16];let a=Float32Array.from(src),b=new Float32Array(a.length);
+  for(let p=0;p<passes;p++){
+    for(let j=0;j<N;j++)for(let i=0;i<N;i++){let v=0;for(let d=-2;d<=2;d++)v+=k[d+2]*a[j*N+Math.max(0,Math.min(N-1,i+d))];b[j*N+i]=v}
+    for(let j=0;j<N;j++)for(let i=0;i<N;i++){let v=0;for(let d=-2;d<=2;d++)v+=k[d+2]*b[Math.max(0,Math.min(N-1,j+d))*N+i];a[j*N+i]=v}}
+  return a}
+function targets(){
+  tiers();const y=S.year,floor=col("--hair"),dead=col("--wedge"),hc=HIST.map(col),fc=FIRE.map(col);
+  HT.fill(0);KIND.fill(0);GAP.fill(undefined);
+  const n2=N*N,G=new Float32Array(n2),C=new Float32Array(n2),CR=new Float32Array(n2),CG=new Float32Array(n2),CB=new Float32Array(n2),D=new Uint8Array(n2);
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++)D[j*N+i]=(byCode[META.order[i]].firstYear<=y&&byCode[META.order[j]].firstYear<=y)?0:1;
+  ST.combined.forEach(([a,b,fy])=>{if(fy>y||!(a in idx)||!(b in idx))return;const bd=ageBand(y-fy),i=idx[a],j=idx[b],c=hc[bd];
+    [j*N+i,i*N+j].forEach(k=>{KIND[k]=1;C[k]=1;CR[k]=c.r;CG[k]=c.g;CB[k]=c.b})});
+  const sorted=[...ST.gaps].sort((a,b)=>scoreOf(a)-scoreOf(b)),nn=Math.max(1,sorted.length-1);
+  sorted.forEach((g,r)=>{g._pct=r/nn;const i=idx[g.a],j=idx[g.b];[j*N+i,i*N+j].forEach(k=>{KIND[k]=2;GAP[k]=g;G[k]=.15+.85*g._pct})});
+  const put=(k,h,c)=>{HT[k]=h;colA[3*k]=c.r;colA[3*k+1]=c.g;colA[3*k+2]=c.b};
+  if(!S.smooth){ // every ranked pair as its own spike
+    for(let k=0;k<n2;k++){let c=D[k]?dead:floor,h=0;
+      if(KIND[k]===1){const bd=ageBand(y-0);c=new THREE.Color(CR[k],CG[k],CB[k]);h=.8}
+      else if(KIND[k]===2){const g=GAP[k];c=fc[g._tier];h=1.2+(HMAX*.8-1.2)*g._pct}
+      put(k,h,c)}
+  }else{
+    const Gb=blur(G,2),Cb=blur(C,2),Rb=blur(CR,2),Gg=blur(CG,2),Bb=blur(CB,2);let mx=1e-6;for(let k=0;k<n2;k++)if(Gb[k]>mx)mx=Gb[k];
+    const tmp=new THREE.Color();
+    for(let k=0;k<n2;k++){
+      const gn=Gb[k]/mx,cw=Cb[k],ground=D[k]?dead.clone():floor.clone();
+      if(cw>.02){tmp.setRGB(Rb[k]/cw,Gg[k]/cw,Bb[k]/cw);ground.lerp(tmp,Math.min(1,cw*1.7))}
+      const u=Math.min(1,gn),fire=u<.62?fc[0].clone().lerp(fc[1],u/.62):fc[1].clone().lerp(fc[2],(u-.62)/.38);
+      ground.lerp(fire,sstep(.34,.62,gn));   // only the taller hills turn fire; the lower ground keeps its age shading
+      put(k,(D[k]?0:1.4*Math.min(1,cw*1.5))+HMAX*Math.pow(gn,1.5),ground)}
+  }
+  geo.attributes.color.needsUpdate=true;
+  if(REDUCED||!tweenReady){H.set(HT);applyHeights()}else tweening=true;
+}
+let tweenReady=false;
+function applyHeights(){for(let k=0;k<H.length;k++)posA[3*k+1]=H[k];geo.attributes.position.needsUpdate=true;geo.computeVertexNormals();geo.computeBoundingSphere();dirtyN=false;placePin()}
+function stepTween(){
+  if(!tweening)return;let moving=false;
+  for(let k=0;k<H.length;k++){const d=HT[k]-H[k];if(Math.abs(d)>.01){H[k]+=d*.22;moving=true}else H[k]=HT[k]}
+  for(let k=0;k<H.length;k++)posA[3*k+1]=H[k];geo.attributes.position.needsUpdate=true;geo.computeVertexNormals();
+  if(!moving){tweening=false;geo.computeBoundingSphere()}
+}
+
+/* ---------- picking ---------- */
+function cellAtEvent(e){const r=$("#cv").getBoundingClientRect();ndc.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+  ray.setFromCamera(ndc,camera);const hit=ray.intersectObject(mesh)[0];if(!hit)return null;
+  const i=Math.round((hit.point.x/W+.5)*(N-1)),j=Math.round((hit.point.z/W+.5)*(N-1));if(i<0||j<0||i>=N||j>=N||i===j)return null;const c=[i,j];c.pt=hit.point;return c}
+let lastMove=0;
+function snap(c,pt){ // a pointer is accurate to about one cell, and row spacing is only a pixel or two on the far side, so a thin peak is easy to graze.
+  // Pick the ranked pair nearest the ray's hit point ON THE SURFACE (so a hill never selects a peak hidden behind it), preferring higher ranks.
+  const k=c[1]*N+c[0],onHill=H[k]>2.5;
+  if(GAP[k]&&!onHill)return c;
+  const R=S.smooth?(onHill?4:3):(onHill?1.5:0);if(!R)return c;
+  const cw=W/(N-1);let best=null,bs=1e9;
+  for(let dj=-5;dj<=5;dj++)for(let di=-5;di<=5;di++){const i=c[0]+di,j=c[1]+dj;if(i<0||j<0||i>=N||j>=N||i===j)continue;const g=GAP[j*N+i];if(!g)continue;
+    const d=Math.hypot(xAt(i)-pt.x,xAt(j)-pt.z)/cw;if(d>R)continue;const sc=d-2.5*g._pct;if(sc<bs){bs=sc;best=[i,j]}}
+  return best||c}
+function onMove(e){if(e.buttons)return;const now=performance.now();if(now-lastMove<40||!ST)return;lastMove=now;const tip=$("#tip");let c=cellAtEvent(e);
+  if(!c){tip.style.display="none";return}
+  c=snap(c,c.pt);const a=META.order[c[0]],b=META.order[c[1]],k=c[1]*N+c[0],g=GAP[k];
+  let t=`<b>${esc(a)}</b> × <b>${esc(b)}</b><br>${esc(clip(titleCase(byCode[a].title),40))}<br>${esc(clip(titleCase(byCode[b].title),40))}`;
+  if(KIND[k]===1){const cm=ST.combined.find(x=>(x[0]===a&&x[1]===b)||(x[0]===b&&x[1]===a));t+=`<br>`+(cm&&cm[2]<=META.start?`already combined when the data starts (${META.start})`:`combined in ${cm?cm[2]:"?"}`)}
+  else if(g){const r=rankText(g);t+=`<br>has not combined · graph #${r.graph} · size ≈#${r.size}`}
+  tip.innerHTML=t;tip.style.display="block";tip.style.left=Math.min(innerWidth-310,e.clientX+14)+"px";tip.style.top=(e.clientY+14)+"px"}
+function onClick(e){let c=cellAtEvent(e);if(!c){clear();return}c=snap(c,c.pt);const g=GAP[c[1]*N+c[0]];if(g)pick(g.a,g.b);else clear()}
+function placePin(){
+  while(pin.children.length)pin.remove(pin.children[0]);
+  if(!S.sel)return;const ink=new THREE.Color(css("--ink"));
+  [[idx[S.sel.a],idx[S.sel.b]],[idx[S.sel.b],idx[S.sel.a]]].forEach(([i,j])=>{const k=j*N+i,x=xAt(i),z=xAt(j),top=Math.max(H[k],HT[k])+7;
+    const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(new Float32Array([x,Math.max(H[k],HT[k]),z,x,top,z]),3));
+    pin.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:ink})));
+    const s=new THREE.Mesh(new THREE.SphereGeometry(.9,12,8),new THREE.MeshBasicMaterial({color:ink}));s.position.set(x,top,z);pin.add(s)})}
+const v3=new THREE.Vector3();
+function cellScreen(a,b){const i=idx[a],j=idx[b],k=j*N+i;v3.set(xAt(i),H[k],xAt(j)).project(camera);const r=$("#cv").getBoundingClientRect();
+  return {x:r.left+(v3.x+1)/2*r.width,y:r.top+(1-v3.y)/2*r.height}}
+function updateCallout(){const el=$("#callout");if(!S.sel){el.style.display="none";return}
+  const i=idx[S.sel.a],j=idx[S.sel.b],k=j*N+i;v3.set(xAt(i),Math.max(H[k],HT[k])+7,xAt(j)).project(camera);const st=$("#stage");
+  if(v3.z>1){el.style.display="none";return}
+  const g=find(S.sel.a,S.sel.b),r=g?rankText(g):null;
+  el.innerHTML=`<b>${esc(S.sel.a)} × ${esc(S.sel.b)}</b>`+(r?`<br>graph rank #${r.graph}`:"");
+  el.style.display="block";el.style.left=Math.max(70,Math.min(st.clientWidth-70,(v3.x+1)/2*st.clientWidth))+"px";el.style.top=Math.max(40,(1-v3.y)/2*st.clientHeight)+"px"}
+
+/* ---------- panels ---------- */
+function gapRow(g){const r=rankText(g),A=byCode[g.a],B=byCode[g.b];
+  return `<li><button class="row" data-a="${g.a}" data-b="${g.b}"><span class="code">${esc(g.a)} × ${esc(g.b)}</span> <span class="mute t" title="${esc(titleCase(A.title))} × ${esc(titleCase(B.title))}">${esc(clip(titleCase(A.title),18))} × ${esc(clip(titleCase(B.title),18))}</span><br><span class="mute">graph #${r.graph} · size ≈#${r.size} of ${r.n}</span></button></li>`}
+function diagnostics(){
+  const y=S.year,alive=META.fields.filter(f=>f.firstYear<=y).length,total=alive*(alive-1)/2,comb=ST.combined.filter(c=>c[2]<=y).length,gaps=ST.candidates,pc=v=>(total?v/total*100:0).toFixed(1)+"%";
+  return `<h3>Diagnostics, ${y}</h3><table id="diag"><tr><td>Fields in the data</td><td>${alive}</td></tr><tr><td>Pairs of those fields</td><td>${total.toLocaleString()}</td></tr>
+    <tr><td>Combined</td><td>${comb.toLocaleString()} (${pc(comb)})</td></tr><tr><td>Not combined yet</td><td>${gaps.toLocaleString()} (${pc(gaps)})</td></tr>
+    <tr><td>Ranked pairs shown as peaks</td><td>${ST.gaps.length.toLocaleString()}</td></tr></table>`}
+function render(){
+  if(!ST)return;let h=diagnostics();
+  if(!S.sel)h+=`<h2>Landscape</h2><p class="mute">Click an orange peak, or pick a gap below, to see why two fields might combine.</p>`;
+  else{const a=byCode[S.sel.a],b=byCode[S.sel.b],g=find(S.sel.a,S.sel.b),r=g?rankText(g):null;
+    h+=`<h2>${esc(a.code)} × ${esc(b.code)}</h2><p>${esc(titleCase(a.title))}<br>× ${esc(titleCase(b.title))}</p>`;
+    if(r)h+=`<p class="mute">Not combined yet. Graph rank #${r.graph} of ${r.n}; size rank ≈#${r.size}. Beyond size: ${g.beyond>=0?"+":""}${(g.beyond*100).toFixed(0)} percentile points.</p>`;
+    h+=`<h3>Why they might combine</h3>`;
+    if(!EV)h+=`<p class="mute">Loading evidence…</p>`;else{
+      const li=(arr,fn)=>arr.length?`<ul>${arr.slice(0,5).map(fn).join("")}</ul>`:`<p class="mute">None yet.</p>`;
+      h+=`<p class="mute">Bridge fields: already combined with both.</p>`+li(EV.bridgeFields,x=>`<li><span class="code">${esc(x.code)}</span> <span title="${esc(titleCase(x.title))}">${esc(clip(titleCase(x.title),30))}</span> <span class="mute">· linked ${x.yearsEstablished} years</span></li>`);
+      h+=`<p class="mute">Shared prerequisites: both build on them.</p>`+li(EV.sharedPrerequisites,x=>`<li><span class="code">${esc(x.code)}</span> <span title="${esc(titleCase(x.title))}">${esc(clip(titleCase(x.title),30))}</span></li>`)}}
+  const tg=topGaps();h+=`<h3>Top gaps in ${S.year}</h3><ul>${tg.map(gapRow).join("")}</ul>`;
+  $("#note").innerHTML=h;$("#note").querySelectorAll(".row").forEach(b=>b.onclick=()=>pick(b.dataset.a,b.dataset.b));
+  $("#srgaps").innerHTML=tg.map(g=>{const r=rankText(g);return `<tr><td>${esc(g.a)}</td><td>${esc(g.b)}</td><td>${r.graph}</td><td>${r.size}</td></tr>`}).join("");
+  $("#legend").innerHTML=`<span>Ground, combined:</span>`+[["over 10 years ago",1],["7 to 10 years ago",2],["4 to 6",3],["last 3 years",4]].map(([t,i])=>`<span><i style="background:var(${HIST[i]})"></i>${t}</span>`).join("")
+    +`<span>${S.smooth?"Hills, not combined yet, where ranked gaps cluster; higher is more:":"Spikes, not combined yet, taller is higher ranked:"}</span>`+[["lower",0],["middle",1],["top",2]].map(([t,i])=>`<span><i style="background:var(${FIRE[i]})"></i>${t}</span>`).join("");
+  $("#yr").textContent=S.year;
+  $("#totree").href="/#year="+S.year+"&score="+S.score;$("#tomatrix").href="/matrix#year="+S.year+"&score="+S.score;
+  crossSection();history_();placePin();
+}
+function crossSection(){
+  const el=$("#xs");
+  if(!S.sel){el.innerHTML=`<h3>Cross-section</h3><p class="mute">Select a pair to slice the landscape along the first field: its partners, in field order.</p>`;return}
+  // Bars use each pair's true value, not the smoothed surface: combined = a fixed low bar, a ranked gap = its rank under the selected score.
+  const a=S.sel.a,b=S.sel.b,ia=idx[a],w=520,h=96,bw=w/N;let bars="";
+  for(let i=0;i<N;i++){if(i===ia)continue;const k=ia*N+i,kind=KIND[k];let c="--hair",v=.04;
+    if(kind===1){const cm=ST.combined.find(x=>(x[0]===META.order[i]&&x[1]===a)||(x[1]===META.order[i]&&x[0]===a));c=HIST[ageBand(S.year-(cm?cm[2]:S.year))];v=.3}
+    else if(kind===2){const g=GAP[k];c=FIRE[g._tier];v=.3+.7*g._pct}
+    const hh=Math.max(1.5,v*h);bars+=`<rect x="${i*bw}" y="${h-hh}" width="${Math.max(1,bw-.4)}" height="${hh}" fill="var(${c})"/>`}
+  const ib=idx[b],xb=ib*bw+bw/2,anchor=xb<60?"start":xb>w-60?"end":"middle";
+  el.innerHTML=`<h3>Cross-section: ${esc(a)} across all partners</h3><svg viewBox="0 0 ${w} ${h+34}" role="img" aria-label="Partners of ${esc(a)}: already combined, ranked candidates, and the selected partner ${esc(b)}">${bars}
+    <line x1="${xb}" x2="${xb}" y1="0" y2="${h}" stroke="var(--ink)" stroke-width="1.5"/><text x="${xb}" y="${h+14}" font-size="12" text-anchor="${anchor}" fill="var(--ink)">${esc(b)}</text>
+    <text x="${w}" y="${h+30}" font-size="12" text-anchor="end" fill="var(--ink-2)">fields in order of shared foundations</text></svg>
+    <p class="mute" style="margin:2px 0 0">Blue bars: partners ${esc(a)} already combined with. Orange bars: its ranked candidates, taller for a higher rank. The line marks ${esc(b)}.</p>`}
+function history_(){
+  const y=S.year,bounds=[[META.start,1980],[1981,1990],[1991,2000],[2001,2010],[2011,META.end]],cnt=bounds.map(()=>0);
+  ST.combined.forEach(([a,b,fy])=>{if(fy>y)return;const k=bounds.findIndex(([lo,hi])=>fy<=hi);cnt[k<0?cnt.length-1:k]++});
+  const total=cnt.reduce((s,v)=>s+v,0);let cum=0,rows="";
+  bounds.forEach(([lo,hi],i)=>{if(lo>y)return;cum+=cnt[i];const label=lo<=META.start?`${META.start} to ${Math.min(hi,y)}`:`${lo} to ${Math.min(hi,y)}`;
+    rows+=`<tr><td>${label}</td><td>${cnt[i].toLocaleString()}</td><td>${cum.toLocaleString()}</td><td>${total?(cnt[i]/total*100).toFixed(1):"0.0"}%</td></tr>`});
+  $("#histwrap").innerHTML=`<h3>Combination history, as of ${y}</h3><table id="hist"><thead><tr><th>First combined</th><th>New pairs</th><th>Cumulative</th><th>Share</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="mute" style="margin:4px 0 0">Pairs already combined in ${META.start} are labelled by the first year of data, not as ${META.start} events.</p>`}
+async function pick(a,b){S.sel={a,b};EV=null;render();try{EV=await api(`/api/evidence?a=${a}&b=${b}&year=${S.year}`)}catch(e){EV=null}render()}
+function clear(){S.sel=null;EV=null;render()}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")clear()});
+
+async function loadYear(y){
+  const my=++tok;y=Math.max(META.start,Math.min(META.end,y));S.year=y;$("#year").value=y;
+  const st=await api("/api/state?year="+y);if(my!==tok)return;ST=st;
+  if(S.sel&&!find(S.sel.a,S.sel.b))S.sel=null;EV=null;
+  targets();
+  if(S.sel)api(`/api/evidence?a=${S.sel.a}&b=${S.sel.b}&year=${y}`).then(e=>{if(my===tok){EV=e;render()}}).catch(()=>{});
+  render();tweenReady=true;
+}
+function setScore(s){S.score=s;document.querySelectorAll("[data-score]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.score===s));if(ST){targets();render()}}
+function play(){const b=$("#play");if(S.play){clearInterval(S.play);S.play=null;b.textContent="Play";return}
+  b.textContent="Pause";if(S.year>=META.end)loadYear(META.start);
+  S.play=setInterval(()=>{if(S.year>=META.end){play();return}loadYear(S.year+1)},600)}
+function checkSentence(){
+  const c=CHECK;if(!c||!c.available)return `Prediction check unavailable. Start the server with <code>--weights-from results/backtest.json</code>.`;
+  const ok=c.beyond&&Object.values(c.beyond.cutoffs).length&&Object.values(c.beyond.cutoffs).every(x=>x.diffVsPa&&x.diffVsPa.ci95[0]>0);
+  if(c.verdict==="NO-GO")return `Prediction check failed: on the top 100 pairs the graph does no better than field size.`+(ok?` Beyond size, it does better.`:"")+` <a href="/#details=1">Details</a>`;
+  if(c.verdict==="GO")return `Prediction check passed: on the top 100 pairs the graph beats field size by the declared margin. <a href="/#details=1">Details</a>`;
+  return `Prediction check has no result. <a href="/#details=1">Details</a>`;
+}
+async function init(){
+  try{META=await api("/api/meta")}catch(e){const er=$("#err");er.style.display="block";er.textContent="The data file could not be read. Check that `prometheus serve` was started with a .rl file.";return}
+  META.fields.forEach(f=>byCode[f.code]=f);N=META.order.length;META.order.forEach((c,i)=>idx[c]=i);
+  $("#sub").textContent=`How ${N} technology fields combined, ${META.start} to ${META.end}, from US patent data.`;
+  if(META.synthetic)$("#toy").style.display="block";
+  const yr=$("#year");yr.min=META.start;yr.max=META.end;yr.step=1;S.year=Math.min(META.end,Math.max(META.start,2005));yr.value=S.year;
+  const span=META.end-META.start;
+  $("#ticks").innerHTML=CUTOFFS.filter(c=>c>=META.start&&c<=META.end).map(c=>`<span class="tk" style="left:${(c-META.start)/span*100}%">${c}</span>`).join("")
+    +`<span class="tk" style="left:0;transform:none">${META.start}</span><span class="tk" style="right:0;left:auto;transform:none">${META.end}</span>`;
+  const h=new URLSearchParams(location.hash.slice(1));
+  if(h.get("cam")==="top")S.cam="top";
+  if(h.get("surface")==="pairs"){S.smooth=false;document.querySelectorAll("[data-surf]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.surf==="pairs"))}
+  if(h.get("score")&&["beyond","hybrid","size"].includes(h.get("score")))S.score=h.get("score");
+  document.querySelectorAll("[data-score]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.score===S.score));
+  const gl=initGL();
+  if(!gl){$("#stage").style.display="none";$("#nogl").style.display="block"}
+  yr.addEventListener("input",()=>loadYear(+yr.value));$("#play").onclick=play;
+  document.querySelectorAll("[data-score]").forEach(b=>b.onclick=()=>setScore(b.dataset.score));
+  document.querySelectorAll("[data-cam]").forEach(b=>b.onclick=()=>gl&&setCam(b.dataset.cam));
+  document.querySelectorAll("[data-surf]").forEach(b=>b.onclick=()=>{S.smooth=b.dataset.surf==="smooth";
+    document.querySelectorAll("[data-surf]").forEach(x=>x.setAttribute("aria-pressed",x===b));if(ST){targets();render()}});
+  try{CHECK=await api("/api/check")}catch(e){CHECK=null}$("#verdict").innerHTML=checkSentence();
+  if(!gl){ // no 3D: still show the numbers and the lists
+    ST=await api("/api/state?year="+S.year);const fake=new Array(N*N);H=new Float32Array(N*N);HT=new Float32Array(N*N);KIND=new Uint8Array(N*N);GAP=fake;pin={children:[],remove(){}};render();return}
+  await loadYear(h.get("year")?+h.get("year"):S.year);
+  if(h.get("gap")){const g=topGaps()[+h.get("gap")-1];if(g)await pick(g.a,g.b)}
+}
+init();
+</script>
+</body>
+</html>
