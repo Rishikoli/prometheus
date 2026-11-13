@@ -25,7 +25,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "prometheus.slices" = ["*.json"]
-"prometheus.web" = ["*.html", "*.js"]
+"prometheus.web" = ["*.html", "*.js", "fonts/*.woff2", "fonts/*.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

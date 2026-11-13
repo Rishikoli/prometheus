@@ -31,7 +31,7 @@ def test_server_api_and_no_peeking(toy_store):
     port = srv.server_address[1]
     try:
         status, body = _get(port, "/")
-        assert status == 200 and b"PROMETHEUS" in body and b"/d3.min.js" in body
+        assert status == 200 and b"Prometheus" in body and b"/d3.min.js" in body
         status, js = _get(port, "/d3.min.js")
         assert status == 200 and b"d3js.org" in js[:400]
 
@@ -53,6 +53,16 @@ def test_server_api_and_no_peeking(toy_store):
         ev = json.loads(_get(port, f"/api/evidence?a={g['a']}&b={g['b']}&year={year}")[1])
         assert ev["a"] == g["a"] and "bridgeFields" in ev
 
+        assert set(meta["domains"]) == set(first_codes := [f["code"] for f in meta["fields"]]) and meta["domainKind"] in ("slice", "cpc-section")
+        status, font = _get(port, "/fonts/newsreader-latin-400-normal.woff2")
+        assert status == 200 and font[:4] == b"wOF2"
+        try:
+            _get(port, "/fonts/../server.py")
+            raise AssertionError("expected 404")
+        except urllib.error.HTTPError as e:
+            assert e.code == 404
+        rc = json.loads(_get(port, f"/api/reach?code={first_codes[0]}&year={meta['end']}")[1])
+        assert rc["code"] == first_codes[0] and isinstance(rc["ancestors"], dict) and isinstance(rc["descendants"], dict)
         lin = json.loads(_get(port, "/api/lineage")[1])
         first = {f["code"]: f["firstYear"] for f in meta["fields"]}
         assert all(first[p["parent"]] < first[c] for c, p in lin["parents"].items())  # parents are strictly older

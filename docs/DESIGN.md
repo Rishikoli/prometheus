@@ -201,6 +201,33 @@ recomputed is the only other animation, and it follows a user action. Nothing an
 - Build order: rename and tests; server additions; tree page v1 (arcs, slider, three modes); margin note, evidence and the
   prediction-check panel; states, keyboard use and reduced motion; screenshots at 1985, 1998 and 2010.
 
+## 12c. As built (v1), and where it differs from the design above
+
+Built and checked on the real store on 13 Nov 2026. `python scripts/ui_check.py` passes 25 checks in a real browser (keyboard,
+click and hover on arcs, Play, slider, modes, happened range, offline, console errors, reduced motion, resize).
+
+Differences, with the reason:
+- **Tree radii use merge rank, not distance.** Genome distances cluster near the top of the tree, which drew one long spoke per
+  leaf. Rank spreads the branches evenly. The tree still shows the same grouping; its radial lengths do not mean distance.
+- **Domain wedges are runs of consecutive leaves.** The leaf order comes from genome similarity, not from domain, so fields of one
+  domain are not contiguous. A domain can therefore appear on several wedges (for example "AI, computing" twice). Only runs wide
+  enough for their label are named.
+- **Plate size scales with the window** (520 to 780 px) so the slider stays on screen at 1440 x 900 (about 650 px there); the
+  design's 780 px needs a taller window. Leaf dots scale with spacing (about 2 to 5 px here) because 123 leaves on a smaller
+  circle would otherwise merge into a ring.
+- **Arc opacity by age band is 0.12, 0.16, 0.45, 0.75 and 1** from oldest to newest (the design's "full colour" for all recent arcs
+  hid the age layers once thousands overlapped). Old arcs are 0.6 px, recent ones 1.4 px.
+- **Dependencies draws at most the first two steps, and only the first step, thin and light, when a field has more than 25**
+  in a direction (a hub can have 100); the margin note lists everything.
+- **Show what happened** gets the ten-year outcome from the server's state at year + 10, so no extra endpoint was needed.
+- **Added `scripts/ui_check.py`** and URL deep links (`#year=`, `#mode=`, `#score=`, `#field=`, `#gap=`, `#happened=1`, `#details=1`).
+- **Not built:** the per-year tree (`/api/tree`), the breakthrough button (hidden while the check is a NO-GO, as designed), the
+  `?view=matrix` route (the heatmap is in git history).
+
+Observed limit: the bundled-tree layout puts every year's arcs in the same corridors, so 1985, 1998 and 2010 look alike at a
+glance. The build-up shows as density and colour, and in the central fan, not as new shapes. At 1998 there are 691 arcs from
+the last ten years against 1,444 older ones; at 2010, 533 against 2,198.
+
 ## 13. Done when
 1. Screenshots at 1985, 1998 and 2010 show the tree, a visible build-up of arcs, fire only on gaps, and the NO-GO sentence.
 2. For each element ask: would it look the same on a page about something else? If yes, change it.

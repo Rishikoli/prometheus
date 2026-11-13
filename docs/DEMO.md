@@ -11,14 +11,15 @@ export PATH=$HOME/.local/bin:$PATH            # for the `relate` CLI
 prometheus serve data/prometheus.rl --weights-from results/backtest.json --open   # http://127.0.0.1:8765/
 ```
 
-The page needs no internet (D3 is bundled). Have two terminal tabs ready: one for the server, one in
+The page needs no internet (D3 and the fonts are bundled). Have two terminal tabs ready: one for the server, one in
 `~/prometheus-forecaster/2005` for the MCP step. If the browser tab misbehaves, these links open a specific view:
 
 | View | Link |
 |---|---|
-| Heatmap, 2005, graph score | `http://127.0.0.1:8765/#year=2005` |
-| Same, "beyond size" colouring, top gap open | `http://127.0.0.1:8765/#year=2005&layer=beyond&gap=1` |
-| Lineage and knock-out, 2010, G06F selected | `http://127.0.0.1:8765/#view=lin&year=2010&ko=G06F` |
+| The tree at 2005 | `http://127.0.0.1:8765/#year=2005` |
+| Top gap open, with evidence | `http://127.0.0.1:8765/#year=2005&gap=1` |
+| What breaks, H01L | `http://127.0.0.1:8765/#year=2005&mode=breaks&field=H01L` |
+| Show what happened, details open | `http://127.0.0.1:8765/#year=2005&happened=1&gap=2&details=1` |
 
 ## 1. The claim, and the result that failed (30 s)
 
@@ -28,30 +29,31 @@ The page needs no internet (D3 is bundled). Have two terminal tabs ready: one fo
 
 Point at the red badge. Do not soften it.
 
-## 2. Why it failed, and the heatmap (60 s)
+## 2. Why it failed, and the tree (60 s)
 
-On the heatmap at 2005, drag the year slider (or press Play). Grey cells are field pairs that already combined, coloured cells
-are the model's top candidate gaps; fields are ordered by shared ancestry, with the clustering tree on the edges.
+The page opens on 2005: 123 fields around a circle, grouped by shared foundations. Drag the slider (or press Play) and arcs build up:
+blue is a pair that already combined, darker is newer; the dashed fire arcs are pairs the model ranks high that have not combined.
 
 > "The graph does predict, AUC 0.84 against 0.5 for random. But by 2010 the size rule already reaches 91% of the best score
-> that is even possible, so the headline test measured the one place where every method looks the same."
+> that is even possible, so the headline test measured the one place where every method looks the same." Open **Details**
+> (top right) to show the table.
 
 ## 3. Exploratory: what the graph adds beyond size (45 s)
 
-Click **Graph score**, then **Size alone**, then **Beyond size** (or open the third link). Click the first coloured cell to open
-the evidence panel: the three percentile bars, then the bridge fields and shared prerequisites, each one a Cypher query on
-the store.
+Switch **Score** between **Size alone**, **Graph score** and **Beyond size**, and watch the dashed arcs and the Top gaps list
+change. Click a dashed arc (or `#year=2005&gap=1`): the margin note gives the bridge fields and shared prerequisites, each one
+a Cypher query on the store, and the ranks side by side. Turn on **Show what happened** at 2005 to see which gaps came true.
 
 > "Size alone and the graph disagree on many pairs. On the pairs the size rule ranks in the bottom half, the graph beats it by
 > 0.23, 0.17 and 0.09 AUC at 2005, 2010 and 2014, with intervals that exclude zero. We defined that test after seeing the
 > failure, so it is exploratory, and the advantage shrinks over time."
 
-## 4. Lineage and knock-out (30 s)
+## 4. Dependencies and what breaks (30 s)
 
-Switch to **Lineage and knock-out**, click a field. Read the yellow banner aloud.
+Click a field, then **Dependencies**, then **What breaks**. Read the number of citing links in the note.
 
-> "109 of our 123 fields were already around in 1976, the first year of data, so we cannot order them. The tree is nearly
-> flat and the page says so. The knock-out shows dependency, not cause."
+> "The tree shows no ages: 109 of our 123 fields were already around in 1976, the first year of data. The knock-out shows
+> dependency along citations, not cause, and says how many links each number rests on."
 
 ## 5. Relate and an agent (60 s)
 

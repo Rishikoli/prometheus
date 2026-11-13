@@ -14,6 +14,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from . import genome as genome_mod
+from . import slice as slicemod
 from .graph import TechGraph
 from .predict import DEFAULT_WEIGHTS, Snapshot, hybrid, percentile, rank_order, signal_table, tie_breaker
 
@@ -21,6 +22,11 @@ WEB = Path(__file__).parent / "web"
 MAX_GAPS = 1500
 # Display rule only (never enters a score): a knock-out exposure that rests on fewer BUILDS_ON links than this is drawn as weak.
 MIN_SUPPORT = 3
+CPC_SECTIONS = {"A": "Human necessities", "B": "Performing operations, transporting", "C": "Chemistry, metallurgy",
+                "D": "Textiles, paper", "E": "Fixed constructions",
+                "F": "Mechanical engineering, lighting, heating, weapons", "G": "Physics", "H": "Electricity"}
+FONTS = {"newsreader-latin-400-normal.woff2", "newsreader-latin-600-normal.woff2",
+         "instrument-sans-latin-400-normal.woff2", "instrument-sans-latin-600-normal.woff2"}
 
 
 class Service:
@@ -42,13 +48,31 @@ class Service:
             order, merges = sorted(snap.codes), []
         self.order, self.merges = order, merges
 
+    def domains(self, codes):
+        """Domain label per field: from the slice file if the store names one, else the CPC section letter."""
+        try:
+            rule = slicemod.load(self.g.meta().get("slice"))
+        except slicemod.SliceError:
+            rule = None
+        if rule is not None:
+            return {c: (rule.domain_of(c) or CPC_SECTIONS.get(c[:1], c[:1])) for c in codes}, "slice"
+        return {c: CPC_SECTIONS.get(c[:1], c[:1]) for c in codes}, "cpc-section"
+
+    def reach(self, code: str, year: int):
+        """What `code` builds on (ancestors) and what builds on it (descendants), with hop counts, as of the year."""
+        year = max(self.start, min(self.end, year))
+        return {"code": code, "year": year, "ancestors": self.g.ancestors(code, year),
+                "descendants": self.g.descendants(code, year)}
+
     def meta(self):
         m = self.g.meta()
         fields = self.g.fields()
+        doms, dkind = self.domains([f["code"] for f in fields])
         return {"meta": m, "synthetic": self.g.is_synthetic, "start": self.start, "end": self.end,
                 "fields": [{"code": f["code"], "title": (f["title"] or "").strip(), "firstYear": f["firstYear"],
                             "nPatents": f["nPatents"]} for f in fields],
-                "order": self.order, "merges": self.merges, "weights": self.weights, "verdict": self.verdict}
+                "order": self.order, "merges": self.merges, "weights": self.weights, "verdict": self.verdict,
+                "domains": doms, "domainKind": dkind}
 
     def state(self, year: int):
         year = max(self.start, min(self.end, year))
@@ -144,6 +168,8 @@ def make_handler(svc: Service):
             try:
                 if u.path in ("/", "/index.html"):
                     return self._send((WEB / "index.html").read_bytes(), "text/html; charset=utf-8")
+                if u.path.startswith("/fonts/") and u.path[7:] in FONTS:  # whitelist: no path traversal
+                    return self._send((WEB / "fonts" / u.path[7:]).read_bytes(), "font/woff2")
                 if u.path == "/d3.min.js":  # vendored (ISC licence), so the page works offline
                     return self._send((WEB / "d3.min.js").read_bytes(), "application/javascript; charset=utf-8")
                 with svc.lock:
@@ -153,6 +179,8 @@ def make_handler(svc: Service):
                         return self._json(svc.state(int(q["year"])))
                     if u.path == "/api/check":
                         return self._json(svc.check())
+                    if u.path == "/api/reach":
+                        return self._json(svc.reach(q["code"], int(q["year"])))
                     if u.path == "/api/lineage":
                         return self._json(svc.lineage())
                     if u.path == "/api/knockout":

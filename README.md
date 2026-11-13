@@ -48,7 +48,7 @@ The headline gate measured the one place where the methods are indistinguishable
   is nearly flat. Field labels use today's CPC on old patents. See [Limitations](#limitations).
 
 **What exists:** pipeline, store, queries, predictor, backtest, genome vectors, sealed capsules, grading, a local web page
-(heatmap, year slider, lineage and knock-out views, evidence panel), and 58 tests. **Not done:** OpenAlex paper-side edges;
+(circular tree of fields with arcs, year slider, dependencies and knock-out modes, evidence panel, prediction check), and 58 tests. **Not done:** OpenAlex paper-side edges;
 the stalled-pair overlay; an A2-style test with a different size proxy.
 
 ## Try it in two minutes (no download)
@@ -131,20 +131,33 @@ prometheus beyond STORE --weights-from F          A2: AUC on pairs preferential 
 prometheus pa-threshold CAPSULE [--write-brief F]  A4: eligibility threshold (and brief) for a capsule
 ```
 
-## Explore it (the heatmap)
+## Explore it (the tree of life)
 
 ```bash
-prometheus serve data/prometheus.rl --weights-from results/backtest.json --open
+prometheus serve data/prometheus.rl --weights-from results/backtest.json --open     # http://127.0.0.1:8765/
 ```
 
-A local page (standard-library server, D3 vendored in the package so it works offline, no build step) over the store, opened read-only. A year slider
-filters the graph as it stood in that year. Fields are ordered by genome (shared ancestry) with the clustering tree
-on both edges. Grey cells are fields that already combined; coloured cells are the top candidate gaps. Three colourings:
-**Graph score** (where the model ranks the pair), **Size alone** (preferential attachment, what the two fields' sizes
-predict by themselves) and **Beyond size** (graph score minus size alone). The backtest found size explains most of the
-prediction, so *Beyond size* is the honest view of what the graph adds. Clicking a gap opens the evidence panel (bridge
-fields and shared prerequisites, as Cypher queries). The page shows the backtest verdict when `--weights-from` is given.
-Deep links work: `#year=2005&layer=beyond&gap=1`.
+A local page (standard-library server, D3 and fonts bundled so it works offline, no build step) over the store, opened
+read-only. The 123 fields sit around a circle, grouped by how similar their foundations are (genome clustering of the "builds
+on" graph; it is **not** a tree of descent). Pairs that already combined are bundled arcs through the middle, shaded by age at
+the slider year, so the picture builds up as the slider moves. Pairs that have not combined but rank high are dashed fire-coloured
+arcs; fire means a predicted pair and nothing else. The prediction check, including the failed gate, is always on the page.
+
+| Control | What it does |
+|---|---|
+| Year slider and Play | the graph as of that year; ticks mark the backtest cutoffs 2005, 2010, 2014 |
+| Combinations | arcs of combined pairs and the top gaps; click a field or a dashed arc for evidence (bridge fields, shared prerequisites) |
+| Dependencies | what the selected field builds on and what builds on it |
+| What breaks | leaves shaded by how exposed they are if the selected field disappeared, with the number of citing links behind each |
+| Score: Beyond size, Graph score, Size alone | how the gaps are ranked; Beyond size is graph rank minus what field size alone predicts |
+| Show what happened | up to 2014: gaps that combined within ten years are solid, the rest hollow grey |
+| Details (top right) | the per-cutoff backtest table and a chart of graph vs size alone, all pairs and beyond-size |
+
+Deep links: `#year=1998`, `#year=2005&gap=1`, `#mode=deps&field=G06F`, `#mode=breaks&field=H01L`, `#year=2005&happened=1&gap=2&details=1`.
+Screenshots at 1985, 1998 and 2010 are in `docs/screenshots/`; the design and the choices made while building it are in
+`docs/DESIGN.md`. `python scripts/ui_check.py` drives the page in a real browser (25 checks: keyboard, clicks, Play, modes, offline).
+
+![Prometheus in 1998](docs/screenshots/tree_1998.png)
 
 ## Grading rules (fixed before any result)
 
@@ -363,8 +376,8 @@ other than common neighbours was not tested.
 |---|---|
 | Pipeline, store, queries, predictor, backtest, genome, capsules, grading, CLI | built; tested on toy data and a fixture |
 | Real PatentsView run, real backtest numbers | done 2026-11-13, see [Real-data results](#real-data-results) |
-| Heatmap screen with year slider, three colourings and evidence panel (`prometheus serve`) | built; checked on the real store |
-| Lineage and knock-out views on the page | built; the tree is nearly flat on real data because 109 of 123 fields are left-censored at 1976 |
+| Tree-of-life page: year slider, three modes, three scores, evidence panel, prediction check (`prometheus serve`) | built; 25 browser checks pass on the real store |
+| Dependencies and knock-out modes on the page | built; field ages are not shown because 109 of 123 fields are left-censored at 1976 |
 | MCP agent against a capsule | A3 (saturated, cannot separate methods) and A4 (beyond size: 9/30 vs 1.5 random, 4/30 PA control) run |
 | Paper-side edges (OpenAlex) and lead time | not started; planned as a two-day spike |
 | Stalled-pair overlay | not started; needs per-year pair counts from the pipeline |
