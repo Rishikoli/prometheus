@@ -1,0 +1,46 @@
+{
+  "name": "deeptech_narrow",
+  "note": "Declared 13 Nov 2026 AFTER the main deeptech run, so exploratory; the headline stays 'deeptech'. Identical to deeptech except G10 -> G10L (speech analysis and synthesis) and B25 -> B25J (manipulators, robots), because G10 pulled in musical instruments (G10C, G10D, G10F, G10G, G10H) and B25 pulled in hand tools (B25B to B25H). Chosen by CPC title, not by which fields grew.",
+  "include": {
+    "AI, computing, speech": [
+      "G06",
+      "G10L",
+      "G16"
+    ],
+    "Semiconductors and electronics": [
+      "H01",
+      "H10",
+      "H03"
+    ],
+    "Biotechnology": [
+      "C12",
+      "C07K",
+      "C07H",
+      "C40"
+    ],
+    "Medical devices and diagnostics": [
+      "A61B",
+      "A61N"
+    ],
+    "Energy storage, power and electrolysis": [
+      "H02",
+      "C25",
+      "B60L"
+    ],
+    "Robotics, automation, drones": [
+      "B25J",
+      "G05",
+      "B64"
+    ],
+    "Photonics and sensing": [
+      "G02",
+      "G01"
+    ]
+  },
+  "exclude": [
+    "Y"
+  ],
+  "why_excluded": {
+    "Y": "Section Y is a cross-sectional tagging scheme (for example Y02 climate technologies), not a technology of its own."
+  }
+}

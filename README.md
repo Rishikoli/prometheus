@@ -276,6 +276,24 @@ prometheus grade forecast_2010.json --against capsules/2020.rl --as-of 2010
 The agent sees two Relate MCP tools, `get_schema` and `read_cypher`; writes are refused. The forecaster must be a fresh agent:
 anything that has seen this repo or `results/backtest.md` cannot be blind.
 
+### A2b and the narrowed slice (declared 13 Nov 2026, before either was run; both exploratory)
+
+Both were chosen **after** the main run and its NO-GO, so they are exploratory and are reported beside the original results, never instead of them.
+
+- **A2b, a second size proxy.** A2 used the product of two fields' number of combination partners (degree) as its size proxy. A2b uses
+  **patents**: the product of the two fields' cumulative patent counts as of the cutoff year (patents granted in the slice through that year,
+  from per-year counts; never the end-of-data total, which would leak the future). Same cutoffs (2005, 2010, 2014), same frozen hybrid weights
+  from `results/backtest.json`, same 2,000-resample paired bootstrap. Two subsets are reported: (1) pairs in the bottom half by patent-count
+  product, with the patent-count product as the reference; (2) pairs in the bottom half by **both** degree product and patent-count product,
+  with both as references. No pass/fail threshold. If the hybrid's lead over the patent-count reference is not clearly above zero, the
+  "beyond size" wording in this README shrinks to say so.
+- **Narrowed slice.** The deeptech slice kept every subclass under the prefixes `G10` and `B25`, which pulled in musical instruments
+  (`G10C` pianos, `G10D`, `G10F`, `G10G`, `G10H`) and hand tools (`B25B` to `B25H`). Both showed up among the top gaps of the main run. The narrowed
+  slice (`src/prometheus/slices/deeptech_narrow.json`) is identical except `G10` becomes `G10L` (speech analysis and synthesis) and `B25`
+  becomes `B25J` (manipulators and robots). It is chosen by the CPC titles, not by which fields grew; but it was prompted by results, so the
+  headline stays the original `deeptech` slice with minimum pair threshold 3. Reported: the gate, the per-cutoff table and A2 with its
+  own tuned weights. The original slice file is not edited.
+
 ### A3 result (run 13 Nov 2026)
 
 Three fresh subagents (same model family as the author's session, no repo or backtest context, instructed to stay in their
