@@ -221,8 +221,11 @@ Differences, with the reason:
   in a direction (a hub can have 100); the margin note lists everything.
 - **Show what happened** gets the ten-year outcome from the server's state at year + 10, so no extra endpoint was needed.
 - **Added `scripts/ui_check.py`** and URL deep links (`#year=`, `#mode=`, `#score=`, `#field=`, `#gap=`, `#happened=1`, `#details=1`).
-- **Not built:** the per-year tree (`/api/tree`), the breakthrough button (hidden while the check is a NO-GO, as designed), the
-  `?view=matrix` route (the heatmap is in git history).
+- **The matrix was kept as a secondary view** at `/matrix` (decided 13 Nov 2026), reachable from "View as matrix" under the tree's
+  controls. It shares the tokens, fonts, slider, score toggle, evidence panel and prediction-check sentence, uses the age ramp for
+  combined cells and fire only for predicted pairs, and is a separate page (`matrix.html`) with no new server logic beyond the route.
+  It colours the server's top 1,500 pairs by the hybrid, so a pair size ranks high but the graph does not is not shown there.
+- **Not built:** the per-year tree (`/api/tree`) and the breakthrough button (hidden while the check is a NO-GO, as designed).
 
 Observed limit: the bundled-tree layout puts every year's arcs in the same corridors, so 1985, 1998 and 2010 look alike at a
 glance. The build-up shows as density and colour, and in the central fan, not as new shapes. At 1998 there are 691 arcs from

@@ -48,6 +48,8 @@ a Cypher query on the store, and the ranks side by side. Turn on **Show what hap
 > 0.23, 0.17 and 0.09 AUC at 2005, 2010 and 2014, with intervals that exclude zero. We defined that test after seeing the
 > failure, so it is exploratory, and the advantage shrinks over time."
 
+**Optional (10 s):** click **View as matrix**. "The tree shows the top gaps. This is every pair: blue already combined, fire the ones the graph ranks highest. Same slider, same evidence."
+
 ## 4. Dependencies and what breaks (30 s)
 
 Click a field, then **Dependencies**, then **What breaks**. Read the number of citing links in the note.

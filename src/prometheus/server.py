@@ -168,6 +168,8 @@ def make_handler(svc: Service):
             try:
                 if u.path in ("/", "/index.html"):
                     return self._send((WEB / "index.html").read_bytes(), "text/html; charset=utf-8")
+                if u.path == "/matrix":  # the secondary view: every candidate pair as a cell
+                    return self._send((WEB / "matrix.html").read_bytes(), "text/html; charset=utf-8")
                 if u.path.startswith("/fonts/") and u.path[7:] in FONTS:  # whitelist: no path traversal
                     return self._send((WEB / "fonts" / u.path[7:]).read_bytes(), "font/woff2")
                 if u.path == "/d3.min.js":  # vendored (ISC licence), so the page works offline

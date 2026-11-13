@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prometheus: matrix</title>
+<link rel="icon" href="data:,">
+<style>
+@font-face{font-family:"Newsreader";font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/newsreader-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Newsreader";font-weight:600;font-style:normal;font-display:swap;src:url(/fonts/newsreader-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Instrument Sans";font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/instrument-sans-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Instrument Sans";font-weight:600;font-style:normal;font-display:swap;src:url(/fonts/instrument-sans-latin-600-normal.woff2) format("woff2")}
+:root{
+  --paper:#EEF1EC;--ink:#16211C;--ink-2:#4B5750;--hair:#C9D0C8;--wedge:#E5E9E2;
+  --hist-1:#80A3CF;--hist-2:#5589C2;--hist-3:#3470AF;--hist-4:#235791;--hist-5:#143E6B;
+  --fire-2:#E4572E;--fire-3:#BF3A16;--fire-4:#8E2208;
+  --serif:"Newsreader",Georgia,serif;--sans:"Instrument Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink)}
+body{font:400 14px/1.45 var(--sans);font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit}
+a{color:inherit}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#toy{display:none;padding:6px 32px;background:var(--ink);color:var(--paper);font-weight:600}
+header{display:grid;grid-template-columns:1fr 340px;gap:40px;padding:20px 32px 6px;align-items:start}
+h1{margin:0;font:600 28px/1.1 var(--serif)}
+.sub{margin:6px 0 0;color:var(--ink-2)}
+.link{background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
+main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:40px;padding:6px 32px 0}
+#stage{position:relative;margin:0 auto;overflow:visible}
+#stage svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+#cv{position:absolute}
+.controls{display:flex;flex-wrap:wrap;gap:10px 28px;align-items:baseline;margin-top:8px}
+.seg{display:flex;gap:16px;align-items:baseline}
+.seg .lab{color:var(--ink-2)}
+.seg button{background:none;border:0;padding:2px 0;cursor:pointer;border-bottom:2px solid transparent}
+.seg button[aria-pressed=true]{font-weight:600;border-bottom-color:var(--ink)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:8px;color:var(--ink-2);font-size:12px}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle}
+.tnote{margin:8px 0 0;color:var(--ink-2);font-size:12px;max-width:640px}
+#note{min-width:0}
+#note h2{font:400 20px/1.2 var(--serif);margin:0 0 4px}
+#note h3{font:600 14px var(--sans);margin:16px 0 4px}
+#note p{margin:4px 0;max-width:60ch}
+#note ul{list-style:none;margin:0;padding:0}
+#note li{margin:3px 0}
+#note .code{font-weight:600}
+#note .mute{color:var(--ink-2)}
+#note .row{cursor:pointer;display:block;width:100%;text-align:left;background:none;border:0;padding:3px 0}
+#note .row:hover .t{text-decoration:underline}
+.timeline{display:grid;grid-template-columns:1fr auto;gap:6px 24px;align-items:center;padding:14px 32px 24px;margin-top:6px}
+.slider{position:relative;padding-bottom:16px}
+.slider input[type=range]{width:100%;margin:0;accent-color:var(--ink)}
+.slider .tk{position:absolute;bottom:0;font-size:12px;color:var(--ink-2);transform:translateX(-50%)}
+.slider .tk:before{content:"";position:absolute;left:50%;top:-8px;height:6px;border-left:1px solid var(--ink-2)}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--paper);padding:5px 8px;border-radius:2px;font-size:12px;max-width:300px;display:none;z-index:5}
+#err{display:none;margin:24px 32px;padding:12px 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+@media (max-width:1279px){header,main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="toy" role="status">Synthetic data. The machinery is real; the technologies are not.</div>
+<header>
+  <div>
+    <h1>Prometheus</h1>
+    <p class="sub" id="sub">&nbsp;</p>
+    <p class="sub"><a href="/" id="totree">View as tree</a></p>
+  </div>
+  <div><p id="verdict" class="sub" style="color:var(--ink);margin-top:2px"></p></div>
+</header>
+<div id="err"></div>
+<main>
+  <section>
+    <div id="stage" aria-label="Matrix of field pairs"><svg id="dtop"></svg><svg id="dleft"></svg><canvas id="cv"></canvas></div>
+    <div class="controls">
+      <div class="seg" id="scores"><span class="lab">Score:</span>
+        <button data-score="beyond" aria-pressed="true">Beyond size</button>
+        <button data-score="hybrid" aria-pressed="false">Graph score</button>
+        <button data-score="size" aria-pressed="false">Size alone</button>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <p class="tnote" id="tnote"></p>
+  </section>
+  <aside id="note" aria-live="polite"></aside>
+</main>
+<div class="timeline">
+  <div class="slider"><input id="year" type="range" aria-label="Year"><span id="ticks"></span></div>
+  <button class="link" id="play">Play</button>
+</div>
+<table class="sr-only"><caption>Top gaps this year</caption>
+  <thead><tr><th>Field A</th><th>Field B</th><th>Graph rank</th><th>Size rank</th></tr></thead><tbody id="srgaps"></tbody></table>
+<div id="tip"></div>
+<script src="/d3.min.js"></script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const api=async p=>{const r=await fetch(p);if(!r.ok){let m=r.status;try{m=(await r.json()).error}catch(e){}throw new Error(m)}return r.json()};
+const clip=(s,n)=>{s=(s||"").trim();if(s.length<=n)return s;const c=s.slice(0,n+1),i=c.lastIndexOf(" ");return (i>n*.5?c.slice(0,i):s.slice(0,n)).replace(/[ ,;]+$/,"")+"…"};
+const titleCase=s=>{s=(s||"").trim().toLowerCase();return s.charAt(0).toUpperCase()+s.slice(1)};
+const HIST=["--hist-1","--hist-2","--hist-3","--hist-4","--hist-5"],FIRE=["--fire-2","--fire-3","--fire-4"],CUTOFFS=[2005,2010,2014];
+const S={year:2005,score:"beyond",sel:null,play:null};
+let META,ST,CHECK,EV,tok=0,N=0,cell=5,pad=0,ctx,dpr=1,idx={},byCode={};
+const LEFT=64,TOP=64;
+
+const scoreOf=g=>S.score==="beyond"?g.beyond:S.score==="hybrid"?g.hybrid:g.size;
+const find=(a,b)=>ST&&ST.gaps.find(g=>(g.a===a&&g.b===b)||(g.a===b&&g.b===a));
+const ageBand=a=>a<=3?4:a<=6?3:a<=10?2:a<=20?1:0;
+function tiers(){const vs=ST.gaps.map(scoreOf).sort((a,b)=>a-b),t1=vs[Math.floor(vs.length/3)],t2=vs[Math.floor(2*vs.length/3)];
+  ST.gaps.forEach(g=>{const v=scoreOf(g);g._tier=v>=t2?2:v>=t1?1:0})}
+
+function layout(){
+  const w=$("#stage").parentElement.clientWidth-LEFT-8;cell=Math.max(3,Math.floor(Math.min(w,740,innerHeight-300)/N));pad=cell*N;
+  const st=$("#stage");st.style.width=(LEFT+pad)+"px";st.style.height=(TOP+pad)+"px";
+  const cv=$("#cv");dpr=devicePixelRatio||1;cv.width=cv.height=pad*dpr;cv.style.width=cv.style.height=pad+"px";cv.style.left=LEFT+"px";cv.style.top=TOP+"px";
+  ctx=cv.getContext("2d");dendro();
+}
+function dendro(){
+  const top=d3.select("#dtop").attr("width",LEFT+pad).attr("height",TOP),left=d3.select("#dleft").attr("width",LEFT).attr("height",TOP+pad);
+  top.selectAll("*").remove();left.selectAll("*").remove();if(!META.merges.length)return;
+  const pos={},h={},M=META.merges.length,segs=[];META.order.forEach((c,i)=>{pos[c]=(i+.5)*cell;h[c]=0});
+  META.merges.forEach((m,k)=>{const id="#"+k,hh=Math.pow((k+1)/M,.75)*(TOP-6);pos[id]=(pos[m[0]]+pos[m[1]])/2;h[id]=hh;
+    segs.push([pos[m[0]],h[m[0]],pos[m[0]],hh],[pos[m[0]],hh,pos[m[1]],hh],[pos[m[1]],hh,pos[m[1]],h[m[1]]])});
+  const st=css("--ink");
+  top.append("g").attr("transform",`translate(${LEFT},0)`).selectAll("path").data(segs).join("path").attr("d",s=>`M${s[0]},${TOP-s[1]}L${s[2]},${TOP-s[3]}`).attr("stroke",st).attr("stroke-opacity",.55).attr("fill","none");
+  left.append("g").attr("transform",`translate(0,${TOP})`).selectAll("path").data(segs).join("path").attr("d",s=>`M${LEFT-s[1]},${s[0]}L${LEFT-s[3]},${s[2]}`).attr("stroke",st).attr("stroke-opacity",.55).attr("fill","none");
+}
+function draw(){
+  if(!ST||!ctx)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,pad,pad);
+  const y=S.year,rect=(a,b)=>ctx.fillRect(idx[a]*cell,idx[b]*cell,cell,cell);
+  ctx.fillStyle=css("--wedge");META.order.forEach((c,i)=>{if(byCode[c].firstYear>y){ctx.fillRect(i*cell,0,cell,pad);ctx.fillRect(0,i*cell,pad,cell)}});
+  ST.combined.forEach(([a,b,fy])=>{if(fy>y||!(a in idx)||!(b in idx))return;ctx.fillStyle=css(HIST[ageBand(y-fy)]);rect(a,b);rect(b,a)});
+  ST.gaps.forEach(g=>{ctx.fillStyle=css(FIRE[g._tier]);rect(g.a,g.b);rect(g.b,g.a)});
+  if(S.sel){ctx.strokeStyle=css("--ink");ctx.lineWidth=2;[[S.sel.a,S.sel.b],[S.sel.b,S.sel.a]].forEach(([a,b])=>ctx.strokeRect(idx[a]*cell+1,idx[b]*cell+1,cell-2,cell-2))}
+}
+const rankText=g=>({graph:g.rank,size:Math.round((1-g.size)*ST.candidates)+1,n:ST.candidates});
+const topGaps=()=>[...ST.gaps].sort((a,b)=>scoreOf(b)-scoreOf(a)).slice(0,10);
+function gapRow(g){const r=rankText(g),A=byCode[g.a],B=byCode[g.b];
+  return `<li><button class="row" data-a="${g.a}" data-b="${g.b}"><span class="code">${esc(g.a)} × ${esc(g.b)}</span> <span class="mute t" title="${esc(titleCase(A.title))} × ${esc(titleCase(B.title))}">${esc(clip(titleCase(A.title),18))} × ${esc(clip(titleCase(B.title),18))}</span><br><span class="mute">graph #${r.graph} · size ≈#${r.size} of ${r.n}</span></button></li>`}
+function render(){
+  if(!ST)return;draw();let h="";
+  if(!S.sel)h+=`<h2>Matrix</h2><p class="mute">Click a coloured cell, or pick a gap below, to see why two fields might combine. Blue cells already combined; fire cells are the ${ST.gaps.length} pairs the graph ranks highest of ${ST.candidates.toLocaleString()}.</p>`;
+  else{const a=byCode[S.sel.a],b=byCode[S.sel.b],g=find(S.sel.a,S.sel.b),r=g?rankText(g):null;
+    h+=`<h2>${esc(a.code)} × ${esc(b.code)}</h2><p>${esc(titleCase(a.title))}<br>× ${esc(titleCase(b.title))}</p>`;
+    if(r)h+=`<p class="mute">Not combined yet. Graph rank #${r.graph} of ${r.n}; size rank ≈#${r.size}. Beyond size: ${g.beyond>=0?"+":""}${(g.beyond*100).toFixed(0)} percentile points.</p>`;
+    h+=`<h3>Why they might combine</h3>`;
+    if(!EV)h+=`<p class="mute">Loading evidence…</p>`;else{
+      const li=(arr,fn)=>arr.length?`<ul>${arr.slice(0,5).map(fn).join("")}</ul>`:`<p class="mute">None yet.</p>`;
+      h+=`<p class="mute">Bridge fields: already combined with both.</p>`+li(EV.bridgeFields,x=>`<li><span class="code">${esc(x.code)}</span> <span title="${esc(titleCase(x.title))}">${esc(clip(titleCase(x.title),30))}</span> <span class="mute">· linked ${x.yearsEstablished} years</span></li>`);
+      h+=`<p class="mute">Shared prerequisites: both build on them.</p>`+li(EV.sharedPrerequisites,x=>`<li><span class="code">${esc(x.code)}</span> <span title="${esc(titleCase(x.title))}">${esc(clip(titleCase(x.title),30))}</span></li>`)}}
+  const tg=topGaps();h+=`<h3>Top gaps in ${S.year}</h3><ul>${tg.map(gapRow).join("")}</ul>`;
+  $("#note").innerHTML=h;$("#note").querySelectorAll(".row").forEach(b=>b.onclick=()=>pick(b.dataset.a,b.dataset.b));
+  $("#srgaps").innerHTML=tg.map(g=>{const r=rankText(g);return `<tr><td>${esc(g.a)}</td><td>${esc(g.b)}</td><td>${r.graph}</td><td>${r.size}</td></tr>`}).join("");
+  $("#legend").innerHTML=`<span>Combined:</span>`+[["over 10 years ago",1],["7 to 10 years ago",2],["4 to 6",3],["last 3 years",4]].map(([t,i])=>`<span><i style="background:var(${HIST[i]})"></i>${t}</span>`).join("")
+    +`<span>Not combined yet, ranked by the selected score:</span>`+[["lower",0],["middle",1],["top third",2]].map(([t,i])=>`<span><i style="background:var(${FIRE[i]})"></i>${t}</span>`).join("");
+  $("#totree").href="/#year="+S.year+"&score="+S.score;
+  $("#tnote").textContent=`Fields are ordered by shared foundations, so related fields sit together. Every candidate pair is a cell; the page colours the ${ST.gaps.length.toLocaleString()} the graph ranks highest. Not a tree of descent.`;
+}
+async function pick(a,b){S.sel={a,b};EV=null;render();try{EV=await api(`/api/evidence?a=${a}&b=${b}&year=${S.year}`)}catch(e){EV=null}render()}
+function clear(){S.sel=null;EV=null;render()}
+function cellAt(e){const r=$("#cv").getBoundingClientRect(),i=Math.floor((e.clientX-r.left)/cell),j=Math.floor((e.clientY-r.top)/cell);
+  return(i<0||j<0||i>=N||j>=N||i===j)?null:[META.order[i],META.order[j]]}
+const tip=$("#tip");
+$("#cv").addEventListener("mousemove",e=>{if(!ST)return;const p=cellAt(e);if(!p){tip.style.display="none";return}
+  const [a,b]=p,g=find(a,b),c=ST.combined.find(x=>(x[0]===a&&x[1]===b)||(x[0]===b&&x[1]===a));
+  let t=`<b>${esc(a)}</b> × <b>${esc(b)}</b><br>${esc(clip(titleCase(byCode[a].title),40))}<br>${esc(clip(titleCase(byCode[b].title),40))}`;
+  if(c)t+=`<br>`+(c[2]<=META.start?`already combined when the data starts (${META.start})`:`combined in ${c[2]}`);else if(g){const r=rankText(g);t+=`<br>has not combined · graph #${r.graph} · size ≈#${r.size}`}
+  tip.innerHTML=t;tip.style.display="block";tip.style.left=Math.min(innerWidth-310,e.clientX+14)+"px";tip.style.top=(e.clientY+14)+"px"});
+$("#cv").addEventListener("mouseleave",()=>tip.style.display="none");
+$("#cv").addEventListener("click",e=>{const p=cellAt(e);if(!p){clear();return}const g=find(p[0],p[1]);if(g)pick(g.a,g.b);else clear()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")clear()});
+
+async function loadYear(y){
+  const my=++tok;y=Math.max(META.start,Math.min(META.end,y));S.year=y;$("#year").value=y;
+  const st=await api("/api/state?year="+y);if(my!==tok)return;ST=st;tiers();
+  if(S.sel&&!find(S.sel.a,S.sel.b))S.sel=null;EV=null;
+  if(S.sel)api(`/api/evidence?a=${S.sel.a}&b=${S.sel.b}&year=${y}`).then(e=>{if(my===tok){EV=e;render()}}).catch(()=>{});
+  render();
+}
+function setScore(s){S.score=s;document.querySelectorAll("[data-score]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.score===s));if(ST){tiers();render()}}
+function play(){const b=$("#play");if(S.play){clearInterval(S.play);S.play=null;b.textContent="Play";return}
+  b.textContent="Pause";if(S.year>=META.end)loadYear(META.start);
+  S.play=setInterval(()=>{if(S.year>=META.end){play();return}loadYear(S.year+1)},400)}
+function checkSentence(){
+  const c=CHECK;if(!c||!c.available)return `Prediction check unavailable. Start the server with <code>--weights-from results/backtest.json</code>.`;
+  const ok=c.beyond&&Object.values(c.beyond.cutoffs).length&&Object.values(c.beyond.cutoffs).every(x=>x.diffVsPa&&x.diffVsPa.ci95[0]>0);
+  if(c.verdict==="NO-GO")return `Prediction check failed: on the top 100 pairs the graph does no better than field size.`+(ok?` Beyond size, it does better.`:"")+` <a href="/#details=1">Details</a>`;
+  if(c.verdict==="GO")return `Prediction check passed: on the top 100 pairs the graph beats field size by the declared margin. <a href="/#details=1">Details</a>`;
+  return `Prediction check has no result. <a href="/#details=1">Details</a>`;
+}
+async function init(){
+  try{META=await api("/api/meta")}catch(e){const er=$("#err");er.style.display="block";er.textContent="The data file could not be read. Check that `prometheus serve` was started with a .rl file.";return}
+  META.fields.forEach(f=>byCode[f.code]=f);N=META.order.length;META.order.forEach((c,i)=>idx[c]=i);
+  $("#sub").textContent=`How ${N} technology fields combined, ${META.start} to ${META.end}, from US patent data.`;
+  if(META.synthetic)$("#toy").style.display="block";
+  const yr=$("#year");yr.min=META.start;yr.max=META.end;yr.step=1;S.year=Math.min(META.end,Math.max(META.start,2005));yr.value=S.year;
+  const span=META.end-META.start;
+  $("#ticks").innerHTML=CUTOFFS.filter(c=>c>=META.start&&c<=META.end).map(c=>`<span class="tk" style="left:${(c-META.start)/span*100}%">${c}</span>`).join("")
+    +`<span class="tk" style="left:0;transform:none">${META.start}</span><span class="tk" style="right:0;left:auto;transform:none">${META.end}</span>`;
+  yr.addEventListener("input",()=>loadYear(+yr.value));$("#play").onclick=play;
+  document.querySelectorAll("[data-score]").forEach(b=>b.onclick=()=>setScore(b.dataset.score));
+  layout();let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{layout();draw()},150)});
+  try{CHECK=await api("/api/check")}catch(e){CHECK=null}$("#verdict").innerHTML=checkSentence();
+  const h=new URLSearchParams(location.hash.slice(1));
+  if(h.get("score")&&["beyond","hybrid","size"].includes(h.get("score")))setScore(h.get("score"));
+  await loadYear(h.get("year")?+h.get("year"):S.year);
+  if(h.get("gap")){const g=topGaps()[+h.get("gap")-1];if(g)await pick(g.a,g.b)}
+}
+init();
+</script>
+</body>
+</html>

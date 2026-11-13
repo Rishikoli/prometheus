@@ -153,11 +153,18 @@ arcs; fire means a predicted pair and nothing else. The prediction check, includ
 | Show what happened | up to 2014: gaps that combined within ten years are solid, the rest hollow grey |
 | Details (top right) | the per-cutoff backtest table and a chart of graph vs size alone, all pairs and beyond-size |
 
+**Matrix view.** `View as matrix` (top of the controls) opens `/matrix`, the same year slider, score toggle and evidence panel on a
+grid of every field pair, ordered by shared foundations with the clustering tree on both edges. Blue cells already combined (darker is
+newer); fire cells are the 1,500 pairs the graph ranks highest. The tree shows about 25 arcs; the matrix shows where size and the
+graph disagree across all of them, so it carries the beyond-size finding more honestly. `View as tree` goes back, keeping the year.
+
 Deep links: `#year=1998`, `#year=2005&gap=1`, `#mode=deps&field=G06F`, `#mode=breaks&field=H01L`, `#year=2005&happened=1&gap=2&details=1`.
 Screenshots at 1985, 1998 and 2010 are in `docs/screenshots/`; the design and the choices made while building it are in
-`docs/DESIGN.md`. `python scripts/ui_check.py` drives the page in a real browser (25 checks: keyboard, clicks, Play, modes, offline).
+`docs/DESIGN.md`. `python scripts/ui_check.py` drives both pages in a real browser (37 checks: keyboard, clicks, Play, modes, offline).
 
 ![Prometheus in 1998](docs/screenshots/tree_1998.png)
+
+![The matrix view, 2005, beyond size](docs/screenshots/matrix_2005.png)
 
 ## Grading rules (fixed before any result)
 
@@ -376,7 +383,7 @@ other than common neighbours was not tested.
 |---|---|
 | Pipeline, store, queries, predictor, backtest, genome, capsules, grading, CLI | built; tested on toy data and a fixture |
 | Real PatentsView run, real backtest numbers | done 2026-11-13, see [Real-data results](#real-data-results) |
-| Tree-of-life page: year slider, three modes, three scores, evidence panel, prediction check (`prometheus serve`) | built; 25 browser checks pass on the real store |
+| Tree-of-life page: year slider, three modes, three scores, evidence panel, prediction check (`prometheus serve`) | built, plus a secondary matrix view at `/matrix`; 37 browser checks pass on the real store |
 | Dependencies and knock-out modes on the page | built; field ages are not shown because 109 of 123 fields are left-censored at 1976 |
 | MCP agent against a capsule | A3 (saturated, cannot separate methods) and A4 (beyond size: 9/30 vs 1.5 random, 4/30 PA control) run |
 | Paper-side edges (OpenAlex) and lead time | not started; planned as a two-day spike |

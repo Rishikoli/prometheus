@@ -99,6 +99,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-of
         <button data-mode="deps" aria-pressed="false">Dependencies</button>
         <button data-mode="breaks" aria-pressed="false">What breaks</button>
       </div>
+      <a class="link" id="tomatrix" href="/matrix" style="color:inherit">View as matrix</a>
       <div class="seg" id="scores"><span class="lab">Score:</span>
         <button data-score="beyond" aria-pressed="true">Beyond size</button>
         <button data-score="hybrid" aria-pressed="false">Graph score</button>
@@ -418,13 +419,14 @@ async function loadYear(y,pulseIt){
   if(S.sel){const f=selField();if(S.sel.type==="pair"&&!find(S.sel.a,S.sel.b))S.sel=null;else if(f&&byCode[f].firstYear>y&&S.mode!=="combos"){}}
   await loadModeData().catch(()=>{});
   if(S.sel&&S.sel.type==="pair"){api(`/api/evidence?a=${S.sel.a}&b=${S.sel.b}&year=${y}`).then(e=>{if(my===tok){EV=e;render()}}).catch(()=>{})}
-  render();
+  matrixLink();render();
   if(pulseIt&&!REDUCED){const n=ST.combined.filter(c=>c[2]===y).length;if(n&&n<400){const t0=performance.now();
     const step=now=>{const p=(now-t0)/300;if(p>=1||my!==tok){drawArcs();return}drawArcs(1-p);requestAnimationFrame(step)};requestAnimationFrame(step)}}
 }
 function setMode(m){S.mode=m;document.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===m));
   loadModeData().catch(()=>{}).then(render)}
-function setScore(s){S.score=s;document.querySelectorAll("[data-score]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.score===s));render()}
+function matrixLink(){const a=$("#tomatrix");if(a)a.href="/matrix#year="+S.year+"&score="+S.score}
+function setScore(s){S.score=s;matrixLink();document.querySelectorAll("[data-score]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.score===s));render()}
 function play(){const b=$("#play");if(S.play){clearInterval(S.play);S.play=null;b.textContent="Play";return}
   b.textContent="Pause";if(S.year>=META.end)loadYear(META.start);
   S.play=setInterval(()=>{if(S.year>=META.end){play();return}loadYear(S.year+1,true)},400)}

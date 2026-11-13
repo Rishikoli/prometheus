@@ -85,6 +85,37 @@ with sync_playwright() as p:
     ext=[u for u in reqs if not u.startswith(BASE) and not u.startswith("data:")]
     ok("no request leaves localhost (works offline)", len(ext)==0, ext[:3])
     ok("no console errors", len(errs)==0, errs[:3])
+    # the tree page links to the matrix, keeping the year and score
+    href=pg.get_attribute("#tomatrix","href")
+    ok("tree page links to the matrix with year and score", href.startswith("/matrix#year=") and "score=" in href, href)
+    # ---- matrix view ----
+    mp=ctx.new_page(); merrs=[]; mreqs=[]
+    mp.on("console",lambda m: merrs.append(m.text) if m.type=="error" else None)
+    mp.on("pageerror",lambda e: merrs.append("PAGEERROR "+str(e)))
+    mp.on("request",lambda r: mreqs.append(r.url))
+    mp.goto(BASE+"matrix#year=2005"); mp.wait_for_selector("#cv",timeout=60000)
+    mp.wait_for_function("document.querySelectorAll('#note li').length>0",timeout=60000)
+    ok("matrix: page loads at 2005 with top gaps", mp.evaluate("S.year===2005 && ST.gaps.length>100"), mp.evaluate("ST.gaps.length"))
+    ok("matrix: NO-GO sentence visible", "Prediction check failed" in mp.inner_text("#verdict"))
+    ok("matrix: link back to the tree keeps year", mp.get_attribute("#totree","href").startswith("/#year=2005"), mp.get_attribute("#totree","href"))
+    cpt=mp.evaluate("""()=>{const g=topGaps()[0],r=document.querySelector('#cv').getBoundingClientRect();
+      return {x:r.left+(idx[g.a]+.5)*cell,y:r.top+(idx[g.b]+.5)*cell,a:g.a,b:g.b}}""")
+    mp.mouse.move(cpt["x"],cpt["y"]); mp.wait_for_timeout(250)
+    tip=mp.inner_text("#tip") if mp.is_visible("#tip") else ""
+    ok("matrix: hovering a gap cell shows its ranks", "has not combined" in tip and "graph #" in tip, tip.replace("\n"," "))
+    mp.mouse.click(cpt["x"],cpt["y"]); mp.wait_for_timeout(1500)
+    ok("matrix: clicking a gap cell selects the pair and loads evidence", mp.evaluate("!!S.sel && !!EV"), mp.inner_text("#note h2"))
+    mp.keyboard.press("Escape"); mp.wait_for_timeout(300)
+    ok("matrix: Esc clears", mp.inner_text("#note h2")=="Matrix")
+    a=mp.inner_text("#note"); mp.click("[data-score=size]"); mp.wait_for_timeout(300); b2=mp.inner_text("#note")
+    ok("matrix: score toggle re-ranks the list", a!=b2)
+    mp.focus("#year"); mp.keyboard.press("ArrowRight"); mp.wait_for_timeout(1200)
+    ok("matrix: slider ArrowRight advances a year", mp.evaluate("S.year")==2006, mp.evaluate("S.year"))
+    mp.click("#play"); mp.wait_for_timeout(1700); y=mp.evaluate("S.year"); mp.click("#play")
+    ok("matrix: Play advances years", y>=2008, y)
+    ext=[u for u in mreqs if not u.startswith(BASE) and not u.startswith("data:")]
+    ok("matrix: no request leaves localhost", len(ext)==0, ext[:3])
+    ok("matrix: no console errors", len(merrs)==0, merrs[:3])
     # reduced motion + resize
     c2=b.new_context(viewport={"width":1280,"height":800},reduced_motion="reduce"); p2=c2.new_page(); e2=[]
     p2.on("pageerror",lambda e: e2.append(str(e))); p2.goto(BASE); p2.wait_for_selector(".leaf",timeout=60000); p2.wait_for_timeout(2500)
