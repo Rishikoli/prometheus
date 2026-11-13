@@ -194,6 +194,7 @@ recomputed is the only other animation, and it follows a user action. Nothing an
 
 ## 12b. Decisions for v1 (author, 13 Nov 2026)
 - Fixed tree only (one tree from all data, with the visible note under the plate). The per-year tree and `/api/tree` are v2.
+- Minimum support for the knock-out display rule is 3 BUILDS_ON links (`MIN_SUPPORT` in `server.py`); it only changes how a field is drawn, never a score.
 - Server additions for v1: `/api/check` (reads only `results/backtest.json` and `results/beyond_size/beyond_size.json`, nothing else) and a
   supporting-link count in the knock-out output (the number of BUILDS_ON links as of the year; no totals).
 - Rename the package, command and store file to `prometheus` before building the page, in one commit, so the page is not edited twice.

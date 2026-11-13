@@ -63,6 +63,11 @@ def test_server_api_and_no_peeking(toy_store):
         early = json.loads(_get(port, f"/api/knockout?code={code}&year={year}")[1])
         assert all(first[c] <= year for c in early["exposure"])  # nothing born later is exposed
 
+        assert ko["minSupport"] >= 1 and set(ko["support"]) == set(ko["exposure"])
+        assert all(isinstance(n, int) and n >= 0 for n in ko["support"].values())
+        chk = json.loads(_get(port, "/api/check")[1])
+        assert chk["available"] is False  # the toy service was started without a results directory
+
         try:
             _get(port, "/api/knockout?code=NOPE&year=2000")
             raise AssertionError("expected a 400")
@@ -76,3 +81,24 @@ def test_server_api_and_no_peeking(toy_store):
     finally:
         srv.shutdown()
         t.join(10)
+
+
+def test_check_reads_only_the_results_files(toy_store, tmp_path):
+    import json as _json
+    (tmp_path / "beyond_size").mkdir()
+    (tmp_path / "backtest.json").write_text(_json.dumps({
+        "gate": {"verdict": "NO-GO", "ratio": 1.04, "threshold": 2.0}, "weights": {"cn": 1}, "settings": {"k": 100},
+        "heldout_cutoffs_result": {"2005": {"candidates": 10, "positives": 2, "base_rate": 0.2, "methods": {
+            "hybrid": {"auc": 0.8, "lift_at_k": 4.0, "x": 1}, "pa": {"auc": 0.7, "lift_at_k": 3.9}, "random": {"auc": 0.5, "lift_at_k": 1.0},
+            "cn": {"auc": 0.9, "lift_at_k": 9.0}}}}}))
+    (tmp_path / "beyond_size" / "beyond_size.json").write_text(_json.dumps({
+        "definition": "d", "n_boot": 5, "cutoffs": {"2005": {"positives_subset": 1, "candidates_subset": 5,
+        "methods": {"hybrid": {"auc": 0.8, "ci95": [0.7, 0.9]}, "pa": {"auc": 0.6, "ci95": [0.5, 0.7]}},
+        "diff_vs_pa": {"hybrid": {"diff": 0.2, "ci95": [0.1, 0.3]}}}}}))
+    svc = server.Service(toy_store, results_dir=tmp_path)
+    c = svc.check()
+    svc.g.close()
+    assert c["verdict"] == "NO-GO" and c["available"]
+    h = c["backtest"]["heldout"]["2005"]
+    assert set(h["methods"]) == {"hybrid", "pa", "random"} and abs(h["maxLift"] - 5.0) < 1e-9
+    assert c["beyond"]["cutoffs"]["2005"]["diffVsPa"]["diff"] == 0.2

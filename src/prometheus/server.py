@@ -19,14 +19,17 @@ from .predict import DEFAULT_WEIGHTS, Snapshot, hybrid, percentile, rank_order, 
 
 WEB = Path(__file__).parent / "web"
 MAX_GAPS = 1500
+# Display rule only (never enters a score): a knock-out exposure that rests on fewer BUILDS_ON links than this is drawn as weak.
+MIN_SUPPORT = 3
 
 
 class Service:
-    def __init__(self, store, weights=None, verdict=None):
+    def __init__(self, store, weights=None, verdict=None, results_dir=None):
         self.g = TechGraph(store, read_only=True)
         self.lock = threading.Lock()
         self.weights = dict(weights or DEFAULT_WEIGHTS)
         self.verdict = verdict
+        self.results_dir = Path(results_dir) if results_dir else None
         self.cache: dict[int, dict] = {}
         self.end = self.g.data_end_year
         fields = self.g.fields()
@@ -71,10 +74,47 @@ class Service:
         return self._lineage
 
     def knockout(self, code: str, year: int):
-        """Dependency exposure if `code` were removed as of the year (not a causal claim)."""
+        """Dependency exposure if `code` were removed as of the year (not a causal claim).
+
+        `support[c]` is how many BUILDS_ON links field c has as of the year, which is what its exposure is an
+        average over. It is a count of links that exist, so it uses no totals and cannot leak the future.
+        """
         year = max(self.start, min(self.end, year))
         res = self.g.knockout(code, year, weighted=False)  # link counts, never later totals
-        return {"code": code, "year": year, "exposure": {c: round(v, 4) for c, v in res.items()}}
+        rows = self.g.q("MATCH (f:Field)-[r:BUILDS_ON]->(:Field) WHERE r.firstYear <= $y RETURN f.code AS c, count(r) AS n",
+                        {"y": year})
+        n = {r["c"]: r["n"] for r in rows}
+        return {"code": code, "year": year, "minSupport": MIN_SUPPORT,
+                "exposure": {c: round(v, 4) for c, v in res.items()},
+                "support": {c: n.get(c, 0) for c in res}}
+
+    def check(self):
+        """The prediction check, read from the two results files and nothing else. Never hides a failure."""
+        if not self.results_dir:
+            return {"available": False, "reason": "start the server with --weights-from results/backtest.json"}
+        out = {"available": True, "backtest": None, "beyond": None}
+        bt = self.results_dir / "backtest.json"
+        if bt.exists():
+            d = json.loads(bt.read_text())
+            held = {}
+            for y, c in d.get("heldout_cutoffs_result", {}).items():
+                held[y] = {"candidates": c["candidates"], "positives": c["positives"], "base_rate": c["base_rate"],
+                           "maxLift": (1 / c["base_rate"]) if c["base_rate"] else None,
+                           "methods": {m: {"auc": v["auc"], "lift": v["lift_at_k"]} for m, v in c["methods"].items()
+                                       if m in ("hybrid", "pa", "random")}}
+            out["backtest"] = {"gate": d.get("gate"), "weights": d.get("weights"), "k": d.get("settings", {}).get("k"),
+                               "tuneCutoffs": d.get("settings", {}).get("tune_cutoffs"), "heldout": held}
+        bs = self.results_dir / "beyond_size" / "beyond_size.json"
+        if bs.exists():
+            d = json.loads(bs.read_text())
+            out["beyond"] = {"definition": d.get("definition"), "nBoot": d.get("n_boot"),
+                             "cutoffs": {y: {"positives": c["positives_subset"], "candidates": c["candidates_subset"],
+                                             "methods": {m: c["methods"][m] for m in ("hybrid", "pa", "random") if m in c["methods"]},
+                                             "diffVsPa": c["diff_vs_pa"].get("hybrid")}
+                                         for y, c in d.get("cutoffs", {}).items()}}
+        g = (out["backtest"] or {}).get("gate") or {}
+        out["verdict"] = g.get("verdict")
+        return out
 
     def evidence(self, a: str, b: str, year: int):
         ev = self.g.evidence(a, b, year)
@@ -111,6 +151,8 @@ def make_handler(svc: Service):
                         return self._json(svc.meta())
                     if u.path == "/api/state":
                         return self._json(svc.state(int(q["year"])))
+                    if u.path == "/api/check":
+                        return self._json(svc.check())
                     if u.path == "/api/lineage":
                         return self._json(svc.lineage())
                     if u.path == "/api/knockout":
@@ -130,7 +172,7 @@ def serve(store, port=8765, weights_from=None, open_browser=False):
         weights = d.get("weights")
         gate = d.get("gate") or {}
         verdict = {k: gate.get(k) for k in ("verdict", "ratio", "hybrid_lift", "better_baseline_lift", "threshold")}
-    svc = Service(store, weights, verdict)
+    svc = Service(store, weights, verdict, Path(weights_from).parent if weights_from else None)
     srv = HTTPServer(("127.0.0.1", port), make_handler(svc))
     url = f"http://127.0.0.1:{port}/"
     print(f"PROMETHEUS serving {store} (read-only) at {url}   Ctrl+C to stop")
