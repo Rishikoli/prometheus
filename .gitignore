@@ -1,0 +1,22 @@
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.venv/
+# raw downloads and scratch files are large; the built store and capsules are meant to be committed
+data/raw/
+data/csv/work.duckdb
+*.duckdb
+*.duckdb.wal
+# demo output on synthetic data
+data/toy/
+data/toy.rl
+results/toy/
+capsules/toy/
+
+# raw PatentsView downloads (see docs/DATA.md for source and checksums) and scratch space
+g_*.tsv
+*.zip
+data/tmp*/
+# large, rebuilt by `techtree pipeline --slice all` + `techtree build`
+data/all.rl
+data/csv_all/

@@ -1,0 +1,17 @@
+{
+  "name": "deeptech",
+  "note": "STARTING POINT, written before any result was seen. Fields are chosen by CPC class prefix, never by how fast they grew, because choosing the fast growers would leak the answer into the backtest. Check every prefix against PatentsView's CPC titles before relying on it, and edit this file BEFORE running the backtest, not after. Not yet decided: whether to also exclude very generic hubs such as G06F, G06Q or H04L; decide before the first backtest and write the decision here.",
+  "include": {
+    "AI, computing, speech": ["G06", "G10", "G16"],
+    "Semiconductors and electronics": ["H01", "H10", "H03"],
+    "Biotechnology": ["C12", "C07K", "C07H", "C40"],
+    "Medical devices and diagnostics": ["A61B", "A61N"],
+    "Energy storage, power and electrolysis": ["H02", "C25", "B60L"],
+    "Robotics, automation, drones": ["B25", "G05", "B64"],
+    "Photonics and sensing": ["G02", "G01"]
+  },
+  "exclude": ["Y"],
+  "why_excluded": {
+    "Y": "Section Y is a cross-sectional tagging scheme (for example Y02 climate technologies), not a technology of its own."
+  }
+}

@@ -1,0 +1,12 @@
+{"pairs":[
+  {"a":"F0005","b":"F0071","cypher":"MATCH (a:Field {code:'F0005'}),(b:Field {code:'F0071'}) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"They share 13 common combination partners, deg 30*15=450 is eligible, and they are not yet combined."},
+  {"a":"F0029","b":"F0032","cypher":"MATCH (a:Field {code:'F0029'}),(b:Field {code:'F0032'}) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"12 shared partners with deg 30*15=450 (eligible) and no direct link yet."},
+  {"a":"F0020","b":"F0111","cypher":"MATCH (a:Field {code:'F0020'}),(b:Field {code:'F0111'}) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"12 shared partners, deg 14*29=406 eligible, not yet combined."},
+  {"a":"F0041","b":"F0061","cypher":"MATCH (a:Field {code:'F0041'}),(b:Field {code:'F0061'}) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"11 shared partners, deg 14*25=350 eligible, not yet combined."},
+  {"a":"F0031","b":"F0038","cypher":"MATCH (a:Field {code:'F0031'}),(b:Field {code:'F0038'}) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"11 shared partners, deg 17*24=408 eligible, not yet combined."},
+  {"a":"F0032","b":"F0111","cypher":"MATCH (a:Field {code:'F0032'}),(b:Field {code:'F0111'}) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"11 shared partners, deg 15*29=435 eligible, not yet combined."},
+  {"a":"F0050","b":"F0106","cypher":"MATCH (a:Field {code:'F0050'}),(b:Field {code:'F0106'}) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"11 shared partners, deg 19*21=399 eligible, not yet combined."},
+  {"a":"F0100","b":"F0106","cypher":"MATCH (a:Field {code:'F0100'}),(b:Field {code:'F0106'}) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"11 shared partners, deg 18*21=378 eligible, not yet combined."},
+  {"a":"F0045","b":"F0115","cypher":"MATCH (a:Field {code:'F0045'}),(b:Field {code:'F0115'}) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"11 shared partners, deg 23*19=437 eligible, not yet combined."},
+  {"a":"F0065","b":"F0109","cypher":"MATCH (a:Field {code:'F0065'}),(b:Field {code:'F0109'}) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"10 shared partners, deg 37*12=444 eligible, not yet combined."}
+  ]}

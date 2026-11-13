@@ -1,0 +1,34 @@
+{
+  "as_of": 1995,
+  "horizon": 10,
+  "graded_against": "capsules/2005.rl",
+  "candidates": 5201,
+  "positives": 536,
+  "base_rate": 0.10305710440299942,
+  "pairs_submitted": 10,
+  "pairs_valid": 10,
+  "rejected": [],
+  "with_cypher": 10,
+  "forecaster": {
+    "hits": 6,
+    "precision": 0.6,
+    "lift": 5.822014925373134
+  },
+  "preferential_attachment": {
+    "hits": 8,
+    "precision": 0.8,
+    "lift": 7.76268656716418,
+    "auc": 0.7789409064004735
+  },
+  "graph_predictor": {
+    "hits": 8,
+    "precision": 0.8,
+    "lift": 7.76268656716418,
+    "auc": 0.8112520196445425
+  },
+  "random_expected": {
+    "hits": 1.03,
+    "lift": 1.0
+  },
+  "note": "With only a few forecasts the hit count is noisy. Blinding reduces, but does not remove, the chance that a language model recognises the history; treat this as an experiment."
+}

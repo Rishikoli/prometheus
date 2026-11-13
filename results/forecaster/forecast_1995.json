@@ -1,0 +1,64 @@
+{
+ "pairs": [
+  {
+   "a": "F0069",
+   "b": "F0085",
+   "cypher": "MATCH (a:Field {code:'F0069'}),(b:Field {code:'F0085'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS connected",
+   "why": "Not yet combined but they share 44 common combination partners, the highest overlap found."
+  },
+  {
+   "a": "F0089",
+   "b": "F0113",
+   "cypher": "MATCH (a:Field {code:'F0089'}),(b:Field {code:'F0113'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS connected",
+   "why": "Both are highly connected fields with 42 shared partners and no direct combination."
+  },
+  {
+   "a": "F0010",
+   "b": "F0025",
+   "cypher": "MATCH (a:Field {code:'F0010'}),(b:Field {code:'F0025'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS connected",
+   "why": "42 shared partners between two hub fields that are not yet combined."
+  },
+  {
+   "a": "F0010",
+   "b": "F0040",
+   "cypher": "MATCH (a:Field {code:'F0010'}),(b:Field {code:'F0040'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS connected",
+   "why": "41 shared partners and no direct combination."
+  },
+  {
+   "a": "F0004",
+   "b": "F0091",
+   "cypher": "MATCH (a:Field {code:'F0004'}),(b:Field {code:'F0091'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS connected",
+   "why": "39 shared partners and no direct combination."
+  },
+  {
+   "a": "F0034",
+   "b": "F0036",
+   "cypher": "MATCH (a:Field {code:'F0034'}),(b:Field {code:'F0036'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS connected",
+   "why": "39 shared partners and no direct combination."
+  },
+  {
+   "a": "F0104",
+   "b": "F0119",
+   "cypher": "MATCH (a:Field {code:'F0104'}),(b:Field {code:'F0119'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS connected",
+   "why": "38 shared partners and no direct combination."
+  },
+  {
+   "a": "F0025",
+   "b": "F0042",
+   "cypher": "MATCH (a:Field {code:'F0025'}),(b:Field {code:'F0042'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS connected",
+   "why": "38 shared partners and no direct combination."
+  },
+  {
+   "a": "F0057",
+   "b": "F0068",
+   "cypher": "MATCH (a:Field {code:'F0057'}),(b:Field {code:'F0068'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS connected",
+   "why": "38 shared partners and no direct combination."
+  },
+  {
+   "a": "F0039",
+   "b": "F0074",
+   "cypher": "MATCH (a:Field {code:'F0039'}),(b:Field {code:'F0074'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS connected",
+   "why": "37 shared partners involving the most-connected field, with no direct combination."
+  }
+ ]
+}

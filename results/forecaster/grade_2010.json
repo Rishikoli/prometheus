@@ -1,0 +1,34 @@
+{
+  "as_of": 2010,
+  "horizon": 10,
+  "graded_against": "capsules/2020.rl",
+  "candidates": 4650,
+  "positives": 1050,
+  "base_rate": 0.22580645161290322,
+  "pairs_submitted": 10,
+  "pairs_valid": 10,
+  "rejected": [],
+  "with_cypher": 10,
+  "forecaster": {
+    "hits": 10,
+    "precision": 1.0,
+    "lift": 4.428571428571429
+  },
+  "preferential_attachment": {
+    "hits": 10,
+    "precision": 1.0,
+    "lift": 4.428571428571429,
+    "auc": 0.8083736772486773
+  },
+  "graph_predictor": {
+    "hits": 10,
+    "precision": 1.0,
+    "lift": 4.428571428571429,
+    "auc": 0.8318189153439154
+  },
+  "random_expected": {
+    "hits": 2.26,
+    "lift": 1.0
+  },
+  "note": "With only a few forecasts the hit count is noisy. Blinding reduces, but does not remove, the chance that a language model recognises the history; treat this as an experiment."
+}

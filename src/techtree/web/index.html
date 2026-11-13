@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROMETHEUS</title>
+<style>
+:root{--bg:#f7f6f2;--panel:#fff;--ink:#1d2433;--mute:#667085;--line:#d9d6cc;--accent:#b4491f;--warn-bg:#fdecc8;--warn-ink:#6b4200;--bad:#a4262c;--good:#1b7a46;--cell:#8a94a6;--dim:#ece9e0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--panel:#1c2028;--ink:#e8e6df;--mute:#9aa3b2;--line:#323845;--accent:#f08a5d;--warn-bg:#3d3114;--warn-ink:#f4d58d;--bad:#ff8a8f;--good:#6fd69a;--cell:#6b7487;--dim:#22262f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:14px 16px 8px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline}
+h1{margin:0;font-size:20px;letter-spacing:.14em}
+.sub{color:var(--mute)}
+.banner{margin:0 16px 8px;padding:8px 12px;border-radius:6px;background:var(--warn-bg);color:var(--warn-ink)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-weight:600;border:1px solid currentColor}
+.nogo{color:var(--bad)}.go{color:var(--good)}
+.controls{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding:6px 16px 10px}
+.controls input[type=range]{width:min(420px,70vw)}
+button,select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+.seg button{border-radius:0;margin:0 -1px 0 0}.seg button:first-child{border-radius:6px 0 0 6px}.seg button:last-child{border-radius:0 6px 6px 0}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;padding:0 16px 24px}
+@media (max-width:980px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+#stage{position:relative;overflow:auto}
+canvas{display:block}
+#dtop,#dleft{position:absolute;pointer-events:none}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);padding:6px 9px;border-radius:6px;font-size:12px;max-width:300px;display:none;z-index:5}
+h2{font-size:13px;margin:0 0 8px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.bar{height:8px;background:var(--dim);border-radius:4px;overflow:hidden;margin:2px 0 8px}
+.bar>i{display:block;height:100%;background:var(--accent)}
+.bar.beyond>i{background:#3b6fb6}
+ul{margin:0;padding-left:18px}li{margin:2px 0}
+.gaplist li{cursor:pointer}.gaplist li:hover{color:var(--accent)}
+.legend{display:flex;gap:10px;align-items:center;color:var(--mute);font-size:12px;flex-wrap:wrap}
+.ramp{width:120px;height:10px;border-radius:3px}
+.small{font-size:12px;color:var(--mute)}
+code{background:var(--dim);padding:0 4px;border-radius:3px}
+</style>
+</head>
+<body>
+<header>
+  <h1>PROMETHEUS</h1>
+  <span class="sub" id="store"></span>
+  <span id="verdict"></span>
+</header>
+<div class="banner" id="synth" hidden>SYNTHETIC toy data. The machinery is real; the technologies are not.</div>
+
+<div class="controls">
+  <label>Year <b id="yr"></b> <input id="slider" type="range"></label>
+  <button id="play">Play</button>
+  <span class="seg" role="group" aria-label="View">
+    <button data-view="heat" aria-pressed="true">Heatmap</button>
+    <button data-view="lin" aria-pressed="false" title="Which field grew out of which, and what a removal would expose">Lineage &amp; knock-out</button>
+  </span>
+  <span class="seg" id="layers" role="group" aria-label="Colour gaps by">
+    <button data-layer="hybrid" aria-pressed="true" title="Where the model ranks the pair">Graph score</button>
+    <button data-layer="size" aria-pressed="false" title="What the two fields' sizes alone predict">Size alone</button>
+    <button data-layer="beyond" aria-pressed="false" title="Graph score minus size alone">Beyond size</button>
+  </span>
+  <span class="small" id="counts"></span>
+</div>
+
+<main>
+  <section class="card">
+    <div id="heat"><div id="stage"><svg id="dtop"></svg><svg id="dleft"></svg><canvas id="cv"></canvas></div>
+    <div class="legend" style="margin-top:10px">
+      <span><span style="display:inline-block;width:10px;height:10px;background:var(--cell)"></span> already combined</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:var(--dim);border:1px solid var(--line)"></span> not yet combined / field not yet born</span>
+      <canvas class="ramp" id="ramp" width="120" height="10"></canvas><span id="rampLabel"></span>
+    </div>
+    <p class="small" id="note"></p></div>
+    <div id="lin" hidden>
+      <p class="small" id="censor" style="margin-top:0;padding:6px 10px;border-radius:6px;background:var(--warn-bg);color:var(--warn-ink)"></p>
+      <p class="small">Each field hangs from the older field it relies on most (its strongest prerequisite), as of the year on the slider. Click a field to see what depends on it. Exposure is a dependency measure along citations, not proof of cause.</p>
+      <div id="linwrap" style="overflow:auto;max-height:78vh"><svg id="linsvg"></svg></div>
+    </div>
+  </section>
+  <aside style="display:grid;gap:14px;align-content:start">
+    <div class="card" id="evidence"><h2>Evidence</h2><div class="small">Click a coloured cell, or pick a gap below.</div></div>
+    <div class="card"><h2>Top gaps this year</h2><ol class="gaplist" id="gaps" style="margin:0;padding-left:22px"></ol></div>
+  </aside>
+</main>
+<div id="tip"></div>
+
+<script src="/d3.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+let META,STATE,LAYER='hybrid',VIEW='heat',LIN=null,KO=null,SEL=null,idx={},byCode={},N=0,cell=4,pad=0,timer=null;
+const CELL_MIN=3,LEFT=70,TOP=70; // room for dendrograms
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const api=async(p)=>{const r=await fetch(p);if(!r.ok)throw new Error((await r.json()).error||r.status);return r.json()};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const LAYERS={
+  hybrid:{f:g=>g.hybrid,c:d3.interpolateYlOrRd,dom:[0.5,1],label:'higher = ranked more likely'},
+  size:{f:g=>g.size,c:d3.interpolateYlOrRd,dom:[0.5,1],label:'higher = bigger fields (size alone)'},
+  beyond:{f:g=>g.beyond,c:t=>d3.interpolateRdBu(1-t),dom:[-0.4,0.4],label:'blue = graph adds; red = size explains it'}
+};
+function colour(g){const L=LAYERS[LAYER],v=L.f(g),[a,b]=L.dom;return L.c(Math.max(0,Math.min(1,(v-a)/(b-a))))}
+
+async function init(){
+  META=await api('/api/meta');
+  META.order.forEach((c,i)=>idx[c]=i);META.fields.forEach(f=>byCode[f.code]=f);N=META.order.length;
+  $('#store').textContent=`${N} fields · ${META.meta.source||''} · ${META.meta.slice||'all'} slice · data to ${META.end}`;
+  if(META.synthetic)$('#synth').hidden=false;
+  const v=META.verdict;
+  if(v&&v.verdict)$('#verdict').innerHTML=`<span class="badge ${v.verdict==='GO'?'go':'nogo'}">Backtest gate: ${esc(v.verdict)}</span> <span class="small">hybrid lift ${v.hybrid_lift?.toFixed(2)} vs best baseline ${v.better_baseline_lift?.toFixed(2)} (needs ${v.threshold}×)</span>`;
+  const s=$('#slider');s.min=META.start;s.max=META.end;s.value=Math.min(META.end,Math.max(META.start,(META.end-10)));
+  s.oninput=()=>load(+s.value);
+  $('#play').onclick=play;
+  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+  document.querySelectorAll('[data-layer]').forEach(b=>b.onclick=()=>{LAYER=b.dataset.layer;document.querySelectorAll('[data-layer]').forEach(x=>x.setAttribute('aria-pressed',x===b));draw();list();ramp()});
+  window.addEventListener('resize',layout);
+  const h=new URLSearchParams(location.hash.slice(1));
+  if(h.get('year'))s.value=h.get('year');
+  if(LAYERS[h.get('layer')]){LAYER=h.get('layer');document.querySelectorAll('[data-layer]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.layer===LAYER))}
+  layout();await load(+s.value);
+  if(h.get('view')==='lin'){setView('lin');if(h.get('ko'))await koSelect(h.get('ko'))}
+  if(h.get('gap')){const L=LAYERS[LAYER];const t=[...STATE.gaps].sort((a,b)=>L.f(b)-L.f(a))[+h.get('gap')-1];if(t)pick(t)}
+}
+function layout(){
+  const w=$('#stage').clientWidth-LEFT-4;
+  cell=Math.max(CELL_MIN,Math.floor(Math.min(w,900)/N));pad=cell*N;
+  const cv=$('#cv');cv.style.marginLeft=LEFT+'px';cv.style.marginTop=TOP+'px';
+  cv.width=pad;cv.height=pad;cv.style.width=pad+'px';cv.style.height=pad+'px';
+  dendro();if(STATE)draw();
+}
+function dendro(){
+  const top=d3.select('#dtop').attr('width',LEFT+pad).attr('height',TOP).style('left','0').style('top','0');
+  const left=d3.select('#dleft').attr('width',LEFT).attr('height',TOP+pad).style('left','0').style('top','0');
+  top.selectAll('*').remove();left.selectAll('*').remove();
+  if(!META.merges.length)return;
+  const pos={},h={};META.order.forEach((c,i)=>{pos[c]=(i+.5)*cell;h[c]=0});
+  const maxd=Math.max(...META.merges.map(m=>m[2]),1e-6),sc=d=>(d/maxd)*(TOP-6);
+  const segs=[];
+  META.merges.forEach((m,k)=>{const [l,r,d]=m,n='#'+k;pos[n]=(pos[l]+pos[r])/2;h[n]=d;
+    segs.push([pos[l],h[l],pos[l],d],[pos[l],d,pos[r],d],[pos[r],d,pos[r],h[r]])});
+  const col=css('--mute');
+  top.append('g').attr('transform',`translate(${LEFT},0)`).selectAll('path').data(segs).join('path')
+    .attr('d',s=>`M${s[0]},${TOP-sc(s[1])}L${s[2]},${TOP-sc(s[3])}`).attr('stroke',col).attr('fill','none').attr('stroke-width',.8);
+  left.append('g').attr('transform',`translate(0,${TOP})`).selectAll('path').data(segs).join('path')
+    .attr('d',s=>`M${LEFT-sc(s[1])},${s[0]}L${LEFT-sc(s[3])},${s[2]}`).attr('stroke',col).attr('fill','none').attr('stroke-width',.8);
+}
+function setView(v){
+  VIEW=v;document.querySelectorAll('[data-view]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.view===v));
+  $('#heat').hidden=v!=='heat';$('#lin').hidden=v!=='lin';$('#layers').hidden=v!=='heat';
+  if(v==='lin')refreshLin();else if(SEL)evidence(SEL.a,SEL.b);else $('#evidence').innerHTML='<h2>Evidence</h2><div class="small">Click a coloured cell, or pick a gap below.</div>';
+}
+async function refreshLin(){
+  if(!LIN)LIN=await api('/api/lineage');
+  if(KO&&!(byCode[KO.code]&&byCode[KO.code].firstYear<=STATE.year))KO=null;
+  if(KO)KO=await api(`/api/knockout?code=${KO.code}&year=${STATE.year}`);
+  drawLineage();koPanel();
+}
+function drawLineage(){
+  const cen=META.fields.filter(f=>f.firstYear===META.start).length;
+  $('#censor').textContent=`${cen} of ${META.fields.length} fields were already present in ${META.start}, the first year of data, so their real age is unknown and the tree cannot order them. It can only place the other ${META.fields.length-cen}.`;
+  const y=STATE.year,alive=META.fields.filter(f=>f.firstYear<=y);
+  const rows=[{id:'ROOT',parent:null}].concat(alive.map(f=>{const p=LIN.parents[f.code];return{id:f.code,parent:p&&byCode[p.parent].firstYear<=y?p.parent:'ROOT'}}));
+  const root=d3.stratify().id(d=>d.id).parentId(d=>d.parent)(rows);
+  root.sort((a,b)=>byCode[a.id]?.firstYear-byCode[b.id]?.firstYear||(a.id<b.id?-1:1));
+  const dx=15,dy=215;d3.tree().nodeSize([dx,dy])(root);
+  const ns=root.descendants().filter(n=>n.id!=='ROOT'),ls=root.links().filter(l=>l.source.id!=='ROOT');
+  let x0=1e9,x1=-1e9,dmax=0;ns.forEach(n=>{x0=Math.min(x0,n.x);x1=Math.max(x1,n.x);dmax=Math.max(dmax,n.depth)});
+  const svg=d3.select('#linsvg').attr('width',dmax*dy+230).attr('height',x1-x0+30);svg.selectAll('*').remove();
+  const g=svg.append('g').attr('transform',`translate(10,${15-x0})`);
+  g.selectAll('path').data(ls).join('path').attr('fill','none').attr('stroke',css('--line')).attr('stroke-width',1.2)
+    .attr('d',d3.linkHorizontal().x(d=>(d.y-dy)).y(d=>d.x));
+  const ex=KO?KO.exposure:{},mx=Math.max(0.01,...Object.values(ex));
+  const gn=g.selectAll('g').data(ns).join('g').attr('transform',d=>`translate(${d.y-dy},${d.x})`).style('cursor','pointer')
+    .on('click',(e,d)=>koSelect(d.id));
+  gn.append('circle').attr('r',d=>d.id===KO?.code?6:4.5)
+    .attr('fill',d=>d.id===KO?.code?css('--ink'):(d.id in ex?d3.interpolateOrRd(.25+.75*ex[d.id]/mx):css('--cell')))
+    .attr('stroke',css('--bg')).attr('stroke-width',1);
+  gn.append('text').attr('x',9).attr('dy','.32em').attr('font-size',11).attr('fill',css('--ink'))
+    .text(d=>`${d.id} ${(byCode[d.id]?.title||'').slice(0,18)}`);
+  gn.append('title').text(d=>`${d.id} ${byCode[d.id]?.title||''}\nborn ${byCode[d.id]?.firstYear}`);
+}
+async function koSelect(code){KO=await api(`/api/knockout?code=${code}&year=${STATE.year}`);drawLineage();koPanel()}
+function koPanel(){
+  if(!KO){$('#evidence').innerHTML='<h2>Knock-out</h2><div class="small">Click a field in the tree.</div>';return}
+  const e=Object.entries(KO.exposure).sort((a,b)=>b[1]-a[1]),mx=e.length?e[0][1]:1;
+  $('#evidence').innerHTML=`<h2>Knock-out · as of ${KO.year}</h2>
+   <div><b>${esc(KO.code)}</b> ${esc(byCode[KO.code]?.title)}</div>
+   <p class="small">If this field were removed, ${e.length} other fields would lose some of what they build on. A dependency measure along citations, not proof of cause or a forecast.</p>
+   ${e.slice(0,14).map(([c,v])=>`<div class="small"><b>${esc(c)}</b> ${esc((byCode[c]?.title||'').slice(0,30))} · ${(v*100).toFixed(0)}%</div><div class="bar"><i style="width:${v/mx*100}%"></i></div>`).join('')||'<div class="small">nothing depends on it yet</div>'}`;
+}
+async function load(y){
+  $('#yr').textContent=y;
+  STATE=await api('/api/state?year='+y);
+  if(+$('#slider').value!==y)$('#slider').value=y;
+  $('#counts').textContent=`${STATE.fields} fields alive · ${STATE.combined.length} combined pairs · ${STATE.candidates} candidate pairs`;
+  draw();list();ramp();
+  if(VIEW==='lin')await refreshLin();
+  $('#note').innerHTML=`Fields are ordered by genome (shared ancestry), so related fields sit together. Gaps are the top ${STATE.gaps.length} candidates by hybrid score; <b>size alone</b> is preferential attachment, which the backtest found explains most of the prediction. <b>Beyond size</b> is the part the graph adds.`;
+  if(VIEW==='heat'&&SEL)evidence(SEL.a,SEL.b);
+}
+function draw(){
+  if(!STATE)return;const cv=$('#cv'),ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,pad,pad);
+  const dim=css('--dim'),ink=css('--cell'),y=STATE.year;
+  ctx.fillStyle=dim;ctx.fillRect(0,0,pad,pad);
+  const rect=(a,b)=>ctx.fillRect(idx[a]*cell,idx[b]*cell,cell,cell);
+  const alive=new Set();META.fields.forEach(f=>{if(f.firstYear<=y)alive.add(f.code)});
+  ctx.fillStyle=css('--bg');
+  META.order.forEach((c,i)=>{if(!alive.has(c)){ctx.fillRect(i*cell,0,cell,pad);ctx.fillRect(0,i*cell,pad,cell)}});
+  ctx.fillStyle=ink;
+  STATE.combined.forEach(([a,b])=>{if(a in idx&&b in idx){rect(a,b);rect(b,a)}});
+  STATE.gaps.forEach(g=>{ctx.fillStyle=colour(g);rect(g.a,g.b);rect(g.b,g.a)});
+  if(SEL){ctx.strokeStyle=css('--ink');ctx.lineWidth=2;
+    [[SEL.a,SEL.b],[SEL.b,SEL.a]].forEach(([a,b])=>ctx.strokeRect(idx[a]*cell+1,idx[b]*cell+1,cell-2,cell-2))}
+}
+function ramp(){
+  const L=LAYERS[LAYER],c=$('#ramp'),x=c.getContext('2d');
+  for(let i=0;i<120;i++){x.fillStyle=L.c(i/119);x.fillRect(i,0,1,10)}
+  $('#rampLabel').textContent=L.label;
+}
+function list(){
+  const L=LAYERS[LAYER];
+  const top=[...STATE.gaps].sort((a,b)=>L.f(b)-L.f(a)).slice(0,15);
+  $('#gaps').innerHTML=top.map((g,i)=>`<li data-i="${i}"><b>${esc(g.a)}</b> + <b>${esc(g.b)}</b> <span class="small">${esc((byCode[g.a]?.title||'').slice(0,22))} / ${esc((byCode[g.b]?.title||'').slice(0,22))}</span></li>`).join('');
+  document.querySelectorAll('#gaps li').forEach(li=>li.onclick=()=>pick(top[+li.dataset.i]));
+}
+function find(a,b){return STATE.gaps.find(g=>(g.a===a&&g.b===b)||(g.a===b&&g.b===a))}
+function pick(g){SEL={a:g.a,b:g.b};draw();evidence(g.a,g.b)}
+async function evidence(a,b){
+  const g=find(a,b);if(!g){SEL=null;return}
+  const ev=await api(`/api/evidence?a=${a}&b=${b}&year=${STATE.year}`);
+  const bar=(v,cls='')=>`<div class="bar ${cls}"><i style="width:${Math.max(0,Math.min(1,v))*100}%"></i></div>`;
+  const li=a=>a.length?`<ul>${a.map(x=>`<li><b>${esc(x.code)}</b> ${esc((x.title||'').trim().slice(0,40))} <span class="small">${x.yearsEstablished!=null?'· linked '+x.yearsEstablished+' yrs':''}</span></li>`).join('')}</ul>`:'<div class="small">none yet</div>';
+  $('#evidence').innerHTML=`<h2>Evidence · as of ${STATE.year}</h2>
+   <div><b>${esc(a)}</b> ${esc(ev.titles[a])}<br><b>${esc(b)}</b> ${esc(ev.titles[b])}</div>
+   <p class="small">Never combined yet. Model rank #${g.rank} of ${STATE.candidates}.</p>
+   <div class="small">Graph score (percentile) ${(g.hybrid*100).toFixed(0)}</div>${bar(g.hybrid)}
+   <div class="small">Size alone ${(g.size*100).toFixed(0)}</div>${bar(g.size)}
+   <div class="small">Beyond size ${g.beyond>=0?'+':''}${(g.beyond*100).toFixed(0)} points</div>${bar(Math.abs(g.beyond),'beyond')}
+   <h2>Bridge fields</h2><div class="small">Already combined with both:</div>${li(ev.bridgeFields)}
+   <h2 style="margin-top:10px">Shared prerequisites</h2>${li(ev.sharedPrerequisites)}`;
+}
+const tip=$('#tip');
+$('#cv').addEventListener('mousemove',e=>{
+  if(!STATE)return;const r=e.target.getBoundingClientRect();
+  const i=Math.floor((e.clientX-r.left)/cell),j=Math.floor((e.clientY-r.top)/cell);
+  if(i<0||j<0||i>=N||j>=N){tip.style.display='none';return}
+  const a=META.order[i],b=META.order[j];if(a===b){tip.style.display='none';return}
+  const g=find(a,b);const comb=STATE.combined.find(c=>(c[0]===a&&c[1]===b)||(c[0]===b&&c[1]===a));
+  let t=`<b>${esc(a)}</b> × <b>${esc(b)}</b><br>${esc(byCode[a]?.title.slice(0,40))}<br>${esc(byCode[b]?.title.slice(0,40))}`;
+  if(comb)t+=`<br>combined since ${comb[2]}`;else if(g)t+=`<br>rank #${g.rank} · graph ${(g.hybrid*100).toFixed(0)} · size ${(g.size*100).toFixed(0)}`;
+  tip.innerHTML=t;tip.style.display='block';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+14)+'px';
+});
+$('#cv').addEventListener('mouseleave',()=>tip.style.display='none');
+$('#cv').addEventListener('click',e=>{
+  const r=e.target.getBoundingClientRect();
+  const i=Math.floor((e.clientX-r.left)/cell),j=Math.floor((e.clientY-r.top)/cell);
+  if(i<0||j<0||i>=N||j>=N)return;const g=find(META.order[i],META.order[j]);if(g)pick(g);
+});
+function play(){
+  const s=$('#slider'),b=$('#play');
+  if(timer){clearInterval(timer);timer=null;b.textContent='Play';return}
+  b.textContent='Pause';if(+s.value>=META.end)s.value=META.start;
+  timer=setInterval(async()=>{if(+s.value>=META.end){play();return}s.value=+s.value+1;await load(+s.value)},700);
+}
+init().catch(e=>{document.body.insertAdjacentHTML('afterbegin',`<div class="banner">Could not load: ${esc(e.message)}</div>`)});
+</script>
+</body>
+</html>

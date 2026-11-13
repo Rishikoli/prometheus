@@ -1,0 +1,84 @@
+# Demo script (about 4 minutes)
+
+Order matters: say the failed test first. Everything after it is labelled exploratory. All numbers are in the README and
+were produced by the commands shown; read them from the page, do not improvise new ones.
+
+## Before you start (once)
+
+```bash
+cd tech-tree-time-machine && source .venv/bin/activate
+export PATH=$HOME/.local/bin:$PATH            # for the `relate` CLI
+techtree serve data/techtree.rl --weights-from results/backtest.json --open   # http://127.0.0.1:8765/
+```
+
+The page needs no internet (D3 is bundled). Have two terminal tabs ready: one for the server, one in
+`~/prometheus-forecaster/2005` for the MCP step. If the browser tab misbehaves, these links open a specific view:
+
+| View | Link |
+|---|---|
+| Heatmap, 2005, graph score | `http://127.0.0.1:8765/#year=2005` |
+| Same, "beyond size" colouring, top gap open | `http://127.0.0.1:8765/#year=2005&layer=beyond&gap=1` |
+| Lineage and knock-out, 2010, G06F selected | `http://127.0.0.1:8765/#view=lin&year=2010&ko=G06F` |
+
+## 1. The claim, and the result that failed (30 s)
+
+> "PROMETHEUS is a technology graph built from nine million US patents, kept in one Relate file. Before we looked at any
+> result we wrote down a pass mark: our predictor has to beat the simple rule 'big fields combine with big fields' by 2 times.
+> **It did not. 4.44 against 4.26, a ratio of 1.04.** The badge at the top of the page says NO-GO."
+
+Point at the red badge. Do not soften it.
+
+## 2. Why it failed, and the heatmap (60 s)
+
+On the heatmap at 2005, drag the year slider (or press Play). Grey cells are field pairs that already combined, coloured cells
+are the model's top candidate gaps; fields are ordered by shared ancestry, with the clustering tree on the edges.
+
+> "The graph does predict, AUC 0.84 against 0.5 for random. But by 2010 the size rule already reaches 91% of the best score
+> that is even possible, so the headline test measured the one place where every method looks the same."
+
+## 3. Exploratory: what the graph adds beyond size (45 s)
+
+Click **Graph score**, then **Size alone**, then **Beyond size** (or open the third link). Click the first coloured cell to open
+the evidence panel: the three percentile bars, then the bridge fields and shared prerequisites, each one a Cypher query on
+the store.
+
+> "Size alone and the graph disagree on many pairs. On the pairs the size rule ranks in the bottom half, the graph beats it by
+> 0.23, 0.17 and 0.09 AUC at 2005, 2010 and 2014, with intervals that exclude zero. We defined that test after seeing the
+> failure, so it is exploratory, and the advantage shrinks over time."
+
+## 4. Lineage and knock-out (30 s)
+
+Switch to **Lineage and knock-out**, click a field. Read the yellow banner aloud.
+
+> "109 of our 123 fields were already around in 1976, the first year of data, so we cannot order them. The tree is nearly
+> flat and the page says so. The knock-out shows dependency, not cause."
+
+## 5. Relate and an agent (60 s)
+
+In the second terminal, from `~/prometheus-forecaster/2005` (a sealed 2005 capsule, field names replaced by ids, no counts):
+
+```bash
+python3 query.py "MATCH (f:Field) RETURN f LIMIT 1"        # an id, an empty title, no counts
+python3 query.py "CREATE (:Hack {x:1})"                    # refused: Only MATCH queries are allowed
+```
+
+> "This is the sealed capsule an agent gets, served read-only over MCP. We gave fresh agents only Relate's two tools,
+> `get_schema` and `read_cypher`. For 1995, 2005 and 2010 they forecast ten pairs each, each with its Cypher. Among the pairs
+> the size rule does not rank as easy, they hit **9 of 30 where chance predicts 1.5**, about the same as our predictor
+> (10 of 30). Against a control that just picks the biggest eligible pairs (4 of 30) it is roughly double, but that is
+> suggestive, not established (p = 0.21)."
+
+## 6. Close (15 s)
+
+> "So: a pre-registered test that failed and why; an exploratory result that the graph adds something beyond size; and
+> caveats we list ourselves: small samples, overlapping picks, the same model family in the experiment, and ages that start at
+> 1976. Everything reproduces from four public files, with checksums, in `docs/DATA.md`."
+
+## Questions to expect
+
+- *"Did you move the goalposts?"* No: the gate, weights and slice were fixed first and the NO-GO stands; A2 and A4 are labelled
+  exploratory and were declared in the README before they ran (A4's rule before any agent ran).
+- *"Could the agent know the history?"* Possibly. Field names are hidden and the agents reasoned by counting shared partners,
+  but blinding cannot prove it. The exact prompts are in `results/forecaster/` and `results/forecaster_a4/`.
+- *"Is 9 of 30 better than your predictor?"* No, it matches it (9 vs 10, p = 1.0).
+- *"Why is PA not just 'size'?"* It is one proxy (degree product). A different size proxy was not tested.

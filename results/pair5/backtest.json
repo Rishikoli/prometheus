@@ -1,0 +1,383 @@
+{
+  "meta": {
+    "source": "patentsview",
+    "dataEndYear": 2025,
+    "slice": "deeptech",
+    "minFieldPatentsPerYear": 5,
+    "minPairPatents": 5,
+    "minBuildsCitations": 5,
+    "asOf": null,
+    "blind": null
+  },
+  "settings": {
+    "horizon": 10,
+    "k": 100,
+    "tune_cutoffs": [
+      1990,
+      1995,
+      2000
+    ],
+    "test_cutoffs": [
+      2005,
+      2010,
+      2014
+    ],
+    "gate_lift": 2.0,
+    "low_positives": 30,
+    "genome_signal": true
+  },
+  "skipped_cutoffs": {},
+  "weights": {
+    "cn": 1.0,
+    "aa": 2.0,
+    "prereq": 1.0,
+    "genome": 2.0
+  },
+  "tuning": {
+    "tuned_on": [
+      1990,
+      1995,
+      2000
+    ],
+    "mean_auc_on_tuning": 0.853131
+  },
+  "tuning_cutoffs_result": {
+    "1990": {
+      "cutoff": 1990,
+      "fields": 117,
+      "candidates": 5494,
+      "positives": 556,
+      "base_rate": 0.1012013105205679,
+      "k": 100,
+      "low_confidence": false,
+      "methods": {
+        "random": {
+          "auc": 0.5024046376507543,
+          "hits_at_k": 12,
+          "precision_at_k": 0.12,
+          "lift_at_k": 1.1857553956834532
+        },
+        "pa": {
+          "auc": 0.7722212266638694,
+          "hits_at_k": 56,
+          "precision_at_k": 0.56,
+          "lift_at_k": 5.533525179856116
+        },
+        "cn": {
+          "auc": 0.8188062551174128,
+          "hits_at_k": 65,
+          "precision_at_k": 0.65,
+          "lift_at_k": 6.422841726618705
+        },
+        "aa": {
+          "auc": 0.826229417438103,
+          "hits_at_k": 68,
+          "precision_at_k": 0.68,
+          "lift_at_k": 6.719280575539568
+        },
+        "prereq": {
+          "auc": 0.814168349403102,
+          "hits_at_k": 61,
+          "precision_at_k": 0.61,
+          "lift_at_k": 6.027589928057553
+        },
+        "hybrid": {
+          "auc": 0.8578164200110143,
+          "hits_at_k": 69,
+          "precision_at_k": 0.69,
+          "lift_at_k": 6.818093525179855
+        },
+        "genome": {
+          "auc": 0.5684952038369304,
+          "hits_at_k": 18,
+          "precision_at_k": 0.18,
+          "lift_at_k": 1.7786330935251797
+        }
+      }
+    },
+    "1995": {
+      "cutoff": 1995,
+      "fields": 120,
+      "candidates": 5559,
+      "positives": 526,
+      "base_rate": 0.09462133477244108,
+      "k": 100,
+      "low_confidence": false,
+      "methods": {
+        "random": {
+          "auc": 0.48234126249642095,
+          "hits_at_k": 9,
+          "precision_at_k": 0.09,
+          "lift_at_k": 0.9511596958174905
+        },
+        "pa": {
+          "auc": 0.7775431203486646,
+          "hits_at_k": 46,
+          "precision_at_k": 0.46,
+          "lift_at_k": 4.861482889733841
+        },
+        "cn": {
+          "auc": 0.812139310210406,
+          "hits_at_k": 60,
+          "precision_at_k": 0.6,
+          "lift_at_k": 6.34106463878327
+        },
+        "aa": {
+          "auc": 0.8168700644189415,
+          "hits_at_k": 60,
+          "precision_at_k": 0.6,
+          "lift_at_k": 6.34106463878327
+        },
+        "prereq": {
+          "auc": 0.7859069306077984,
+          "hits_at_k": 53,
+          "precision_at_k": 0.53,
+          "lift_at_k": 5.601273764258556
+        },
+        "hybrid": {
+          "auc": 0.8373786242737099,
+          "hits_at_k": 58,
+          "precision_at_k": 0.58,
+          "lift_at_k": 6.129695817490494
+        },
+        "genome": {
+          "auc": 0.6283513601107217,
+          "hits_at_k": 11,
+          "precision_at_k": 0.11,
+          "lift_at_k": 1.1625285171102662
+        }
+      }
+    },
+    "2000": {
+      "cutoff": 2000,
+      "fields": 122,
+      "candidates": 5505,
+      "positives": 483,
+      "base_rate": 0.08773841961852862,
+      "k": 100,
+      "low_confidence": false,
+      "methods": {
+        "random": {
+          "auc": 0.5002226229435206,
+          "hits_at_k": 13,
+          "precision_at_k": 0.13,
+          "lift_at_k": 1.4816770186335404
+        },
+        "pa": {
+          "auc": 0.8024678990083385,
+          "hits_at_k": 45,
+          "precision_at_k": 0.45,
+          "lift_at_k": 5.12888198757764
+        },
+        "cn": {
+          "auc": 0.8383466783420033,
+          "hits_at_k": 58,
+          "precision_at_k": 0.58,
+          "lift_at_k": 6.610559006211179
+        },
+        "aa": {
+          "auc": 0.8438506183558389,
+          "hits_at_k": 58,
+          "precision_at_k": 0.58,
+          "lift_at_k": 6.610559006211179
+        },
+        "prereq": {
+          "auc": 0.796611472667262,
+          "hits_at_k": 55,
+          "precision_at_k": 0.55,
+          "lift_at_k": 6.268633540372671
+        },
+        "hybrid": {
+          "auc": 0.8641985615259731,
+          "hits_at_k": 57,
+          "precision_at_k": 0.57,
+          "lift_at_k": 6.4965838509316765
+        },
+        "genome": {
+          "auc": 0.6527368605052881,
+          "hits_at_k": 6,
+          "precision_at_k": 0.06,
+          "lift_at_k": 0.6838509316770186
+        }
+      }
+    }
+  },
+  "heldout_cutoffs_result": {
+    "2005": {
+      "cutoff": 2005,
+      "fields": 122,
+      "candidates": 5256,
+      "positives": 639,
+      "base_rate": 0.12157534246575342,
+      "k": 100,
+      "low_confidence": false,
+      "methods": {
+        "random": {
+          "auc": 0.5046922935345086,
+          "hits_at_k": 15,
+          "precision_at_k": 0.15,
+          "lift_at_k": 1.2338028169014084
+        },
+        "pa": {
+          "auc": 0.7923837637525875,
+          "hits_at_k": 61,
+          "precision_at_k": 0.61,
+          "lift_at_k": 5.017464788732394
+        },
+        "cn": {
+          "auc": 0.8263863255580943,
+          "hits_at_k": 68,
+          "precision_at_k": 0.68,
+          "lift_at_k": 5.593239436619719
+        },
+        "aa": {
+          "auc": 0.8324954419317872,
+          "hits_at_k": 66,
+          "precision_at_k": 0.66,
+          "lift_at_k": 5.428732394366198
+        },
+        "prereq": {
+          "auc": 0.7909132168894774,
+          "hits_at_k": 72,
+          "precision_at_k": 0.72,
+          "lift_at_k": 5.92225352112676
+        },
+        "hybrid": {
+          "auc": 0.8587780140279019,
+          "hits_at_k": 72,
+          "precision_at_k": 0.72,
+          "lift_at_k": 5.92225352112676
+        },
+        "genome": {
+          "auc": 0.7315691855268497,
+          "hits_at_k": 26,
+          "precision_at_k": 0.26,
+          "lift_at_k": 2.1385915492957746
+        }
+      }
+    },
+    "2010": {
+      "cutoff": 2010,
+      "fields": 122,
+      "candidates": 5022,
+      "positives": 1014,
+      "base_rate": 0.2019115890083632,
+      "k": 100,
+      "low_confidence": false,
+      "methods": {
+        "random": {
+          "auc": 0.5030953871350002,
+          "hits_at_k": 23,
+          "precision_at_k": 0.23,
+          "lift_at_k": 1.139112426035503
+        },
+        "pa": {
+          "auc": 0.8146955595711929,
+          "hits_at_k": 87,
+          "precision_at_k": 0.87,
+          "lift_at_k": 4.308816568047337
+        },
+        "cn": {
+          "auc": 0.8447220450617503,
+          "hits_at_k": 89,
+          "precision_at_k": 0.89,
+          "lift_at_k": 4.407869822485207
+        },
+        "aa": {
+          "auc": 0.8498396451672592,
+          "hits_at_k": 89,
+          "precision_at_k": 0.89,
+          "lift_at_k": 4.407869822485207
+        },
+        "prereq": {
+          "auc": 0.8146175597522903,
+          "hits_at_k": 93,
+          "precision_at_k": 0.93,
+          "lift_at_k": 4.605976331360947
+        },
+        "hybrid": {
+          "auc": 0.8643588070407509,
+          "hits_at_k": 89,
+          "precision_at_k": 0.89,
+          "lift_at_k": 4.407869822485207
+        },
+        "genome": {
+          "auc": 0.7365765264343108,
+          "hits_at_k": 47,
+          "precision_at_k": 0.47,
+          "lift_at_k": 2.3277514792899408
+        }
+      }
+    },
+    "2014": {
+      "cutoff": 2014,
+      "fields": 122,
+      "candidates": 4744,
+      "positives": 1008,
+      "base_rate": 0.21247892074198987,
+      "k": 100,
+      "low_confidence": false,
+      "methods": {
+        "random": {
+          "auc": 0.49000129584310526,
+          "hits_at_k": 16,
+          "precision_at_k": 0.16,
+          "lift_at_k": 0.753015873015873
+        },
+        "pa": {
+          "auc": 0.8255007849410285,
+          "hits_at_k": 85,
+          "precision_at_k": 0.85,
+          "lift_at_k": 4.000396825396826
+        },
+        "cn": {
+          "auc": 0.8477736193960097,
+          "hits_at_k": 87,
+          "precision_at_k": 0.87,
+          "lift_at_k": 4.0945238095238095
+        },
+        "aa": {
+          "auc": 0.8525622641990415,
+          "hits_at_k": 86,
+          "precision_at_k": 0.86,
+          "lift_at_k": 4.047460317460318
+        },
+        "prereq": {
+          "auc": 0.8355066587216614,
+          "hits_at_k": 85,
+          "precision_at_k": 0.85,
+          "lift_at_k": 4.000396825396826
+        },
+        "hybrid": {
+          "auc": 0.8630353584599436,
+          "hits_at_k": 86,
+          "precision_at_k": 0.86,
+          "lift_at_k": 4.047460317460318
+        },
+        "genome": {
+          "auc": 0.7501862774463819,
+          "hits_at_k": 53,
+          "precision_at_k": 0.53,
+          "lift_at_k": 2.4943650793650796
+        }
+      }
+    }
+  },
+  "gate": {
+    "verdict": "NO-GO",
+    "threshold": 2.0,
+    "hybrid_lift": 4.792527887024095,
+    "better_baseline_lift": 4.4422260607255195,
+    "ratio": 1.0788572714467761,
+    "mean_lift_by_method": {
+      "random": 1.0419770386509282,
+      "pa": 4.4422260607255195,
+      "cn": 4.698544356209578,
+      "aa": 4.628020844770574,
+      "prereq": 4.842875559294844,
+      "hybrid": 4.792527887024095,
+      "genome": 2.3202360359835983
+    },
+    "best_single_method_on_test": "prereq"
+  }
+}

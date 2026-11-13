@@ -1,0 +1,12 @@
+{"pairs": [
+  {"a":"F0045","b":"F0115","cypher":"MATCH (a:Field {code:'F0045'}),(b:Field {code:'F0115'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"18 shared neighbours, deg 29x24=696, not yet combined."},
+  {"a":"F0020","b":"F0100","cypher":"MATCH (a:Field {code:'F0020'}),(b:Field {code:'F0100'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"17 shared neighbours, deg 21x35=735, not yet combined."},
+  {"a":"F0067","b":"F0071","cypher":"MATCH (a:Field {code:'F0067'}),(b:Field {code:'F0071'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"16 shared neighbours, deg 22x29=638, not yet combined."},
+  {"a":"F0020","b":"F0041","cypher":"MATCH (a:Field {code:'F0020'}),(b:Field {code:'F0041'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"15 shared neighbours, deg 21x26=546, not yet combined."},
+  {"a":"F0030","b":"F0053","cypher":"MATCH (a:Field {code:'F0030'}),(b:Field {code:'F0053'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"15 shared neighbours, deg 24x25=600, not yet combined."},
+  {"a":"F0092","b":"F0102","cypher":"MATCH (a:Field {code:'F0092'}),(b:Field {code:'F0102'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"14 shared neighbours, deg 38x17=646, not yet combined."},
+  {"a":"F0029","b":"F0032","cypher":"MATCH (a:Field {code:'F0029'}),(b:Field {code:'F0032'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"14 shared neighbours, deg 33x18=594, not yet combined."},
+  {"a":"F0035","b":"F0100","cypher":"MATCH (a:Field {code:'F0035'}),(b:Field {code:'F0100'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"14 shared neighbours, deg 18x35=630, not yet combined."},
+  {"a":"F0108","b":"F0115","cypher":"MATCH (a:Field {code:'F0108'}),(b:Field {code:'F0115'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"14 shared neighbours, deg 29x24=696, not yet combined."},
+  {"a":"F0050","b":"F0106","cypher":"MATCH (a:Field {code:'F0050'}),(b:Field {code:'F0106'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c)","why":"14 shared neighbours, deg 28x24=672, not yet combined."}
+  ]}

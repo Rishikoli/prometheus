@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "capsule-2010": {
+      "command": "relate",
+      "args": [
+        "serve",
+        "--mcp",
+        "stdio",
+        "--database",
+        "capsules/2010.rl",
+        "--read-only"
+      ]
+    }
+  }
+}

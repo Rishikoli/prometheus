@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "techtree"
+version = "0.2.0"
+description = "PROMETHEUS: a patent-derived technology graph in one Relate file, with a backtested 'adjacent possible' predictor, counterfactuals and sealed time capsules."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "relate-db>=1.0.1",
+  "duckdb>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+techtree = "techtree.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"techtree.slices" = ["*.json"]
+"techtree.web" = ["*.html", "*.js"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

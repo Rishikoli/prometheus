@@ -1,0 +1,64 @@
+{
+ "pairs": [
+  {
+   "a": "F0039",
+   "b": "F0074",
+   "cypher": "MATCH (a:Field {code:'F0039'}),(b:Field {code:'F0074'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN a.code,b.code,count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS linked",
+   "why": "58 shared combination partners and a BUILDS_ON link but no direct combination yet."
+  },
+  {
+   "a": "F0069",
+   "b": "F0085",
+   "cypher": "MATCH (a:Field {code:'F0069'}),(b:Field {code:'F0085'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN a.code,b.code,count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS linked",
+   "why": "57 shared combination partners and a BUILDS_ON link, not yet combined."
+  },
+  {
+   "a": "F0056",
+   "b": "F0076",
+   "cypher": "MATCH (a:Field {code:'F0056'}),(b:Field {code:'F0076'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN a.code,b.code,count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS linked",
+   "why": "52 shared combination partners and a BUILDS_ON link, not yet combined."
+  },
+  {
+   "a": "F0042",
+   "b": "F0094",
+   "cypher": "MATCH (a:Field {code:'F0042'}),(b:Field {code:'F0094'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN a.code,b.code,count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS linked",
+   "why": "52 shared combination partners and a BUILDS_ON link, not yet combined."
+  },
+  {
+   "a": "F0066",
+   "b": "F0097",
+   "cypher": "MATCH (a:Field {code:'F0066'}),(b:Field {code:'F0097'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN a.code,b.code,count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS linked",
+   "why": "51 shared combination partners and a BUILDS_ON link, not yet combined."
+  },
+  {
+   "a": "F0119",
+   "b": "F0122",
+   "cypher": "MATCH (a:Field {code:'F0119'}),(b:Field {code:'F0122'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN a.code,b.code,count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS linked",
+   "why": "51 shared combination partners and a BUILDS_ON link, not yet combined."
+  },
+  {
+   "a": "F0042",
+   "b": "F0077",
+   "cypher": "MATCH (a:Field {code:'F0042'}),(b:Field {code:'F0077'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN a.code,b.code,count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS linked",
+   "why": "51 shared combination partners and a BUILDS_ON link, not yet combined."
+  },
+  {
+   "a": "F0054",
+   "b": "F0104",
+   "cypher": "MATCH (a:Field {code:'F0054'}),(b:Field {code:'F0104'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN a.code,b.code,count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS linked",
+   "why": "51 shared combination partners and a BUILDS_ON link, not yet combined."
+  },
+  {
+   "a": "F0022",
+   "b": "F0074",
+   "cypher": "MATCH (a:Field {code:'F0022'}),(b:Field {code:'F0074'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN a.code,b.code,count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS linked",
+   "why": "51 shared combination partners, not yet combined."
+  },
+  {
+   "a": "F0004",
+   "b": "F0097",
+   "cypher": "MATCH (a:Field {code:'F0004'}),(b:Field {code:'F0097'}) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN a.code,b.code,count(DISTINCT c) AS common, EXISTS((a)-[:COMBINED_WITH]-(b)) AS linked",
+   "why": "50 shared combination partners and a BUILDS_ON link, not yet combined."
+  }
+ ]
+}
