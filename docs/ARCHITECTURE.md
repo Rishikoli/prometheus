@@ -149,4 +149,4 @@ year with each branch flipped to stay near last year's position; the landscape b
 - Most fields are dated 1976, the first year of data, so ages are unreliable and the tree shows none.
 - The server is single-threaded and local; it is a research tool, not a multi-user service.
 - The heavy preparation is DuckDB and the scoring is Python, by design; Relate is the store, the query layer, the vector index and the agent interface.
-- The pre-registered test failed. The README's "What we found" and "Limitations" sections list what that does and does not mean.
+- The pre-registered test failed. [RESULTS.md](RESULTS.md) lists what that does and does not mean.

@@ -37,7 +37,7 @@ Claude recomputed the Fisher p-values (0.209, 0.125, 1.0) and they matched. [Say
 In A3 and A4 the "forecaster" is a language model. Each of six agents was a fresh Claude subagent (the same model family that wrote the code), given only a sealed,
 blinded capsule through a read-only Relate query tool. They were told to stay in their own folder; Claude audited their tool calls afterwards and none left it.
 The exact prompts, briefs and helper are in `results/forecaster/` and `results/forecaster_a4/`. Because the forecasters and the author of the code are
-the same model family, and a language model might recognise the shape of the graph, the README treats these as experiments, not as evidence of foresight.
+the same model family, and a language model might recognise the shape of the graph, `docs/RESULTS.md` treats these as experiments, not as evidence of foresight.
 
 ## How the output was checked
 

@@ -1,6 +1,6 @@
 # Demo script (about 4 minutes)
 
-Order matters: say the failed test first. Everything after it is labelled exploratory. All numbers are in the README and
+Order matters: say the failed test first. Everything after it is labelled exploratory. All numbers are in [RESULTS.md](RESULTS.md) and
 were produced by the commands shown; read them from the page, do not improvise new ones.
 
 ## Before you start (once)
@@ -84,7 +84,7 @@ python3 query.py "CREATE (:Hack {x:1})"                    # refused: Only MATCH
 ## Questions to expect
 
 - *"Did you move the goalposts?"* No: the gate, weights and slice were fixed first and the NO-GO stands; A2 and A4 are labelled
-  exploratory and were declared in the README before they ran (A4's rule before any agent ran).
+  exploratory and were declared in the README before they ran (now collected in `docs/RESULTS.md`) (A4's rule before any agent ran).
 - *"Could the agent know the history?"* Possibly. Field names are hidden and the agents reasoned by counting shared partners,
   but blinding cannot prove it. The exact prompts are in `results/forecaster/` and `results/forecaster_a4/`.
 - *"Is 9 of 30 better than your predictor?"* No, it matches it (9 vs 10, p = 1.0).
