@@ -273,3 +273,10 @@ other than common neighbours was not tested.
 | Paper-side edges (OpenAlex) and lead time | skipped on purpose |
 | Stalled-pair overlay | built (tree page toggle; evidence line on every page); the pipeline now writes `co_assigned.csv` and `field_year.csv` |
 
+
+## Ledger demonstration (declared 14 Nov 2026, before it ran; not an analysis)
+
+This is a demonstration of shared graph state, not a measurement. Three fresh agents forecast on the sealed 2005 capsule at the same time and each
+writes its ten picks into one shared ledger (`results/ledger/ledger.rl`) through a single `relate serve --mcp` server, in one statement each.
+The grader then writes the outcomes into the same file, judged on the 2015 capsule. The hit counts are reported for completeness, but they are **not**
+pooled with A3 or A4 and carry no conclusion: the agents are the same model family as before, and three runs of ten pairs is a tiny sample.
