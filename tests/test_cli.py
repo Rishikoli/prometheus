@@ -32,3 +32,16 @@ def test_end_to_end_on_toy_data(tmp_path, capsys):
 def test_errors_are_one_line_not_tracebacks(tmp_path, capsys):
     assert main(["build", str(tmp_path / "nope"), str(tmp_path / "x.rl")]) == 2
     assert "error:" in capsys.readouterr().err
+
+
+def test_agent_config_is_read_only_with_an_absolute_path(toy_store, tmp_path, capsys):
+    import json
+    from prometheus import cli
+    out = tmp_path / "mcp.json"
+    assert cli.main(["agent-config", str(toy_store), "--out", str(out), "--name", "graph"]) == 0
+    srv = json.loads(out.read_text())["mcpServers"]["graph"]
+    args = srv["args"]
+    assert args[:3] == ["serve", "--mcp", "stdio"] and "--read-only" in args
+    db = args[args.index("--database") + 1]
+    assert db.startswith("/") and db.endswith("toy.rl")
+    assert cli.main(["agent-config", str(tmp_path / "missing.rl"), "--out", str(out)]) == 2  # a clear error, not a traceback

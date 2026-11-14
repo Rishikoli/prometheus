@@ -141,6 +141,23 @@ def cmd_serve(a):
     server.serve(a.store, port=a.port, weights_from=a.weights_from, open_browser=a.open)
 
 
+def cmd_agent_config(a):
+    """MCP settings that give an agent read-only access to a store through Relate's own server (absolute paths, as MCP clients need)."""
+    import shutil
+    store = Path(a.store).resolve()
+    if not store.exists():
+        raise FileNotFoundError(f"{store} does not exist")
+    exe = shutil.which("relate") or "relate"
+    cfg = {"mcpServers": {a.name: {"command": exe, "args": ["serve", "--mcp", "stdio", "--database", str(store), "--read-only"]}}}
+    out = Path(a.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(cfg, indent=2) + "\n")
+    print(f"wrote {out}: read-only MCP access to {store} as '{a.name}'")
+    if exe == "relate":
+        print("note: the relate CLI is not on PATH; install it with: curl -sSfL https://relatedb.ai/install.sh | bash")
+    print(f"Claude Code: claude --mcp-config {out}    then give the agent agent/PROMPT.md")
+
+
 def cmd_capsule(a):
     from . import capsule
     print(json.dumps(capsule.build_capsule(a.csv_dir, a.as_of, a.out, seed=a.seed, horizon=a.horizon), indent=2))
@@ -251,6 +268,10 @@ def main(argv=None):
     s.add_argument("store"); s.add_argument("--port", type=int, default=8765); s.add_argument("--open", action="store_true")
     s.add_argument("--weights-from", help="backtest.json: tuned weights and the gate verdict shown on the page")
     s.set_defaults(fn=cmd_serve)
+
+    s = sub.add_parser("agent-config", help="MCP settings for an agent to query a store read-only (see agent/PROMPT.md)")
+    s.add_argument("store"); s.add_argument("--out", default="agent/mcp.json"); s.add_argument("--name", default="prometheus")
+    s.set_defaults(fn=cmd_agent_config)
 
     s = sub.add_parser("capsule", help="build a sealed, blinded time capsule file")
     s.add_argument("csv_dir"); s.add_argument("--as-of", type=int, required=True); s.add_argument("--out", required=True)

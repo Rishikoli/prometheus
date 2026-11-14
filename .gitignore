@@ -20,3 +20,6 @@ data/tmp*/
 # large, rebuilt by `prometheus pipeline --slice all` + `prometheus build`
 data/all.rl
 data/csv_all/
+
+# written by `prometheus agent-config` with absolute paths for this machine
+agent/mcp.json

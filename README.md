@@ -105,6 +105,19 @@ Small samples, a 1976 start that hides field ages, and other caveats are in [doc
 
 Each view has a year slider, the evidence for any pair, and the prediction check. Details are in [docs/GUIDE.md](docs/GUIDE.md).
 
+## Ask the graph with your own agent
+
+Any MCP-capable agent can query the real graph, read-only, through Relate's own server:
+
+```bash
+prometheus agent-config data/prometheus.rl --out agent/mcp.json   # needs the Relate CLI; writes absolute paths for your clone
+claude --mcp-config agent/mcp.json                                 # or add the server to Claude Desktop or another MCP client
+```
+
+Then give the agent [agent/PROMPT.md](agent/PROMPT.md): the schema, the rules for answering "as of" a year, and twelve Cypher recipes, each checked
+against the store with `python scripts/mcp_query.py data/prometheus.rl --check agent/PROMPT.md`.
+An example, with the agent's exact answer and queries: [results/agent_ask/G06E_G06M.md](results/agent_ask/G06E_G06M.md).
+
 ## Documentation
 
 | File | Contents |

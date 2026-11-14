@@ -108,7 +108,8 @@ sequenceDiagram
 ```
 
 The agent sees two tools and an anonymous graph. Every pair it submits must carry the Cypher that supports it, and the grader rejects pairs that are unknown or already combined.
-The six agents run so far used a small helper that speaks the MCP protocol to `relate serve`, not Claude Desktop; exact prompts are in `results/forecaster*/`.
+Besides the sealed capsules, `prometheus agent-config` gives any MCP client read-only access to the full store, and `agent/PROMPT.md` briefs the agent
+(schema, as-of rules, twelve checked Cypher recipes; example in `results/agent_ask/`). The six forecaster agents used a small helper that speaks the MCP protocol to `relate serve`, not Claude Desktop; exact prompts are in `results/forecaster*/`.
 
 ## 7. The web server and pages
 
