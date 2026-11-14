@@ -13,6 +13,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from . import config
 from . import genome as genome_mod
 from . import slice as slicemod
 from .graph import TechGraph
@@ -141,8 +142,39 @@ class Service:
         out["verdict"] = g.get("verdict")
         return out
 
+    def tree(self, year: int):
+        """The tree of shared foundations as of `year`: leaf order and merges over the fields alive that year; the rest are listed as `dead`."""
+        year = max(self.start, min(self.end, year))
+        if not hasattr(self, "_trees"):
+            self._trees = {}
+        if year not in self._trees:
+            snap = Snapshot.from_graph(self.g, year)
+            try:
+                order, merges = genome_mod.cluster(genome_mod.vectors(snap))
+            except ValueError:  # too many fields to cluster: fall back to code order, no branches
+                order, merges = sorted(snap.codes), []
+            alive = set(snap.codes)
+            dead = sorted((f["code"] for f in self.g.fields() if f["code"] not in alive), key=lambda c: (self.first[c], c)) \
+                if hasattr(self, "first") else sorted(f["code"] for f in self.g.fields() if f["code"] not in alive)
+            self._trees[year] = {"year": year, "order": order, "merges": merges, "dead": dead}
+        return self._trees[year]
+
+    def stalled(self, year: int):
+        """Pairs co-classified for STALLED_MIN_YEARS or more and still under the combination threshold. A display overlay, never a score."""
+        year = max(self.start, min(self.end, year))
+        rows = self.g.stalled(year)
+        return {"year": year, "minYears": config.STALLED_MIN_YEARS, "threshold": self.g.meta().get("minPairPatents"),
+                "pairs": [[a, b, y] for a, b, y in rows]}
+
     def evidence(self, a: str, b: str, year: int):
         ev = self.g.evidence(a, b, year)
+        try:  # first year a patent carried both classes, if it was on or before the slider year (None if never or not yet)
+            r = self.g.q("MATCH (x:Field {code: $a})-[r:CO_CLASSIFIED]-(y:Field {code: $b}) WHERE r.firstYear <= $y RETURN r.firstYear AS y",
+                         {"a": a, "b": b, "y": year})
+            ev["coClassifiedSince"] = r[0]["y"] if r else None
+        except Exception:
+            ev["coClassifiedSince"] = None
+        ev["threshold"] = self.g.meta().get("minPairPatents")
         t = {f["code"]: (f["title"] or "").strip() for f in self.g.fields()}
         ev["titles"] = {a: t.get(a, ""), b: t.get(b, "")}
         return ev
@@ -184,6 +216,10 @@ def make_handler(svc: Service):
                         return self._json(svc.state(int(q["year"])))
                     if u.path == "/api/check":
                         return self._json(svc.check())
+                    if u.path == "/api/tree":
+                        return self._json(svc.tree(int(q["year"])))
+                    if u.path == "/api/stalled":
+                        return self._json(svc.stalled(int(q["year"])))
                     if u.path == "/api/reach":
                         return self._json(svc.reach(q["code"], int(q["year"])))
                     if u.path == "/api/lineage":

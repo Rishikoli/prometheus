@@ -48,8 +48,7 @@ The headline gate measured the one place where the methods are indistinguishable
   is nearly flat. Field labels use today's CPC on old patents. See [Limitations](#limitations).
 
 **What exists:** pipeline, store, queries, predictor, backtest, genome vectors, sealed capsules, grading, a local web page
-(circular tree of fields with arcs, year slider, dependencies and knock-out modes, evidence panel, prediction check), and 58 tests. **Not done:** OpenAlex paper-side edges;
-the stalled-pair overlay; an A2-style test with a different size proxy.
+(circular tree of fields recomputed per year, with arcs, a year slider, dependencies, knock-out and stalled-pair overlays, an evidence panel and the prediction check), and 63 tests. **Not done:** OpenAlex paper-side edges (skipped on purpose).
 
 ## Try it in two minutes (no download)
 
@@ -77,7 +76,7 @@ prometheus genome data/prometheus.rl
 prometheus backtest data/prometheus.rl --out results
 ```
 
-The pipeline reads column names from the file headers. If one differs from what is expected, it stops and prints the
+The pipeline also writes `co_assigned.csv` (the first year a patent carried both classes of a pair, for the stalled-pair overlay) and `field_year.csv` (patents per field per year, for the patent-count size proxy). The pipeline reads column names from the file headers. If one differs from what is expected, it stops and prints the
 columns it found.
 
 ## How Relate is used, and why
@@ -145,12 +144,13 @@ arcs; fire means a predicted pair and nothing else. The prediction check, includ
 
 | Control | What it does |
 |---|---|
-| Year slider and Play | the graph as of that year; ticks mark the backtest cutoffs 2005, 2010, 2014 |
+| Year slider and Play | the graph as of that year; ticks mark the backtest cutoffs 2005, 2010, 2014. The tree is **recomputed for each year** from the fields in the data that year, each branch flipped to stay near last year's position (consecutive years move a leaf 6 of 123 positions on average); fields not yet in the data wait in a gap at the end of the circle. `#tree=fixed` keeps the single all-data tree |
 | Combinations | arcs of combined pairs and the top gaps; click a field or a dashed arc for evidence (bridge fields, shared prerequisites) |
 | Dependencies | what the selected field builds on and what builds on it |
 | What breaks | leaves shaded by how exposed they are if the selected field disappeared, with the number of citing links behind each |
 | Score: Beyond size, Graph score, Size alone | how the gaps are ranked; Beyond size is graph rank minus what field size alone predicts |
 | Show what happened | up to 2014: gaps that combined within ten years are solid, the rest hollow grey |
+| Show stalled pairs | grey dotted arcs for pairs where some patents carry both classes, for three years or more, but fewer than the 3-patent combination threshold (about 800 a year). A display overlay: it is not a score and not a prediction |
 | Details (top right) | the per-cutoff backtest table and a chart of graph vs size alone, all pairs and beyond-size |
 
 **Landscape view (3D).** The `Landscape` link in the top bar opens `/landscape` (WebGL, Three.js bundled, so it works offline): the matrix as terrain.
@@ -158,8 +158,8 @@ Every point on the surface is a pair of fields, in the same genome order as the 
 edges. The low ground is pairs that already combined, shaded blue by age; fire-coloured peaks are ranked gaps. Two honest settings:
 **Smooth** (default) blurs the surface over about two neighbouring fields, so a hill means many high-ranked gaps among related fields and
 heights are relative to the tallest hill that year; **Each pair** draws every ranked pair as its own spike, taller for a higher rank. Drag to
-rotate, scroll to zoom, right-drag to pan; hover and click snap to the nearest ranked pair. A cross-section panel shows the selected field's
-partners with their true values (not the blur), and a table shows how many pairs first combined in each period up to the slider year. If the
+rotate, scroll to zoom, right-drag to pan; hover and click snap to the nearest ranked pair. A cross-section panel is a stacked area chart of the selected field
+against every other field (smoothed like the surface, or stepped on Each pair): the share of nearby fields it has combined with, by age, and that are ranked candidates, by rank third. It uses true values, not the blur; and a table shows how many pairs first combined in each period up to the slider year. If the
 browser has no WebGL the page says so and still lists the numbers and the top gaps. It is a ranking, not a probability, like every other view.
 
 ![The landscape view, 2010, one pair selected](docs/screenshots/landscape_2010_pair.png)
@@ -169,9 +169,9 @@ grid of every field pair, ordered by shared foundations with the clustering tree
 newer); fire cells are the 1,500 pairs the graph ranks highest. The tree shows about 25 arcs; the matrix shows where size and the
 graph disagree across all of them, so it carries the beyond-size finding more honestly. `Tree` goes back, keeping the year. The tree stays the front page.
 
-Deep links: `#year=1998`, `#year=2005&gap=1`, `#mode=deps&field=G06F`, `#mode=breaks&field=H01L`, `#year=2005&happened=1&gap=2&details=1`.
+Deep links: `#year=1998`, `#year=2005&stalled=1`, `#tree=fixed`, `#year=2005&gap=1`, `#mode=deps&field=G06F`, `#mode=breaks&field=H01L`, `#year=2005&happened=1&gap=2&details=1`.
 Screenshots at 1985, 1998 and 2010 are in `docs/screenshots/`; the design and the choices made while building it are in
-`docs/DESIGN.md`. `python scripts/ui_check.py` drives all three pages in a real browser (55 checks: keyboard, clicks, 3D picking, Play, modes, offline, no-WebGL fallback).
+`docs/DESIGN.md`. `python scripts/ui_check.py` drives all three pages in a real browser (63 checks: keyboard, clicks, 3D picking, Play, modes, offline, no-WebGL fallback).
 
 ![Prometheus in 1998](docs/screenshots/tree_1998.png)
 
@@ -436,18 +436,18 @@ other than common neighbours was not tested.
 |---|---|
 | Pipeline, store, queries, predictor, backtest, genome, capsules, grading, CLI | built; tested on toy data and a fixture |
 | Real PatentsView run, real backtest numbers | done 2026-11-13, see [Real-data results](#real-data-results) |
-| Tree-of-life page: year slider, three modes, three scores, evidence panel, prediction check (`prometheus serve`) | built, plus a matrix view at `/matrix` and a 3D landscape at `/landscape`; 55 browser checks pass on the real store |
+| Tree-of-life page: year slider, three modes, three scores, evidence panel, prediction check (`prometheus serve`) | built, plus a matrix view at `/matrix` and a 3D landscape at `/landscape`; 63 browser checks pass on the real store |
 | Dependencies and knock-out modes on the page | built; field ages are not shown because 109 of 123 fields are left-censored at 1976 |
 | MCP agent against a capsule | A3 (saturated, cannot separate methods) and A4 (beyond size: 9/30 vs 1.5 random, 4/30 PA control) run |
-| Paper-side edges (OpenAlex) and lead time | not started; planned as a two-day spike |
-| Stalled-pair overlay | not started; needs per-year pair counts from the pipeline |
+| Paper-side edges (OpenAlex) and lead time | skipped on purpose |
+| Stalled-pair overlay | built (tree page toggle; evidence line on every page); the pipeline now writes `co_assigned.csv` and `field_year.csv` |
 
 ## Layout
 
 ```
 src/prometheus/   pipeline.py build.py graph.py predict.py backtest.py genome.py capsule.py grade.py slice.py toy.py cli.py
 queries/        the Cypher behind each feature, one file each, run by the tests
-tests/          58 tests (pipeline fixture, Cypher vs Python, no-peeking, placebo, capsule sealing, grading, CLI)
+tests/          63 tests (pipeline fixture, Cypher vs Python, no-peeking, placebo, capsule sealing, grading, CLI)
 docs/           DATA.md (getting the data), AI_USE.md (how AI was used)
 ```
 

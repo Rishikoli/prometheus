@@ -234,7 +234,17 @@ Differences, with the reason:
   values, never the blur. Pointer picking snaps to the ranked pair nearest the ray's hit point on the surface, because row spacing is a
   pixel or two on the far side. Not taken from the mockup: its numbers (they do not match the data), a "combination count" palette
   (it would use totals through 2025 in an as-of view), and a "Flow" view (undefined).
-- **Not built:** the per-year tree (`/api/tree`) and the breakthrough button (hidden while the check is a NO-GO, as designed).
+- **Per-year tree: built** (13/14 Nov 2026), `/api/tree?year=`. The genome clustering takes about 0.07 s a year, so it is computed on request and cached. Alive fields get that
+  year's tree; each branch is flipped to sit near where its leaves were last year, with a mirror image only if it moves fewer leaves (consecutive years move a leaf 6 of 123
+  positions on average, measured in `scripts/ui_check.py`). Fields not yet in the data wait in a gap at the end of the circle and move in when they appear. Leaves tween over
+  600 ms; branches and arcs are hidden during the move and redrawn after (the arcs are bundled through the tree, so they cannot follow a moving tree). No tween while Play runs
+  or under reduced motion, or when nothing moved. `#tree=fixed` keeps the single all-data tree. A rotation of the whole order is not allowed because the gap breaks the circle.
+- **Stalled-pair overlay: built.** Grey dotted arcs (never fire) for pairs whose first co-classified patent is at least 3 years old and that are still under the combination
+  threshold; derived from two first-years in the store (`CO_CLASSIFIED`, `COMBINED_WITH`), so no totals. Off by default (about 800 arcs make a grey haze in the middle).
+  Pair evidence on all three pages says when a pair has been co-classified without reaching the threshold. It is a display, not a score.
+- **The landscape's cross-section is a smoothed stacked area chart** (decided 14 Nov 2026), not bars: along the bottom the other fields in order; stacked heights are the share of
+  nearby fields combined with the selected field (by age) and ranked as candidates (by rank third). Smoothing follows the Surface toggle; Each pair draws steps.
+- **Not built:** the breakthrough button (hidden while the check is a NO-GO, as designed).
 
 Observed limit: the bundled-tree layout puts every year's arcs in the same corridors, so 1985, 1998 and 2010 look alike at a
 glance. The build-up shows as density and colour, and in the central fan, not as new shapes. At 1998 there are 691 arcs from

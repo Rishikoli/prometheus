@@ -134,6 +134,7 @@ summary{cursor:pointer}
 <table class="sr-only"><caption>Top gaps this year</caption>
   <thead><tr><th>Field A</th><th>Field B</th><th>Graph rank</th><th>Size rank</th></tr></thead><tbody id="srgaps"></tbody></table>
 <div id="tip"></div>
+<script src="/d3.min.js"></script>
 <script src="/three.min.js"></script>
 <script src="/OrbitControls.js"></script>
 <script>
@@ -147,7 +148,7 @@ const titleCase=s=>{s=(s||"").trim().toLowerCase();return s.charAt(0).toUpperCas
 const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const HIST=["--hist-1","--hist-2","--hist-3","--hist-4","--hist-5"],FIRE=["--fire-2","--fire-3","--fire-4"],CUTOFFS=[2005,2010,2014];
 const S={year:2005,score:"beyond",sel:null,play:null,cam:"oblique",smooth:true};
-let META,ST,CHECK,EV,tok=0,N=0,idx={},byCode={};
+let META,ST,CHECK,EV,STL=null,tok=0,N=0,idx={},byCode={};
 /* three */
 const W=100,HMAX=20;
 let renderer,scene,camera,controls,mesh,geo,posA,colA,H,HT,KIND,GAP,pin,tweening=false,dirtyN=false;
@@ -294,7 +295,8 @@ function diagnostics(){
   const y=S.year,alive=META.fields.filter(f=>f.firstYear<=y).length,total=alive*(alive-1)/2,comb=ST.combined.filter(c=>c[2]<=y).length,gaps=ST.candidates,pc=v=>(total?v/total*100:0).toFixed(1)+"%";
   return `<h3>Diagnostics, ${y}</h3><table id="diag"><tr><td>Fields in the data</td><td>${alive}</td></tr><tr><td>Pairs of those fields</td><td>${total.toLocaleString()}</td></tr>
     <tr><td>Combined</td><td>${comb.toLocaleString()} (${pc(comb)})</td></tr><tr><td>Not combined yet</td><td>${gaps.toLocaleString()} (${pc(gaps)})</td></tr>
-    <tr><td>Ranked pairs shown as peaks</td><td>${ST.gaps.length.toLocaleString()}</td></tr></table>`}
+    <tr><td>Ranked pairs shown as peaks</td><td>${ST.gaps.length.toLocaleString()}</td></tr>
+    ${STL&&STL.pairs.length?`<tr><td title="Some patents carry both classes for ${STL.minYears}+ years, under the threshold">Stalled pairs</td><td>${STL.pairs.length.toLocaleString()}</td></tr>`:""}</table>`}
 function render(){
   if(!ST)return;let h=diagnostics();
   if(!S.sel)h+=`<h2>Landscape</h2><p class="mute">Click an orange peak, or pick a gap below, to see why two fields might combine.</p>`;
@@ -302,6 +304,7 @@ function render(){
     h+=`<h2>${esc(a.code)} × ${esc(b.code)}</h2><p>${esc(titleCase(a.title))}<br>× ${esc(titleCase(b.title))}</p>`;
     if(r)h+=`<p class="mute">Not combined yet. Graph rank #${r.graph} of ${r.n}; size rank ≈#${r.size}. Beyond size: ${g.beyond>=0?"+":""}${(g.beyond*100).toFixed(0)} percentile points.</p>`;
     h+=`<h3>Why they might combine</h3>`;
+    if(EV&&EV.coClassifiedSince)h+=`<p>Some patents have carried both classes since ${EV.coClassifiedSince}, but fewer than ${EV.threshold||3} so far.</p>`;
     if(!EV)h+=`<p class="mute">Loading evidence…</p>`;else{
       const li=(arr,fn)=>arr.length?`<ul>${arr.slice(0,5).map(fn).join("")}</ul>`:`<p class="mute">None yet.</p>`;
       h+=`<p class="mute">Bridge fields: already combined with both.</p>`+li(EV.bridgeFields,x=>`<li><span class="code">${esc(x.code)}</span> <span title="${esc(titleCase(x.title))}">${esc(clip(titleCase(x.title),30))}</span> <span class="mute">· linked ${x.yearsEstablished} years</span></li>`);
@@ -315,26 +318,37 @@ function render(){
   $("#totree").href="/#year="+S.year+"&score="+S.score;$("#tomatrix").href="/matrix#year="+S.year+"&score="+S.score;
   crossSection();history_();placePin();
 }
+const XS_COLORS=["--hist-2","--hist-3","--hist-4","--hist-5","--fire-2","--fire-3","--fire-4"];
+const XS_LABELS=["combined over 10 years ago","combined 7 to 10 years ago","combined 4 to 6 years ago","combined in the last 3 years","candidate, lower third","candidate, middle third","candidate, top third"];
+function blur1(a,passes){const k=[1/16,4/16,6/16,4/16,1/16];let x=Float32Array.from(a);
+  for(let p=0;p<passes;p++){const y=new Float32Array(x.length);for(let i=0;i<x.length;i++){let v=0;for(let d=-2;d<=2;d++)v+=k[d+2]*x[Math.max(0,Math.min(x.length-1,i+d))];y[i]=v}x=y}return x}
 function crossSection(){
   const el=$("#xs");
-  if(!S.sel){el.innerHTML=`<h3>Cross-section</h3><p class="mute">Select a pair to slice the landscape along the first field: its partners, in field order.</p><details><summary>What is the cross-section?</summary><p>The landscape is a grid of pairs. This takes one row of it: the selected field, with every other field along
-      the bottom in order of shared foundations. Each bar is one pair. <b>Blue</b>: already combined (lighter if older). <b>Orange</b>: a ranked candidate, taller for a higher
-      rank under the selected score. A short grey stub is neither. The line marks the partner you selected. A run of tall orange bars side by side means the field is ranked likely to
-      combine with a whole family of related fields, not just one. Bars show true values, not the smoothed surface.</p></details>`;return}
-  // Bars use each pair's true value, not the smoothed surface: combined = a fixed low bar, a ranked gap = its rank under the selected score.
-  const a=S.sel.a,b=S.sel.b,ia=idx[a],w=520,h=96,bw=w/N;let bars="";
-  for(let i=0;i<N;i++){if(i===ia)continue;const k=ia*N+i,kind=KIND[k];let c="--hair",v=.04;
-    if(kind===1){const cm=ST.combined.find(x=>(x[0]===META.order[i]&&x[1]===a)||(x[1]===META.order[i]&&x[0]===a));c=HIST[ageBand(S.year-(cm?cm[2]:S.year))];v=.3}
-    else if(kind===2){const g=GAP[k];c=FIRE[g._tier];v=.3+.7*g._pct}
-    const hh=Math.max(1.5,v*h);bars+=`<rect x="${i*bw}" y="${h-hh}" width="${Math.max(1,bw-.4)}" height="${hh}" fill="var(${c})"/>`}
-  const ib=idx[b],xb=ib*bw+bw/2,anchor=xb<60?"start":xb>w-60?"end":"middle";
-  el.innerHTML=`<h3>Cross-section: ${esc(a)} across all partners</h3><svg viewBox="0 0 ${w} ${h+34}" role="img" aria-label="Partners of ${esc(a)}: already combined, ranked candidates, and the selected partner ${esc(b)}">${bars}
+  const expl=`<details><summary>What is the cross-section?</summary><p>A stacked area chart of one row of the landscape: the selected field against every other field, which run along the bottom in
+    order of shared foundations. At each position the stack shows the share of nearby fields (about two either side when Smooth) that the selected field has <b>already combined with</b>,
+    split by how recently (blue, newest on top), and that are <b>ranked candidates</b> for it, split by rank third (orange, top third highest). A wide orange band means the field is ranked
+    likely to combine with a whole family of related fields, not just one. On <b>Each pair</b> the same data is drawn unsmoothed, one step per field. It uses true values, never the smoothed surface.</p></details>`;
+  if(!S.sel){el.innerHTML=`<h3>Cross-section</h3><p class="mute">Select a pair to see its first field against every other field, as a stacked area.</p>`+expl;return}
+  const a=S.sel.a,b=S.sel.b,ia=idx[a],w=520,h=110,left=34,bot=34,L=7;
+  const layer=new Array(L).fill(0).map(()=>new Float32Array(N));
+  for(let i=0;i<N;i++){if(i===ia)continue;const k=ia*N+i,kind=KIND[k];
+    if(kind===1){const cm=ST.combined.find(x=>(x[0]===META.order[i]&&x[1]===a)||(x[1]===META.order[i]&&x[0]===a));const bd=ageBand(S.year-(cm?cm[2]:S.year));layer[bd<=1?0:bd-1][i]=1}
+    else if(kind===2)layer[4+GAP[k]._tier][i]=1}
+  const vals=layer.map(l=>S.smooth?blur1(l,2):l);
+  const data=Array.from({length:N},(_,i)=>({i,v:vals.map(l=>l[i])}));
+  const series=d3.stack().keys(d3.range(L)).value((d,k)=>d.v[k])(data);
+  const x=d3.scaleLinear().domain([0,N-1]).range([left,w]),y=d3.scaleLinear().domain([0,1]).range([h,0]);
+  const area=d3.area().x(d=>x(d.data.i)).y0(d=>y(d[0])).y1(d=>y(d[1])).curve(S.smooth?d3.curveMonotoneX:d3.curveStepAfter);
+  const paths=series.map((s,k)=>`<path d="${area(s)}" fill="var(${XS_COLORS[k]})" data-layer="${k}"><title>${esc(XS_LABELS[k])}</title></path>`).join("");
+  const grid=[0,.5,1].map(t=>`<line x1="${left}" x2="${w}" y1="${y(t)}" y2="${y(t)}" stroke="var(--hair)"/><text x="${left-6}" y="${y(t)+4}" font-size="12" text-anchor="end" fill="var(--ink-2)">${Math.round(t*100)}%</text>`).join("");
+  const ib=idx[b],xb=x(ib),anchor=xb<left+50?"start":xb>w-50?"end":"middle";
+  const used=series.map((s,k)=>vals[k].some(v=>v>0.001)?k:-1).filter(k=>k>=0);
+  const key=used.map(k=>`<span><i style="background:var(${XS_COLORS[k]})"></i>${XS_LABELS[k]}</span>`).join("");
+  el.innerHTML=`<h3>Cross-section: ${esc(a)} against every other field</h3><svg viewBox="0 0 ${w} ${h+bot}" role="img" aria-label="Stacked area of the partners of ${esc(a)}: combined by age and ranked candidates by rank third">${grid}${paths}
     <line x1="${xb}" x2="${xb}" y1="0" y2="${h}" stroke="var(--ink)" stroke-width="1.5"/><text x="${xb}" y="${h+14}" font-size="12" text-anchor="${anchor}" fill="var(--ink)">${esc(b)}</text>
-    <text x="${w}" y="${h+30}" font-size="12" text-anchor="end" fill="var(--ink-2)">fields in order of shared foundations</text></svg>
-    <p class="mute" style="margin:2px 0 0">Blue bars: partners ${esc(a)} already combined with. Orange bars: its ranked candidates, taller for a higher rank. The line marks ${esc(b)}.</p><details><summary>What is the cross-section?</summary><p>The landscape is a grid of pairs. This takes one row of it: the selected field, with every other field along
-      the bottom in order of shared foundations. Each bar is one pair. <b>Blue</b>: already combined (lighter if older). <b>Orange</b>: a ranked candidate, taller for a higher
-      rank under the selected score. A short grey stub is neither. The line marks the partner you selected. A run of tall orange bars side by side means the field is ranked likely to
-      combine with a whole family of related fields, not just one. Bars show true values, not the smoothed surface.</p></details>`}
+    <text x="${w}" y="${h+30}" font-size="12" text-anchor="end" fill="var(--ink-2)">fields in order of shared foundations</text>
+    <text x="${left}" y="${h+30}" font-size="12" fill="var(--ink-2)">share of nearby fields</text></svg>
+    <div class="legend" style="margin-top:4px">${key||"<span>No combined partners or ranked candidates for this field.</span>"}</div>`+expl}
 function history_(){
   const y=S.year,bounds=[[META.start,1980],[1981,1990],[1991,2000],[2001,2010],[2011,META.end]],cnt=bounds.map(()=>0);
   ST.combined.forEach(([a,b,fy])=>{if(fy>y)return;const k=bounds.findIndex(([lo,hi])=>fy<=hi);cnt[k<0?cnt.length-1:k]++});
@@ -350,6 +364,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")clear()});
 async function loadYear(y){
   const my=++tok;y=Math.max(META.start,Math.min(META.end,y));S.year=y;$("#year").value=y;
   const st=await api("/api/state?year="+y);if(my!==tok)return;ST=st;
+  try{const sl=await api("/api/stalled?year="+y);if(my!==tok)return;STL=sl}catch(e){STL=null}
   if(S.sel&&!find(S.sel.a,S.sel.b))S.sel=null;EV=null;
   targets();
   if(S.sel)api(`/api/evidence?a=${S.sel.a}&b=${S.sel.b}&year=${y}`).then(e=>{if(my===tok){EV=e;render()}}).catch(()=>{});

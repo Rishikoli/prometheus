@@ -36,7 +36,9 @@ was needed:
 - `g_cpc_title`: `cpc_subclass`, `cpc_subclass_title`, `cpc_group`, `cpc_group_title`, `cpc_class`, `cpc_class_title`
 - `g_us_patent_citation`: `patent_id`, `citation_sequence`, `citation_patent_id`, `citation_date`, `record_name`, `wipo_kind`, `citation_category`
 
-**Disk shortcut used for the reported run.** On a laptop with 5 to 6 GB free, the 10.9 GB citation file was streamed
+**Where the files were.** The runs reported in the README read the full unzipped files from the repository root (git-ignored). An earlier `data/raw/` folder held the same three tables plus the two-column citation cut below; it was deleted on 14 Nov 2026 after the narrowed-slice run, because everything it held is reproducible from the root copies (`cmp` confirmed they are identical, and the cut is the first and third columns). The pipeline accepts any paths.
+
+**Disk shortcut used for the first run.** On a laptop with 5 to 6 GB free, the 10.9 GB citation file was streamed
 out of its zip and cut to the two columns the pipeline uses, so it never sat on disk in full:
 
 ```bash

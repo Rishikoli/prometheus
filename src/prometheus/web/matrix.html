@@ -159,6 +159,7 @@ function render(){
     h+=`<h2>${esc(a.code)} × ${esc(b.code)}</h2><p>${esc(titleCase(a.title))}<br>× ${esc(titleCase(b.title))}</p>`;
     if(r)h+=`<p class="mute">Not combined yet. Graph rank #${r.graph} of ${r.n}; size rank ≈#${r.size}. Beyond size: ${g.beyond>=0?"+":""}${(g.beyond*100).toFixed(0)} percentile points.</p>`;
     h+=`<h3>Why they might combine</h3>`;
+    if(EV&&EV.coClassifiedSince)h+=`<p>Some patents have carried both classes since ${EV.coClassifiedSince}, but fewer than ${EV.threshold||3} so far.</p>`;
     if(!EV)h+=`<p class="mute">Loading evidence…</p>`;else{
       const li=(arr,fn)=>arr.length?`<ul>${arr.slice(0,5).map(fn).join("")}</ul>`:`<p class="mute">None yet.</p>`;
       h+=`<p class="mute">Bridge fields: already combined with both.</p>`+li(EV.bridgeFields,x=>`<li><span class="code">${esc(x.code)}</span> <span title="${esc(titleCase(x.title))}">${esc(clip(titleCase(x.title),30))}</span> <span class="mute">· linked ${x.yearsEstablished} years</span></li>`);

@@ -51,6 +51,8 @@ a Cypher query on the store, and the ranks side by side. Turn on **Show what hap
 
 **Optional (20 s):** click **Landscape** in the top bar and drag to rotate: "The same grid as terrain. Low blue ground is pairs that already combined; the orange hills are where the graph ranks many gaps among related fields. Switch Surface to Each pair to see every ranked pair as its own spike." Then **Matrix**. "The tree shows the top gaps. This is every pair: blue already combined, fire the ones the graph ranks highest. Same slider, same evidence."
 
+**Optional (15 s):** tick **Show stalled pairs**. "Grey dotted arcs are pairs where some patents already carry both classes, for three years or more, but not enough to count as combined. It is a display, not a prediction." Drag the year slider and point out that the tree is recomputed each year and leaves drift instead of scrambling.
+
 ## 4. Dependencies and what breaks (30 s)
 
 Click a field, then **Dependencies**, then **What breaks**. Read the number of citing links in the note.

@@ -21,6 +21,7 @@
 html,body{margin:0;background:var(--paper);color:var(--ink)}
 body{font:400 14px/1.45 var(--sans);font-variant-numeric:tabular-nums}
 button,input{font:inherit;color:inherit}
+a{color:inherit}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 #toy{display:none;padding:6px 32px;background:var(--ink);color:var(--paper);font-weight:600}
 header{display:grid;grid-template-columns:1fr 340px;gap:40px;padding:20px 32px 6px;align-items:start}
@@ -72,7 +73,7 @@ details p{margin:6px 0}
 #note .mute{color:var(--ink-2)}
 #note .row{cursor:pointer;display:block;width:100%;text-align:left;background:none;border:0;padding:3px 0}
 #note .row:hover .t{text-decoration:underline}
-.timeline{display:grid;grid-template-columns:1fr auto auto;gap:6px 24px;align-items:center;padding:14px 32px 24px;margin-top:6px}
+.timeline{display:grid;grid-template-columns:1fr auto auto auto;gap:6px 24px;align-items:center;padding:14px 32px 24px;margin-top:6px}
 .slider{position:relative;padding-bottom:16px}
 .slider input[type=range]{width:100%;margin:0;accent-color:var(--ink)}
 .slider .tk{position:absolute;bottom:0;font-size:12px;color:var(--ink-2);transform:translateX(-50%)}
@@ -117,7 +118,9 @@ details p{margin:6px 0}
     <details id="howtree"><summary>What is this tree?</summary>
       <p><b>A field</b> is a patent technology class (a CPC subclass such as H01M, batteries). 123 are shown, one dot each, bigger for more patents.</p>
       <p><b>The tree</b> groups fields by their foundations: two fields sit close together when they build on (cite) the same older fields. It is a
-      family tree of shared foundations, <b>not</b> of descent, and it shows no ages, because most fields already existed when the data starts in 1976.</p>
+      family tree of shared foundations, <b>not</b> of descent, and it shows no ages, because most fields already existed when the data starts in 1976.
+      It is recomputed for each year from the fields in the data that year, and each branch is flipped to stay near last year's position, so the picture drifts
+      as the slider moves instead of scrambling. A field that is not in the data yet waits in the gap at the end of the circle and moves into the tree when it appears.</p>
       <p><b>Solid arcs</b> join two fields that have already combined (at least 3 patents carry both classes). Darker blue is newer; the slider
       moves the year, so the picture builds up. <b>Dashed fire arcs</b> are pairs that have not combined but that the graph ranks high. A dashed arc is a
       ranking, not a probability: the prediction check at the top says how far to trust it.</p></details>
@@ -130,6 +133,7 @@ details p{margin:6px 0}
     <span id="ticks"></span>
   </div>
   <button class="link" id="play">Play</button>
+  <label id="slab" title="Some patents carry both classes, but fewer than the combination threshold, for three years or more"><input type="checkbox" id="stalled"> Show stalled pairs</label>
   <label id="hlab"><input type="checkbox" id="happened"> Show what happened</label>
 </div>
 <table class="sr-only" id="srgaps"><caption>Top gaps this year</caption>
@@ -147,30 +151,41 @@ const api=async p=>{const r=await fetch(p);if(!r.ok){let m=r.status;try{m=(await
 const clip=(s,n)=>{s=(s||"").trim();if(s.length<=n)return s;const c=s.slice(0,n+1),i=c.lastIndexOf(" ");return (i>n*.5?c.slice(0,i):s.slice(0,n)).replace(/[ ,;]+$/,"")+"…"};
 const titleCase=s=>{s=(s||"").trim().toLowerCase();return s.charAt(0).toUpperCase()+s.slice(1)};
 
-const S={year:2005,mode:"combos",score:"beyond",sel:null,happened:false,play:null};
-let META,ST,FUT=null,CHECK=null,KO=null,REACH=null,EV=null,tok=0;
+const S={year:2005,mode:"combos",score:"beyond",sel:null,happened:false,stalled:false,play:null};
+let META,ST,FUT=null,CHECK=null,KO=null,REACH=null,EV=null,STL=null,tok=0;
 let N=0,D=640,R=320,RL=224,nodes={},parent={},byCode={},idx={},ctx,dpr=1,paths=new Map(),hit=[];
 const CUTOFFS=[2005,2010,2014],MAXHAPP=2014;
 const HIST=["--hist-1","--hist-2","--hist-3","--hist-4","--hist-5"],FIRE=["--fire-2","--fire-3","--fire-4"],GREY=["--grey-1","--grey-2","--grey-3","--grey-4"];
 const BETA=+(new URLSearchParams(location.hash.slice(1)).get('beta')||.85);
 const lineStr=d3.lineRadial().curve(d3.curveBundle.beta(BETA));
 
-/* ---------- tree ---------- */
-function buildTree(){
-  N=META.order.length;nodes={};parent={};
-  META.order.forEach((c,i)=>{idx[c]=i;nodes[c]={id:c,th:(i+.5)/N*TAU,d:0,ch:[]}});
-  META.merges.forEach((m,k)=>{const id="#"+k,a=nodes[m[0]],b=nodes[m[1]];
-    nodes[id]={id,d:m[2],rk:(k+1)/META.merges.length,ch:[a,b],th:(a.th+b.th)/2};parent[m[0]]=id;parent[m[1]]=id});
-  let root=META.merges.length?nodes["#"+(META.merges.length-1)]:null;
-  if(!root){root={id:"#root",d:1,rk:1,ch:META.order.map(c=>nodes[c]),th:Math.PI};nodes["#root"]=root;META.order.forEach(c=>parent[c]="#root")}
-  root._root=true;
+/* ---------- tree layout: recomputed for each year, oriented to stay close to the previous year ---------- */
+let TR=null,leafEl={},curTh={},animId=0,treeCache=new Map();
+const TREEMODE=(new URLSearchParams(location.hash.slice(1)).get("tree")==="fixed")?"fixed":"year";
+function makeLayout(tr){
+  const prev=idx,hasPrev=Object.keys(prev).length>0,alive=tr.order,M=tr.merges.length,nd={},par={},base={};
+  alive.forEach((c,i)=>{base[c]=i;nd[c]={id:c,d:0,ch:[]}});
+  tr.merges.forEach((m,k)=>{const id="#"+k,a=nd[m[0]],b=nd[m[1]];nd[id]={id,d:m[2],rk:(k+1)/M,ch:[a,b]};par[m[0]]=id;par[m[1]]=id});
+  let root=M?nd["#"+(M-1)]:null;
+  if(!root){root={id:"#root",d:1,rk:1,ch:alive.map(c=>nd[c])};nd["#root"]=root;alive.forEach(c=>par[c]="#root")}
+  // flip children so each subtree sits near where its leaves were last year (fewer, shorter moves)
+  const st=new Map(),walk=n=>{let r;if(!n.ch.length)r={c:1,s:(hasPrev&&prev[n.id]!==undefined)?prev[n.id]:base[n.id]};
+    else{r={c:0,s:0};n.ch.forEach(x=>{const q=walk(x);r.c+=q.c;r.s+=q.s})}st.set(n,r);return r};
+  walk(root);const mu=n=>st.get(n).s/st.get(n).c;
+  Object.values(nd).forEach(n=>{if(n.ch.length>1)n.ch.sort((x,y)=>mu(x)-mu(y))});
+  let order=[];(function dfs(n){if(!n.ch.length){order.push(n.id);return}n.ch.forEach(dfs)})(root);
+  if(hasPrev){const cost=o=>o.reduce((t,c,i)=>t+(prev[c]!==undefined?Math.min(Math.abs(i-prev[c]),N-Math.abs(i-prev[c])):0),0);
+    const rev=[...order].reverse();if(cost(rev)<cost(order))order=rev}           // a mirror image only if it moves fewer leaves
+  const full=order.concat(tr.dead||[]);
+  full.forEach((c,i)=>{if(!nd[c])nd[c]={id:c,d:0,ch:[],dead:true};nd[c].th=(i+.5)/N*TAU});
+  (function ang(n){if(!n.ch.length)return n.th;const t=n.ch.map(ang);n.th=t.reduce((x,y)=>x+y,0)/t.length;return n.th})(root);
+  return {nd,par,full,alive:order,root};
 }
+function applyLayout(L){TR=L;nodes=L.nd;parent=L.par;idx={};L.full.forEach((c,i)=>idx[c]=i);applyRadii();paths.clear()}
+function applyRadii(){for(const n of Object.values(nodes))n.r=(n.ch&&n.ch.length)?RL*(1-.93*Math.pow(n.rk,.75)):RL}   // by merge RANK, not distance: distances bunch near the top and would draw a spoke per leaf
 function geometry(){
   const left=$("#plate").parentElement.clientWidth;
   D=Math.round(Math.max(520,Math.min(780,left,innerHeight-250)));R=D/2;RL=R-84;
-  // Radius by merge RANK, not by distance: most genome distances are near the top, which would draw a spoke per leaf.
-  for(const n of Object.values(nodes))n.r=n.ch.length?RL*(1-.93*Math.pow(n.rk,.75)):RL;
-  paths.clear();
 }
 const pos=(th,r)=>[r*Math.sin(th),-r*Math.cos(th)];
 function chain(c){const o=[nodes[c]];let p=parent[c];while(p){o.push(nodes[p]);p=parent[p]}return o}
@@ -179,40 +194,19 @@ function pathPts(a,b){const A=chain(a),B=chain(b),m=new Map(B.map((n,i)=>[n.id,i
 function arc(a,b){const k=a<b?a+"|"+b:b+"|"+a;let p=paths.get(k);if(!p){const pts=pathPts(a,b);p={pts,p2d:new Path2D(lineStr(pts))};paths.set(k,p)}return p}
 
 /* ---------- drawing the plate ---------- */
-function drawPlate(){
+function drawStatic(){
   const plate=$("#plate");plate.style.width=plate.style.height=D+"px";
   plate.innerHTML='<canvas id="cv"></canvas><svg id="sv" width="'+D+'" height="'+D+'"></svg>';
-  const cv=$("#cv");dpr=devicePixelRatio||1;cv.width=cv.height=D*dpr;cv.style.width=cv.style.height=D+"px";
-  ctx=cv.getContext("2d");
+  const cv=$("#cv");dpr=devicePixelRatio||1;cv.width=cv.height=D*dpr;cv.style.width=cv.style.height=D+"px";ctx=cv.getContext("2d");
   const g=d3.select("#sv").append("g").attr("transform",`translate(${R},${R})`);
-  // domain wedges: runs of consecutive leaves in the same domain
-  const runs=[];META.order.forEach((c,i)=>{const d=META.domains[c];if(runs.length&&runs[runs.length-1].d===d)runs[runs.length-1].j=i;else runs.push({d,i,j:i})});
-  const w0=R-40,w1=R-18,wd=g.append("g");
-  runs.forEach((r,k)=>{r.t0=r.i/N*TAU;r.t1=(r.j+1)/N*TAU;
-    wd.append("path").attr("d",d3.arc().innerRadius(w0).outerRadius(w1).startAngle(r.t0).endAngle(r.t1)()).attr("fill",k%2?css("--paper"):css("--wedge"));
-    const len=(r.t1-r.t0)*(w0+w1)/2,name=r.d||"",fit=Math.floor(len/7.8);
-    if(fit>=8){const tm=(r.t0+r.t1)/2,flip=tm>Math.PI/2&&tm<3*Math.PI/2,rm=(w0+w1)/2+(flip?4:-4),id="dp"+k;
-      const [x0,y0]=pos(flip?r.t1:r.t0,rm),[x1,y1]=pos(flip?r.t0:r.t1,rm),large=(r.t1-r.t0)>Math.PI?1:0;
-      wd.append("path").attr("id",id).attr("fill","none").attr("d",`M${x0},${y0}A${rm},${rm} 0 ${large} ${flip?0:1} ${x1},${y1}`);
-      wd.append("text").attr("class","dom").append("textPath").attr("href","#"+id).attr("startOffset","50%").attr("text-anchor","middle").text(clip(name,fit))}});
-  // dendrogram
-  const br=g.append("g").attr("fill","none").attr("stroke",css("--ink")).attr("stroke-width",1).attr("stroke-opacity",.55);
-  Object.values(nodes).filter(n=>n.ch.length).forEach(n=>{
-    n.ch.forEach(c=>{const [x0,y0]=pos(c.th,c.r),[x1,y1]=pos(c.th,n.r);br.append("path").attr("d",`M${x0},${y0}L${x1},${y1}`)});
-    const [a,b]=n.ch.map(c=>c.th),[xa,ya]=pos(a,n.r),[xb,yb]=pos(b,n.r);
-    br.append("path").attr("d",`M${xa},${ya}A${n.r},${n.r} 0 ${Math.abs(b-a)>Math.PI?1:0} 1 ${xb},${yb}`)});
-  // leaves
+  g.append("g").attr("id","wedges");g.append("g").attr("id","branches").attr("fill","none").attr("stroke",css("--ink")).attr("stroke-width",1).attr("stroke-opacity",.55);
   const pmax=Math.log(Math.max(...META.fields.map(f=>f.nPatents||1))),pmin=Math.log(Math.min(...META.fields.map(f=>f.nPatents||1)));
-  const lv=g.append("g").attr("id","leaves");
-  META.order.forEach((c,i)=>{const f=byCode[c],th=nodes[c].th,[x,y]=pos(th,RL),deg=th*180/Math.PI-90,flip=th>Math.PI;
-    const sp=TAU*RL/N,rmax=Math.min(7,sp*.4),rmin=Math.max(1.8,rmax*.45);
+  const lv=g.append("g").attr("id","leaves");leafEl={};
+  META.order.forEach(c=>{const f=byCode[c],sp=TAU*RL/N,rmax=Math.min(7,sp*.4),rmin=Math.max(1.8,rmax*.45);
     const r=rmin+(rmax-rmin)*((Math.log(f.nPatents||1)-pmin)/Math.max(1e-6,pmax-pmin));f._r=r;
     const e=lv.append("g").attr("class","leaf").attr("data-c",c).attr("tabindex",0).attr("role","button").attr("aria-label",`${c} ${titleCase(f.title)}`);
-    e.append("circle").attr("class","ring").attr("cx",x).attr("cy",y).attr("r",r+4);
-    e.append("circle").attr("class","dot").attr("cx",x).attr("cy",y).attr("r",r).attr("fill",css("--ink"));
-    e.append("text").attr("transform",`rotate(${deg}) translate(${RL+r+5},0)${flip?" rotate(180)":""}`).attr("text-anchor",flip?"end":"start").attr("dy","0.32em").text(c);
-    e.append("circle").attr("class","hitc").attr("cx",x).attr("cy",y).attr("r",10).attr("fill","transparent");
-  });
+    e.append("circle").attr("class","ring").attr("r",r+4);e.append("circle").attr("class","dot").attr("r",r).attr("fill",css("--ink"));
+    e.append("text").attr("dy","0.32em").text(c);e.append("circle").attr("class","hitc").attr("r",10).attr("fill","transparent");leafEl[c]=e});
   g.append("g").attr("id","evrings");
   g.append("text").attr("class","yr").attr("id","yr").style("font-size",Math.min(96,D*.15)+"px").attr("text-anchor","middle").attr("dominant-baseline","central");
   d3.selectAll(".leaf").on("click",(e)=>{e.stopPropagation();selectField(e.currentTarget.dataset.c)})
@@ -220,7 +214,55 @@ function drawPlate(){
     .on("mousemove",(e)=>{const f=byCode[e.currentTarget.dataset.c];tipAt(e,`<b>${esc(f.code)}</b> ${esc(titleCase(f.title))}<br>${f.nPatents?.toLocaleString()} patents · in the data since ${f.firstYear}`+(f.firstYear>S.year?"<br>Not in the data yet (needs 5 patents a year)":""))})
     .on("mouseleave",tipOff);
   cv.addEventListener("mousemove",canvasMove);cv.addEventListener("mouseleave",tipOff);cv.addEventListener("click",canvasClick);
-  document.querySelector("#plate svg").addEventListener("click",()=>{});
+}
+function setLeafAngle(c,th){
+  th=((th%TAU)+TAU)%TAU;const e=leafEl[c];if(!e)return;const [x,y]=pos(th,RL),deg=th*180/Math.PI-90,flip=th>Math.PI,r=byCode[c]._r;
+  e.selectAll("circle").attr("cx",x).attr("cy",y);
+  e.select("text").attr("transform",`rotate(${deg}) translate(${RL+r+5},0)${flip?" rotate(180)":""}`).attr("text-anchor",flip?"end":"start")}
+function drawWedges(){
+  const wd=d3.select("#wedges");wd.selectAll("*").remove();
+  const runs=[];TR.full.forEach((c,i)=>{const d=META.domains[c];if(runs.length&&runs[runs.length-1].d===d)runs[runs.length-1].j=i;else runs.push({d,i,j:i})});
+  const w0=R-40,w1=R-18;
+  runs.forEach((r,k)=>{r.t0=r.i/N*TAU;r.t1=(r.j+1)/N*TAU;
+    wd.append("path").attr("d",d3.arc().innerRadius(w0).outerRadius(w1).startAngle(r.t0).endAngle(r.t1)()).attr("fill",k%2?css("--paper"):css("--wedge"));
+    const len=(r.t1-r.t0)*(w0+w1)/2,name=r.d||"",fit=Math.floor(len/7.8);
+    if(fit>=8){const tm=(r.t0+r.t1)/2,flip=tm>Math.PI/2&&tm<3*Math.PI/2,rm=(w0+w1)/2+(flip?4:-4),id="dp"+k;
+      const [x0,y0]=pos(flip?r.t1:r.t0,rm),[x1,y1]=pos(flip?r.t0:r.t1,rm),large=(r.t1-r.t0)>Math.PI?1:0;
+      wd.append("path").attr("id",id).attr("fill","none").attr("d",`M${x0},${y0}A${rm},${rm} 0 ${large} ${flip?0:1} ${x1},${y1}`);
+      wd.append("text").attr("class","dom").append("textPath").attr("href","#"+id).attr("startOffset","50%").attr("text-anchor","middle").text(clip(name,fit))}});
+}
+function drawBranches(){
+  const br=d3.select("#branches");br.selectAll("*").remove();
+  Object.values(nodes).filter(n=>n.ch&&n.ch.length).forEach(n=>{
+    n.ch.forEach(c=>{const [x0,y0]=pos(c.th,c.r),[x1,y1]=pos(c.th,n.r);br.append("path").attr("d",`M${x0},${y0}L${x1},${y1}`)});
+    const t=n.ch.map(c=>c.th),lo=Math.min(...t),hi=Math.max(...t),[xa,ya]=pos(lo,n.r),[xb,yb]=pos(hi,n.r);
+    br.append("path").attr("d",`M${xa},${ya}A${n.r},${n.r} 0 ${hi-lo>Math.PI?1:0} 1 ${xb},${yb}`)});
+}
+function reorderLeavesDom(){const lv=$("#leaves");if(!lv||!TR)return;TR.full.forEach(c=>{if(leafEl[c])lv.appendChild(leafEl[c].node())})}   // tab order follows the rim
+function placeAllLeaves(){META.order.forEach(c=>{curTh[c]=nodes[c].th;setLeafAngle(c,nodes[c].th)})}
+function tweenLeaves(newTh,ms){
+  const my=++animId,from={...curTh};
+  return new Promise(res=>{const t0=performance.now();
+    const step=now=>{if(my!==animId){res(false);return}const t=Math.min(1,(now-t0)/ms),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      for(const c of META.order){let d=newTh[c]-from[c];d=((d+Math.PI)%TAU+TAU)%TAU-Math.PI;curTh[c]=from[c]+d*e;setLeafAngle(c,curTh[c])}
+      if(t<1)requestAnimationFrame(step);else{for(const c of META.order)curTh[c]=newTh[c];res(true)}};
+    requestAnimationFrame(step)});
+}
+async function setTree(tr,animate){
+  const hadPrev=Object.keys(curTh).length>0,old={...curTh};
+  applyLayout(makeLayout(tr));
+  const newTh={};META.order.forEach(c=>newTh[c]=nodes[c].th);
+  const cv=$("#cv"),show=()=>{drawWedges();drawBranches();reorderLeavesDom();d3.select("#wedges").style("opacity",1);d3.select("#branches").style("opacity",1)};
+  const moved=META.order.some(c=>old[c]===undefined||Math.abs(newTh[c]-old[c])>1e-6);
+  if(!animate||!hadPrev||REDUCED||!moved){animId++;placeAllLeaves();show();return true}
+  cv.style.opacity=0;d3.select("#wedges").style("opacity",0);d3.select("#branches").style("opacity",0);   // arcs and branches are redrawn once the leaves have settled
+  const ok=await tweenLeaves(newTh,600);if(!ok)return false;
+  show();cv.style.opacity=1;return true;
+}
+async function treeFor(y){
+  if(TREEMODE==="fixed")return {order:META.order,merges:META.merges,dead:[]};
+  if(!treeCache.has(y))treeCache.set(y,await api("/api/tree?year="+y));
+  return treeCache.get(y);
 }
 function tipAt(e,html){const t=$("#tip");t.innerHTML=html;t.style.display="block";t.style.left=Math.min(innerWidth-310,e.clientX+14)+"px";t.style.top=(e.clientY+14)+"px"}
 function tipOff(){$("#tip").style.display="none"}
@@ -256,6 +298,9 @@ function drawArcs(pulse){
     ctx.strokeStyle=css(HIST[bi]);ctx.lineWidth=recent?1.4:.6;
     const al=[.12,.16,.45,.75,1][bi];ctx.globalAlpha=al*dim*(recent&&S.mode!=="combos"?.25:1);ctx.stroke()});   // newest strongest, so the age layers read as density
   if(mine.length){ctx.beginPath();mine.forEach(([a,b])=>line(arc(a,b).pts));ctx.strokeStyle=css("--ink");ctx.lineWidth=1.4;ctx.globalAlpha=.9;ctx.stroke()}
+  if(S.stalled&&STL&&S.mode==="combos"){   // grey dotted: co-classified for years but still under the combination threshold. Never fire: fire means a predicted pair.
+    ctx.beginPath();STL.pairs.forEach(([a,b])=>{if(a in idx&&b in idx)line(arc(a,b).pts)});
+    ctx.strokeStyle=css("--grey-2");ctx.setLineDash([1.5,3]);ctx.lineWidth=1;ctx.globalAlpha=.75*dim;ctx.stroke();ctx.setLineDash([])}
   hit=[];
   if(S.mode==="combos"){
     drawnGaps().forEach(g=>{const col=css(FIRE[g._tier]),t=S.happened?truth(g):null,sel=S.sel&&S.sel.type==="pair"&&((S.sel.a===g.a&&S.sel.b===g.b)||(S.sel.a===g.b&&S.sel.b===g.a));
@@ -353,6 +398,7 @@ function render(){
     if(S.happened&&g){const t=truth(g);const fy=t?(FUT.map.get(g.a<g.b?g.a+"|"+g.b:g.b+"|"+g.a)):null;
       h+=`<p><b>${t?`Combined in ${fy}.`:`Did not combine by ${S.year+10}.`}</b></p>`}
     h+=`<h3>Why they might combine</h3>`;
+    if(EV&&EV.coClassifiedSince)h+=`<p>Some patents have carried both classes since ${EV.coClassifiedSince}, but fewer than ${EV.threshold||3} so far: this pair is ${S.year-EV.coClassifiedSince>=(STL?STL.minYears:3)?"stalled":"just starting"}.</p>`;
     if(!EV)h+=`<p class="mute">Loading evidence…</p>`;else{
       const li=(arr,fn)=>arr.length?`<ul>${arr.slice(0,5).map(fn).join("")}</ul>`:`<p class="mute">None yet.</p>`;
       h+=`<p class="mute">Bridge fields: already combined with both.</p>`+li(EV.bridgeFields,x=>`<li><span class="code">${esc(x.code)}</span> <span title="${esc(titleCase(x.title))}">${esc(clip(titleCase(x.title),30))}</span> <span class="mute">· linked ${x.yearsEstablished} years</span></li>`);
@@ -388,6 +434,7 @@ function legend(){
   else{
     L.push(`<span>Combined:</span>`+[["Over 10 years ago",1],["7 to 10 years ago",2],["4 to 6",3],["last 3 years",4]].map(([t,i])=>`<span><i style="border-color:var(${HIST[i]});opacity:${i<2?.45:1}"></i>${t}</span>`).join(""));
     if(S.mode==="combos")L.push(`<span>Not combined yet, ranked by the selected score:</span>`+[["lower",0],["middle",1],["top third",2]].map(([t,i])=>`<span><i class="dash" style="border-color:var(${FIRE[i]})"></i>${t}</span>`).join(""));
+    if(S.mode==="combos"&&S.stalled)L.push(`<span><i class="dash" style="border-color:var(--grey-2)"></i>stalled: co-classified for ${STL?STL.minYears:3}+ years, under the threshold${STL?` (${STL.pairs.length} pairs)`:""}</span>`);
     if(S.mode==="combos"&&S.happened)L.push(`<span><i style="border-color:var(--fire-3)"></i>came true</span><span><i class="dash" style="border-color:var(--grey-1)"></i>did not</span>`);
   }
   $("#legend").innerHTML=L.join("");
@@ -428,6 +475,9 @@ async function loadYear(y,pulseIt){
   const st=await api("/api/state?year="+y);if(my!==tok)return;ST=st;
   FUT=null;if(S.happened){const fu=await api("/api/state?year="+(y+10));if(my!==tok)return;
     const map=new Map();fu.combined.forEach(([a,b,fy])=>map.set(a<b?a+"|"+b:b+"|"+a,fy));FUT={set:new Set(map.keys()),map}}
+  if(TREEMODE==="year"||TR===null){const tr=await treeFor(y);if(my!==tok)return;if(!(await setTree(tr,!S.play&&!REDUCED&&TR!==null)))return}
+  if(my!==tok)return;
+  STL=null;if(S.stalled){try{const sl=await api("/api/stalled?year="+y);if(my!==tok)return;STL=sl}catch(e){STL=null}}
   KO=null;REACH=null;EV=null;
   if(S.sel){const f=selField();if(S.sel.type==="pair"&&!find(S.sel.a,S.sel.b))S.sel=null;else if(f&&byCode[f].firstYear>y&&S.mode!=="combos"){}}
   await loadModeData().catch(()=>{});
@@ -450,29 +500,31 @@ async function init(){
   META.fields.forEach(f=>byCode[f.code]=f);
   $("#sub").textContent=`How ${META.fields.length} technology fields combined, ${META.start} to ${META.end}, from US patent data.`;
   if(META.synthetic)$("#toy").style.display="block";
-  buildTree();geometry();drawPlate();
+  N=META.order.length;geometry();drawStatic();
   document.querySelector("#cv").style.opacity=0;           // branches first, arcs fade in
-  const yr=$("#year");yr.min=META.start;yr.max=META.end;yr.step=1;S.year=Math.min(META.end,Math.max(META.start,2005));yr.value=S.year;
+  const h0=new URLSearchParams(location.hash.slice(1));
+  const yr=$("#year");yr.min=META.start;yr.max=META.end;yr.step=1;S.year=Math.min(META.end,Math.max(META.start,+h0.get("year")||2005));yr.value=S.year;
   const span=META.end-META.start;
   $("#ticks").innerHTML=CUTOFFS.filter(c=>c>=META.start&&c<=META.end).map(c=>`<span class="tk" style="left:calc(${(c-META.start)/span*100}% )">${c}</span>`).join("")
     +`<span class="tk" style="left:0;transform:none">${META.start}</span><span class="tk" style="right:0;left:auto;transform:none">${META.end}</span>`;
-  $("#tnote").textContent=`The tree groups fields with similar foundations. It is not a family of descent. Tree layout uses data through ${META.end}. Arcs follow the slider.`;
+  $("#tnote").textContent=TREEMODE==="fixed"?`The tree groups fields with similar foundations. It is not a family of descent. Tree layout uses data through ${META.end}. Arcs follow the slider.`:`The tree groups fields with similar foundations. It is not a family of descent. It is recomputed for each year from the fields in the data that year, so branches move as the slider does; fields not yet in the data wait in the gap at the end of the circle.`;
   yr.addEventListener("input",()=>loadYear(+yr.value));
   $("#play").onclick=play;
   $("#happened").onchange=async e=>{S.happened=e.target.checked;await loadYear(S.year)};
+  $("#stalled").onchange=async e=>{S.stalled=e.target.checked;await loadYear(S.year)};
   document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
   document.querySelectorAll("[data-score]").forEach(b=>b.onclick=()=>setScore(b.dataset.score));
   document.addEventListener("keydown",e=>{if(e.key==="Escape")clearSel()});
-  let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{geometry();drawPlate();render();document.querySelector("#cv").style.opacity=1},150)});
+  let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{geometry();drawStatic();if(TR){applyRadii();paths.clear();placeAllLeaves();drawWedges();drawBranches();reorderLeavesDom();render()}document.querySelector("#cv").style.opacity=1},150)});
   try{CHECK=await api("/api/check")}catch(e){CHECK=null}
   $("#verdict").innerHTML=checkSentence();$("#check").innerHTML=checkPanel();
   const det=$("#det");if(det)det.onclick=()=>{const c=$("#check");c.hidden=!c.hidden;det.setAttribute("aria-expanded",!c.hidden)};
   await loadYear(S.year);
   document.querySelector("#cv").style.opacity=1;
   const h=new URLSearchParams(location.hash.slice(1));   // deep links for screenshots and the demo
-  if(h.get("year"))await loadYear(+h.get("year"));
   if(h.get("mode"))setMode(h.get("mode"));
   if(h.get("score"))setScore(h.get("score"));
+  if(h.get("stalled")==="1"){$("#stalled").checked=true;S.stalled=true;await loadYear(S.year)}
   if(h.get("happened")==="1"&&S.year<=MAXHAPP){$("#happened").checked=true;S.happened=true;await loadYear(S.year)}
   if(h.get("field"))await selectField(h.get("field"));
   if(h.get("gap")){const g=topGaps()[+h.get("gap")-1];if(g)await selectPair(g.a,g.b)}

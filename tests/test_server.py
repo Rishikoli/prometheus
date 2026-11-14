@@ -70,6 +70,13 @@ def test_server_api_and_no_peeking(toy_store):
             assert e.code == 404
         rc = json.loads(_get(port, f"/api/reach?code={first_codes[0]}&year={meta['end']}")[1])
         assert rc["code"] == first_codes[0] and isinstance(rc["ancestors"], dict) and isinstance(rc["descendants"], dict)
+        tr = json.loads(_get(port, f"/api/tree?year={year}")[1])
+        alive = {f["code"] for f in meta["fields"] if f["firstYear"] <= year}
+        assert set(tr["order"]) == alive and set(tr["dead"]) == {f["code"] for f in meta["fields"]} - alive  # the tree is over the fields alive that year
+        assert len(tr["merges"]) == max(0, len(alive) - 1)
+        stl = json.loads(_get(port, f"/api/stalled?year={year}")[1])
+        assert stl["pairs"] == [] and stl["minYears"] >= 1  # the toy store has no CO_CLASSIFIED edges: the overlay is simply empty
+        assert "coClassifiedSince" in ev and ev["coClassifiedSince"] is None
         lin = json.loads(_get(port, "/api/lineage")[1])
         first = {f["code"]: f["firstYear"] for f in meta["fields"]}
         assert all(first[p["parent"]] < first[c] for c, p in lin["parents"].items())  # parents are strictly older
