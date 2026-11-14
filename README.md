@@ -12,6 +12,32 @@ history**. Built for the Relate by Neo4j hackathon.
 - **Sealed time capsules**: one small read-only Relate file per year, with field names hidden, so a forecaster (a language
   model over MCP, or the built-in predictor) sees only what was known then and is graded on what happened.
 
+## Use case
+
+**The problem.** New technology often arrives where two existing fields meet: batteries and software, imaging and machine learning. People who plan research
+or follow innovation (R&D strategists, funders, analysts) would like to know which pairs of fields are about to combine. Anyone can claim to see it; very
+few check the claim against history. And there is a cheap rival that is easy to forget: **big fields tend to combine with other big fields**, so a "prediction"
+may only be a measure of size. This project builds the graph that lets you ask the question properly, and grades the answer against what actually happened.
+
+**Which relationships matter.** Everything is a relationship between technology fields (patent classes), and each one carries the year it first appeared:
+
+| Relationship | Meaning | Why it matters |
+|---|---|---|
+| `COMBINED_WITH` | enough patents carry both classes | the thing being predicted; its history is the training signal |
+| `BUILDS_ON` | one field's patents cite the other's | a field's prerequisites; fields with shared foundations are close |
+| shared partners and shared prerequisites | two fields that have not combined yet, but already connect to the same fields | the evidence for a candidate pair, shown on every page as "bridge fields" and "shared prerequisites" |
+| `CO_CLASSIFIED` | some patents carry both classes, below the combination threshold | pairs that are stalled, not absent |
+| time (`firstYear` on every edge) | when a relationship appeared | the graph "as of" any year is a query, so every prediction can be tested on what came after |
+
+**Who it is for.** A person exploring the graph (a tree, a matrix and a 3D landscape, each with the evidence behind a pair), and an agent that has to reason over it:
+the forecaster experiments give a language model only a sealed, blinded, read-only Relate file for one year and score its ten picks against the next ten years.
+
+**What we found.** Not what we hoped. On the question we declared in advance, the graph's predictions do **not** beat the size rule (a clear NO-GO). Where we looked beyond
+size, afterwards and labelled as exploratory, the graph does carry real information. The honest answer to "which fields will combine next?" is therefore
+"big ones, mostly; the graph adds something real among the rest". See [What we found](#what-we-found-real-patentsview-data-945-million-us-patents-1976-to-2025).
+
+It is a way to examine a claim, not a forecast to invest on: a high rank is a ranking, not a probability.
+
 ## What we found (real PatentsView data, 9.45 million US patents, 1976 to 2025)
 
 **1. The pre-registered test failed.** Before looking at any result we fixed the rule: the hybrid predictor's lift@100 on the
