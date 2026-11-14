@@ -86,6 +86,7 @@ A prediction made as of year Y must not be able to see anything after Y. The des
 | `beyond.py` | A2 and A2b: AUC on pairs a size proxy ranks in the bottom half, with a paired bootstrap |
 | `capsule.py` | the sealed per-year store, the brief, the MCP config; the A4 eligibility brief |
 | `ledger.py` | the shared forecast ledger: agents record picks through `relate serve --mcp` (one statement, one transaction each); `grade` writes outcomes back |
+| `challenge.py` | "beat the graph": briefs, scoring on the beyond-size candidate set, the leaderboard |
 | `grade.py` | scores a forecast against a later capsule, with optional `--pa-max` candidate restriction |
 | `server.py` | the local read-only HTTP server and its API (section 7) |
 | `cli.py` | `prometheus` commands: `toy pipeline build info gaps evidence knockout breakthrough backtest beyond genome relatives order serve capsule pa-threshold baseline-forecast grade` |
@@ -125,6 +126,7 @@ and serves static pages plus a JSON API. It binds to 127.0.0.1 and has no write 
 | `/api/tree?year=` | the tree of shared foundations over the fields alive that year; cached |
 | `/api/evidence?a=&b=&year=` | bridge fields, shared prerequisites, co-classified-since |
 | `/api/knockout`, `/api/reach`, `/api/lineage`, `/api/stalled` | exposure with support counts, ancestors and descendants, the lineage forest, stalled pairs |
+| `/field`, `/api/field?code=&year=` | the field profile page and everything it shows, as of the year (relatives are from all years) |
 | `/api/check` | the backtest and A2 results, read from the two results files and nothing else |
 | `/d3.min.js`, `/three.min.js`, `/OrbitControls.js`, `/fonts/*` | vendored libraries and fonts (a fixed whitelist, no path traversal) |
 

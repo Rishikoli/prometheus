@@ -142,6 +142,37 @@ class Service:
         out["verdict"] = g.get("verdict")
         return out
 
+    def field(self, code: str, year: int):
+        """Everything about one field for the profile page. Lists marked 'today' use all years; the rest are as of `year`."""
+        year = max(self.start, min(self.end, year))
+        if not hasattr(self, "_fieldmap"):
+            self._fieldmap = {f["code"]: f for f in self.g.fields()}
+        f = self._fieldmap.get(code)
+        if f is None:
+            raise KeyError(f"unknown field {code}")
+        q, c = self.g.q, {"c": code}
+        per_year = q("MATCH (y:FieldYear {code: $c}) RETURN y.year AS year, y.n AS n ORDER BY year", c) if self.g.patents_as_of(self.end) else []
+        partners = q("MATCH (a:Field {code: $c})-[r:COMBINED_WITH]-(b:Field) RETURN b.code AS code, b.title AS title, r.firstYear AS year "
+                     "ORDER BY year, code", c)
+        builds_on = q("MATCH (a:Field {code: $c})-[r:BUILDS_ON]->(b:Field) RETURN b.code AS code, b.title AS title, r.firstYear AS year, "
+                      "r.count AS links ORDER BY links DESC, code", c)
+        built_by = q("MATCH (b:Field)-[r:BUILDS_ON]->(a:Field {code: $c}) RETURN b.code AS code, b.title AS title, r.firstYear AS year, "
+                     "r.count AS links ORDER BY links DESC, code", c)
+        try:
+            relatives = genome_mod.nearest(self.g, code, 8)
+        except Exception:
+            relatives = []
+        stalled = [{"code": b if a == code else a, "since": y} for a, b, y in self.g.stalled(year) if code in (a, b)]
+        gaps = sorted((g for g in self.state(year)["gaps"] if code in (g["a"], g["b"])), key=lambda g: g["rank"])[:10]
+        ko = self.knockout(code, year) if f["firstYear"] <= year else None
+        doms, _ = self.domains([code])
+        return {"code": code, "title": (f["title"] or "").strip(), "firstYear": f["firstYear"], "nPatents": f["nPatents"],
+                "domain": doms.get(code), "year": year, "perYear": per_year, "partners": partners, "buildsOn": builds_on,
+                "builtBy": built_by, "relatives": relatives, "stalled": stalled,
+                "gaps": [{**g, "other": g["b"] if g["a"] == code else g["a"]} for g in gaps],
+                "knockout": {"exposure": dict(list(ko["exposure"].items())[:10]), "support": ko["support"], "minSupport": ko["minSupport"]} if ko else None,
+                "candidates": self.state(year)["candidates"]}
+
     def tree(self, year: int):
         """The tree of shared foundations as of `year`: leaf order and merges over the fields alive that year; the rest are listed as `dead`."""
         year = max(self.start, min(self.end, year))
@@ -207,6 +238,8 @@ def make_handler(svc: Service):
                     return self._send((WEB / "fonts" / u.path[7:]).read_bytes(), "font/woff2")
                 if u.path in STATIC_JS:  # vendored (D3 ISC, three.js MIT), so the pages work offline
                     return self._send((WEB / STATIC_JS[u.path]).read_bytes(), "application/javascript; charset=utf-8")
+                if u.path == "/field":  # one page per field
+                    return self._send((WEB / "field.html").read_bytes(), "text/html; charset=utf-8")
                 if u.path == "/landscape":  # the 3D view: the matrix as terrain, peaks are ranked gaps
                     return self._send((WEB / "landscape.html").read_bytes(), "text/html; charset=utf-8")
                 with svc.lock:
@@ -216,6 +249,8 @@ def make_handler(svc: Service):
                         return self._json(svc.state(int(q["year"])))
                     if u.path == "/api/check":
                         return self._json(svc.check())
+                    if u.path == "/api/field":
+                        return self._json(svc.field(q["code"].upper(), int(q["year"])))
                     if u.path == "/api/tree":
                         return self._json(svc.tree(int(q["year"])))
                     if u.path == "/api/stalled":

@@ -100,3 +100,27 @@ def test_grading_against_full_store_with_map_matches(caps, toy_store, tmp_path):
         grade.grade(fc, toy_store, as_of=1995)  # a full store needs the map
     with pytest.raises(ValueError):
         grade.grade(fc, d / "2005.rl", as_of=1995, horizon=20)  # beyond what the store knows
+
+
+def test_challenge_scores_beyond_size_and_rejects_big_pairs(toy_csv, tmp_path):
+    import json
+    from prometheus import capsule, challenge
+    from prometheus.graph import TechGraph
+    from prometheus.predict import Snapshot
+    for y in (1995, 2005):
+        capsule.build_capsule(toy_csv, y, tmp_path / f"{y}.rl", seed=0)
+    t = challenge.threshold(1995, tmp_path)
+    with TechGraph(tmp_path / "1995.rl") as g:
+        snap = Snapshot.from_graph(g, 1995)
+    pa = {p: snap.deg(p[0]) * snap.deg(p[1]) for p in snap.candidates()}
+    small = [p for p, v in pa.items() if v <= t][:8]
+    big = [p for p, v in pa.items() if v > t][:2]
+    f = tmp_path / "f.json"
+    f.write_text(json.dumps({"pairs": [{"a": a, "b": b, "cypher": "MATCH", "why": "w"} for a, b in small + big]}))
+    r = challenge.score(f, 1995, tmp_path)
+    assert r["pairs_valid"] == len(small) and len(r["rejected"]) == len(big)  # big pairs are not eligible
+    assert r["threshold"] == t and "graph_predictor" in r and r["verdict"]
+    assert "Beat the graph: round 1995" in challenge.brief(1995, tmp_path) and f"<= {t}" in challenge.brief(1995, tmp_path)
+    import pytest
+    with pytest.raises(ValueError):
+        challenge.paths(2001, tmp_path)

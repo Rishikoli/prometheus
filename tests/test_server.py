@@ -70,6 +70,15 @@ def test_server_api_and_no_peeking(toy_store):
             assert e.code == 404
         rc = json.loads(_get(port, f"/api/reach?code={first_codes[0]}&year={meta['end']}")[1])
         assert rc["code"] == first_codes[0] and isinstance(rc["ancestors"], dict) and isinstance(rc["descendants"], dict)
+        code0 = meta["fields"][0]["code"]
+        fp = json.loads(_get(port, f"/api/field?code={code0.lower()}&year={year}")[1])
+        assert fp["code"] == code0 and fp["year"] == year and "partners" in fp and "buildsOn" in fp
+        assert all(g["a"] == code0 or g["b"] == code0 for g in fp["gaps"])  # only this field's candidates
+        try:
+            _get(port, f"/api/field?code=NOPE&year={year}")
+            raise AssertionError("expected a 400")
+        except urllib.error.HTTPError as e:
+            assert e.code == 400
         tr = json.loads(_get(port, f"/api/tree?year={year}")[1])
         alive = {f["code"] for f in meta["fields"] if f["firstYear"] <= year}
         assert set(tr["order"]) == alive and set(tr["dead"]) == {f["code"] for f in meta["fields"]} - alive  # the tree is over the fields alive that year

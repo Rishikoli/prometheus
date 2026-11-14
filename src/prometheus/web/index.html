@@ -94,7 +94,7 @@ footer{padding:0 32px 28px;color:var(--ink-2);font-size:12px}
   <div>
     <h1>Prometheus</h1>
     <p class="sub" id="sub">&nbsp;</p>
-    <nav class="views" aria-label="Views"><a href="/landscape" id="tolandscape">Landscape</a><a href="/" aria-current="page">Tree</a><a href="/matrix" id="tomatrix">Matrix</a></nav>
+    <nav class="views" aria-label="Views"><a href="/landscape" id="tolandscape">Landscape</a><a href="/" aria-current="page">Tree</a><a href="/matrix" id="tomatrix">Matrix</a><a href="/field" id="tofield">Field</a></nav>
   </div>
   <div>
     <p id="verdict" class="sub" style="color:var(--ink);margin-top:2px"></p>
@@ -498,7 +498,7 @@ async function loadYear(y,pulseIt){
 }
 function setMode(m){S.mode=m;document.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===m));
   loadModeData().catch(()=>{}).then(render)}
-function matrixLink(){const a=$("#tomatrix"),l=$("#tolandscape"),f=selField(),ff=f?"&field="+f:"";if(a)a.href="/matrix#year="+S.year+"&score="+S.score+ff;if(l)l.href="/landscape#year="+S.year+"&score="+S.score+ff}
+function matrixLink(){const a=$("#tomatrix"),l=$("#tolandscape"),f=selField(),ff=f?"&field="+f:"";if(a)a.href="/matrix#year="+S.year+"&score="+S.score+ff;if(l)l.href="/landscape#year="+S.year+"&score="+S.score+ff;const t=$("#tofield");if(t)t.href="/field#year="+S.year+(f?"&code="+f:"")}
 function setScore(s){S.score=s;matrixLink();document.querySelectorAll("[data-score]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.score===s));render()}
 function play(){const b=$("#play");if(S.play){clearInterval(S.play);S.play=null;b.textContent="Play";return}
   b.textContent="Pause";if(S.year>=META.end)loadYear(META.start);

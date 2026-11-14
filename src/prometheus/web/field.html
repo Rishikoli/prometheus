@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prometheus: field profile</title>
+<link rel="icon" href="data:,">
+<style>
+@font-face{font-family:"Newsreader";font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/newsreader-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Newsreader";font-weight:600;font-style:normal;font-display:swap;src:url(/fonts/newsreader-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Instrument Sans";font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/instrument-sans-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Instrument Sans";font-weight:600;font-style:normal;font-display:swap;src:url(/fonts/instrument-sans-latin-600-normal.woff2) format("woff2")}
+:root{
+  --paper:#EEF1EC;--ink:#16211C;--ink-2:#4B5750;--hair:#C9D0C8;--wedge:#E5E9E2;
+  --hist-1:#80A3CF;--hist-2:#5589C2;--hist-3:#3470AF;--hist-4:#235791;--hist-5:#143E6B;
+  --fire-2:#E4572E;--fire-3:#BF3A16;--fire-4:#8E2208;--grey-1:#9AA59E;--grey-2:#6E7A73;--grey-3:#46524B;
+  --serif:"Newsreader",Georgia,serif;--sans:"Instrument Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink)}
+body{font:400 14px/1.45 var(--sans);font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit}
+a{color:inherit}
+header{display:grid;grid-template-columns:1fr 340px;gap:40px;padding:20px 32px 6px;align-items:start}
+h1{margin:0;font:600 28px/1.1 var(--serif)}
+.sub{margin:6px 0 0;color:var(--ink-2)}
+.views{margin:8px 0 0;display:flex;gap:18px}
+.views a{text-decoration:none;padding:2px 0;border-bottom:2px solid transparent}
+.views a[aria-current=page]{font-weight:600;border-bottom-color:var(--ink)}
+main{padding:6px 32px 0;max-width:1376px}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:40px;align-items:end;padding-bottom:12px;border-bottom:1px solid var(--hair)}
+.code{font:600 56px/1 var(--serif);margin:10px 0 4px}
+.title{font:400 20px/1.3 var(--serif);margin:0 0 6px;max-width:60ch}
+.meta{color:var(--ink-2)}
+.finder{display:flex;gap:6px;align-items:baseline}
+.finder input[type=text]{background:var(--paper);border:1px solid var(--ink-2);border-radius:2px;padding:2px 6px;width:150px}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:16px}
+.charts svg{width:100%;height:auto;display:block}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 40px;margin-top:20px}
+h2{font:600 14px var(--sans);margin:0 0 6px}
+h2 .mute{font-weight:400}
+.mute{color:var(--ink-2)}
+ul{list-style:none;margin:0;padding:0}
+li{margin:3px 0}
+.go{background:none;border:0;padding:0;cursor:pointer;font-weight:600;text-decoration:underline;text-decoration-color:var(--hair);text-underline-offset:3px}
+.go:hover{text-decoration-color:var(--ink)}
+.bar{display:inline-block;height:6px;background:var(--grey-2);vertical-align:middle;margin-left:6px}
+.links{margin-top:20px;display:flex;gap:18px;flex-wrap:wrap}
+.timeline{display:grid;grid-template-columns:1fr auto;gap:6px 24px;align-items:center;padding:18px 32px 10px;max-width:1376px}
+.slider{position:relative;padding-bottom:16px}
+.slider input[type=range]{width:100%;margin:0;accent-color:var(--ink)}
+.slider .tk{position:absolute;bottom:0;font-size:12px;color:var(--ink-2);transform:translateX(-50%)}
+.slider .tk:before{content:"";position:absolute;left:50%;top:-8px;height:6px;border-left:1px solid var(--ink-2)}
+footer{padding:8px 32px 28px;color:var(--ink-2);font-size:12px}
+#err{display:none;margin:24px 32px;padding:12px 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+@media (max-width:1100px){.grid{grid-template-columns:1fr 1fr}.charts,.top,header{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Prometheus</h1>
+    <p class="sub" id="sub">&nbsp;</p>
+    <nav class="views" aria-label="Views"><a href="/landscape" id="tolandscape">Landscape</a><a href="/" id="totree">Tree</a><a href="/matrix" id="tomatrix">Matrix</a><a href="/field" aria-current="page">Field</a></nav>
+  </div>
+  <div><p class="sub">One field at a time: how it grew, what it builds on, what it combined with, and what may come next.</p></div>
+</header>
+<div id="err"></div>
+<main>
+  <section class="top">
+    <div>
+      <div class="code" id="fcode">&nbsp;</div>
+      <p class="title" id="ftitle"></p>
+      <p class="meta" id="fmeta"></p>
+    </div>
+    <div class="finder"><label for="findfield" class="mute">Find a field:</label>
+      <input type="text" id="findfield" list="fieldlist" placeholder="e.g. G06N" autocomplete="off" spellcheck="false"><datalist id="fieldlist"></datalist></div>
+  </section>
+  <section class="charts">
+    <div><h2>Patents granted per year <span class="mute">(bars after the selected year are pale)</span></h2><div id="c1"></div></div>
+    <div><h2>Fields it had combined with, over time</h2><div id="c2"></div></div>
+  </section>
+  <section class="grid" id="lists"></section>
+  <div class="links" id="links"></div>
+</main>
+<div class="timeline">
+  <div class="slider"><input id="year" type="range" aria-label="Year"><span id="ticks"></span></div>
+  <span class="mute" id="yrlab"></span>
+</div>
+<footer>Data: PatentsView (USPTO), granted US patents 1976 to 2025, grouped by CPC subclass. Stored and queried with Relate. A ranking, not a probability.</footer>
+<script src="/d3.min.js"></script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const api=async p=>{const r=await fetch(p);if(!r.ok){let m=r.status;try{m=(await r.json()).error}catch(e){}throw new Error(m)}return r.json()};
+const clip=(s,n)=>{s=(s||"").trim();if(s.length<=n)return s;const c=s.slice(0,n+1),i=c.lastIndexOf(" ");return (i>n*.5?c.slice(0,i):s.slice(0,n)).replace(/[ ,;]+$/,"")+"…"};
+const titleCase=s=>{s=(s||"").trim().toLowerCase();return s.charAt(0).toUpperCase()+s.slice(1)};
+const CUTOFFS=[2005,2010,2014];
+let META,byCode={},S={code:"G06N",year:2005},F=null,tok=0;
+const go=c=>`<button class="go" data-go="${esc(c)}" title="${esc(titleCase(byCode[c]?.title))}">${esc(c)}</button>`;
+const name=c=>esc(clip(titleCase(byCode[c]?.title),34));
+
+function chartBars(el,data,year){
+  const W=560,H=150,m={l:44,r:8,t:8,b:22},x=d3.scaleBand().domain(d3.range(META.start,META.end+1)).range([m.l,W-m.r]).padding(.15);
+  const y=d3.scaleLinear().domain([0,d3.max(data,d=>d.n)||1]).nice().range([H-m.b,m.t]);
+  const svg=d3.create("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("role","img").attr("aria-label","Patents granted per year");
+  svg.append("g").selectAll("rect").data(data).join("rect").attr("x",d=>x(d.year)).attr("width",x.bandwidth()).attr("y",d=>y(d.n)).attr("height",d=>y(0)-y(d.n))
+    .attr("fill",d=>d.year<=year?css("--hist-3"):css("--hair"));
+  svg.append("g").attr("transform",`translate(0,${H-m.b})`).call(d3.axisBottom(x).tickValues([META.start,1990,2005,2010,2014,META.end].filter(v=>v>=META.start&&v<=META.end)).tickSize(3)).call(g=>g.select(".domain").remove()).selectAll("text").attr("font-size",11).attr("fill",css("--ink-2"));
+  svg.append("g").attr("transform",`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(3).tickFormat(d3.format("~s"))).call(g=>g.select(".domain").remove()).selectAll("text").attr("font-size",11).attr("fill",css("--ink-2"));
+  const xm=x(year)+x.bandwidth()/2;svg.append("line").attr("x1",xm).attr("x2",xm).attr("y1",m.t).attr("y2",H-m.b).attr("stroke",css("--ink")).attr("stroke-width",1.5);
+  el.replaceChildren(svg.node());
+}
+function chartPartners(el,partners,year){
+  const W=560,H=150,m={l:44,r:8,t:8,b:22},years=d3.range(META.start,META.end+1),cum=[];let n=0;
+  const byY=d3.rollup(partners,v=>v.length,d=>d.year);years.forEach(y=>{n+=byY.get(y)||0;cum.push({year:y,n})});
+  const x=d3.scaleLinear().domain([META.start,META.end]).range([m.l,W-m.r]),y=d3.scaleLinear().domain([0,d3.max(cum,d=>d.n)||1]).nice().range([H-m.b,m.t]);
+  const svg=d3.create("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("role","img").attr("aria-label","Number of fields it had combined with, by year");
+  const area=d3.area().curve(d3.curveStepAfter).x(d=>x(d.year)).y0(y(0)).y1(d=>y(d.n));
+  svg.append("path").attr("d",area(cum.filter(d=>d.year<=year))).attr("fill",css("--hist-3"));
+  svg.append("path").attr("d",d3.line().curve(d3.curveStepAfter).x(d=>x(d.year)).y(d=>y(d.n))(cum.filter(d=>d.year>=year))).attr("fill","none").attr("stroke",css("--grey-1")).attr("stroke-dasharray","4 3");
+  svg.append("g").attr("transform",`translate(0,${H-m.b})`).call(d3.axisBottom(x).tickValues([META.start,1990,2005,2010,2014,META.end]).tickFormat(d3.format("d")).tickSize(3)).call(g=>g.select(".domain").remove()).selectAll("text").attr("font-size",11).attr("fill",css("--ink-2"));
+  svg.append("g").attr("transform",`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(3)).call(g=>g.select(".domain").remove()).selectAll("text").attr("font-size",11).attr("fill",css("--ink-2"));
+  svg.append("line").attr("x1",x(year)).attr("x2",x(year)).attr("y1",m.t).attr("y2",H-m.b).attr("stroke",css("--ink")).attr("stroke-width",1.5);
+  const now=cum.find(d=>d.year===year);if(now)svg.append("text").attr("x",x(year)+5).attr("y",y(now.n)-4).attr("font-size",12).attr("fill",css("--ink")).text(`${now.n} by ${year}`);
+  el.replaceChildren(svg.node());
+}
+function render(){
+  const f=F,y=S.year,alive=f.firstYear<=y;
+  document.title=`Prometheus: ${f.code}`;
+  $("#fcode").textContent=f.code;$("#ftitle").textContent=titleCase(f.title);
+  const through=f.perYear.filter(d=>d.year<=y).reduce((t,d)=>t+d.n,0);
+  $("#fmeta").innerHTML=`${esc(f.domain||"")} · in the data since ${f.firstYear}${f.firstYear<=META.start?" (when the data starts)":""} · ${through.toLocaleString()} patents through ${y} of ${(f.nPatents||0).toLocaleString()} in all`+(alive?"":` · <b>not in the data yet in ${y}</b>`);
+  chartBars($("#c1"),f.perYear,y);chartPartners($("#c2"),f.partners,y);
+  const asof=a=>a.filter(d=>d.year<=y),mx=a=>Math.max(1,...a.map(d=>d.links||0));
+  const linkList=(a,empty)=>{const b=asof(a).slice(0,8),m=mx(b);return b.length?`<ul>${b.map(d=>`<li>${go(d.code)} ${name(d.code)}<span class="bar" style="width:${Math.round(40*(d.links||0)/m)}px" title="${d.links} citation links through ${META.end} (display only)"></span></li>`).join("")}</ul>`:`<p class="mute">${empty}</p>`};
+  const newest=asof(f.partners).slice(-6).reverse();
+  const L=[];
+  L.push(`<div><h2>Builds on <span class="mute">(${asof(f.buildsOn).length} by ${y})</span></h2>${linkList(f.buildsOn,"Nothing yet.")}<p class="mute" style="font-size:12px">Bars: citation links through ${META.end}, for scale only.</p></div>`);
+  L.push(`<div><h2>Built on by <span class="mute">(${asof(f.builtBy).length} by ${y})</span></h2>${linkList(f.builtBy,"Nothing yet.")}</div>`);
+  L.push(`<div><h2>Newest combinations <span class="mute">(${asof(f.partners).length} by ${y})</span></h2>${newest.length?`<ul>${newest.map(d=>`<li>${go(d.code)} ${name(d.code)} <span class="mute">· ${d.year<=META.start?"by "+META.start:d.year}</span></li>`).join("")}</ul>`:'<p class="mute">None yet.</p>'}</div>`);
+  L.push(`<div><h2>Likely next, as of ${y} <span class="mute">(a ranking, not a probability)</span></h2>${f.gaps.length?`<ul>${f.gaps.map(g=>`<li>${go(g.other)} ${name(g.other)}<br><span class="mute">graph #${g.rank} · size ≈#${Math.round((1-g.size)*f.candidates)+1} of ${f.candidates.toLocaleString()} · beyond size ${g.beyond>=0?"+":""}${Math.round(g.beyond*100)}</span></li>`).join("")}</ul>`:'<p class="mute">No ranked candidates this year.</p>'}</div>`);
+  L.push(`<div><h2>Stalled with <span class="mute">(co-classified 3+ years, still under the threshold)</span></h2>${f.stalled.length?`<ul>${f.stalled.slice(0,8).map(s=>`<li>${go(s.code)} ${name(s.code)} <span class="mute">· since ${s.since}</span></li>`).join("")}</ul>`+(f.stalled.length>8?`<p class="mute">and ${f.stalled.length-8} more</p>`:""):'<p class="mute">None.</p>'}</div>`);
+  L.push(`<div><h2>Nearest relatives <span class="mute">(shared foundations, from all years: not an as-of view)</span></h2>${f.relatives.length?`<ul>${f.relatives.map(r=>`<li>${go(r.code)} ${name(r.code)} <span class="mute">· ${r.cosine.toFixed(3)}</span></li>`).join("")}</ul><p class="mute" style="font-size:12px">Cosine similarity of genomes. Most fields share the same big foundations, so scores sit close to 1; the order matters more than the number.</p>`:'<p class="mute">No genome for this field.</p>'}</div>`);
+  if(f.knockout){const e=Object.entries(f.knockout.exposure);
+    L.push(`<div><h2>What breaks if it disappeared, as of ${y}</h2>${e.length?`<ul>${e.slice(0,8).map(([c,v])=>{const n=f.knockout.support[c]||0;return `<li>${go(c)} ${(v*100).toFixed(0)}% <span class="mute">· ${n} citing links${n<f.knockout.minSupport?", a weak signal":""}</span></li>`}).join("")}</ul><p class="mute" style="font-size:12px">A dependency measure along citations, not a cause.</p>`:'<p class="mute">Nothing depends on it yet.</p>'}</div>`)}
+  $("#lists").innerHTML=L.join("");
+  document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>load(b.dataset.go,S.year));
+  const h=`#year=${y}&field=${f.code}`;
+  $("#links").innerHTML=`<span class="mute">See ${esc(f.code)} in:</span> <a href="/${h}">the tree</a> <a href="/matrix${h}">the matrix</a> <a href="/landscape${h}">the landscape</a>`;
+  $("#totree").href="/"+h;$("#tomatrix").href="/matrix"+h;$("#tolandscape").href="/landscape"+h;
+  $("#yrlab").textContent=`As of ${y}`;history.replaceState(null,"",`#code=${f.code}&year=${y}`);
+}
+async function load(code,year){
+  const my=++tok;code=(code||"").toUpperCase();if(!byCode[code])return;S.code=code;S.year=Math.max(META.start,Math.min(META.end,year));$("#year").value=S.year;
+  const f=await api(`/api/field?code=${code}&year=${S.year}`);if(my!==tok)return;F=f;render();window.scrollTo({top:0,behavior:"instant"});
+}
+async function init(){
+  try{META=await api("/api/meta")}catch(e){const er=$("#err");er.style.display="block";er.textContent="The data file could not be read. Check that `prometheus serve` was started with a .rl file.";return}
+  META.fields.forEach(f=>byCode[f.code]=f);
+  $("#sub").textContent=`How ${META.fields.length} technology fields combined, ${META.start} to ${META.end}, from US patent data.`;
+  $("#fieldlist").innerHTML=META.fields.map(f=>`<option value="${esc(f.code)}">${esc(titleCase(f.title))}</option>`).join("");
+  const ff=$("#findfield"),tryFind=()=>{const c=(ff.value||"").trim().toUpperCase().split(/\s/)[0];if(byCode[c]){ff.value="";load(c,S.year)}};
+  ff.addEventListener("change",tryFind);ff.addEventListener("keydown",e=>{if(e.key==="Enter")tryFind()});
+  const yr=$("#year");yr.min=META.start;yr.max=META.end;yr.step=1;const span=META.end-META.start;
+  $("#ticks").innerHTML=CUTOFFS.map(c=>`<span class="tk" style="left:${(c-META.start)/span*100}%">${c}</span>`).join("")+`<span class="tk" style="left:0;transform:none">${META.start}</span><span class="tk" style="right:0;left:auto;transform:none">${META.end}</span>`;
+  let deb;yr.addEventListener("input",()=>{clearTimeout(deb);deb=setTimeout(()=>load(S.code,+yr.value),120)});
+  const h=new URLSearchParams(location.hash.slice(1)),c=(h.get("code")||h.get("field")||"G06N").toUpperCase();
+  await load(byCode[c]?c:"G06N",+(h.get("year")||2005));
+}
+init();
+</script>
+</body>
+</html>

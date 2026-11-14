@@ -94,7 +94,7 @@ summary{cursor:pointer}
   <div>
     <h1>Prometheus</h1>
     <p class="sub" id="sub">&nbsp;</p>
-    <nav class="views" aria-label="Views"><a href="/landscape" aria-current="page">Landscape</a><a href="/" id="totree">Tree</a><a href="/matrix" id="tomatrix">Matrix</a></nav>
+    <nav class="views" aria-label="Views"><a href="/landscape" aria-current="page">Landscape</a><a href="/" id="totree">Tree</a><a href="/matrix" id="tomatrix">Matrix</a><a href="/field" id="tofield">Field</a></nav>
   </div>
   <div><p id="verdict" class="sub" style="color:var(--ink);margin-top:2px"></p></div>
 </header>
@@ -424,7 +424,7 @@ function render(){
   $("#yr").textContent=S.year;
   $("#hstxt").textContent=S.smooth?"Hill height: more high-ranked gaps nearby, relative to the tallest":"Spike height: higher rank under the selected score";
   $("#clearfocus").hidden=!(S.focus||S.sel);
-  const lf=S.sel?S.sel.a:S.focus,ff=lf?"&field="+lf:"";$("#totree").href="/#year="+S.year+"&score="+S.score+ff;$("#tomatrix").href="/matrix#year="+S.year+"&score="+S.score+ff;
+  const lf=S.sel?S.sel.a:S.focus,ff=lf?"&field="+lf:"";$("#tofield").href="/field#year="+S.year+(lf?"&code="+lf:"");$("#totree").href="/#year="+S.year+"&score="+S.score+ff;$("#tomatrix").href="/matrix#year="+S.year+"&score="+S.score+ff;
   crossSection();history_();placePin();
 }
 const XS_COLORS=["--hist-2","--hist-3","--hist-4","--hist-5","--fire-2","--fire-3","--fire-4"];

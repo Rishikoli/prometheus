@@ -176,6 +176,31 @@ def cmd_ledger(a):
         print(json.dumps(ledger.report(a.path, a.as_of), indent=2))
 
 
+def cmd_challenge(a):
+    from . import challenge
+    w = challenge.load_weights(a.weights_from)
+    if a.action == "brief":
+        text = challenge.brief(a.round, a.capsules)
+        if a.out:
+            Path(a.out).write_text(text)
+            print(f"wrote {a.out}")
+        else:
+            print(text)
+    elif a.action == "score":
+        if not a.forecast:
+            raise ValueError("score needs a forecast.json")
+        r = challenge.score(a.forecast, a.round, a.capsules, w)
+        print(f"round {r['round']}: {r['pairs_valid']} of {r['pairs_submitted']} pairs valid; {len(r['rejected'])} rejected")
+        for x in r["rejected"]:
+            print(f"  rejected {x['pair']}: {x['reason']}")
+        print(f"  you:             {r['forecaster']['hits']} combined")
+        if "graph_predictor" in r:
+            print(f"  graph predictor: {r['graph_predictor']['hits']}   size rule: {r['preferential_attachment']['hits']}   chance: {r['random_expected']['hits']:.1f} expected")
+        print(f"  {r['verdict']}")
+    else:
+        print(challenge.leaderboard(a.capsules, "results", w))
+
+
 def cmd_capsule(a):
     from . import capsule
     print(json.dumps(capsule.build_capsule(a.csv_dir, a.as_of, a.out, seed=a.seed, horizon=a.horizon), indent=2))
@@ -296,6 +321,12 @@ def main(argv=None):
     s.add_argument("--agent"); s.add_argument("--as-of", type=int); s.add_argument("--capsule", default="")
     s.add_argument("--picks", help="record: a forecast.json"); s.add_argument("--against", help="grade: the capsule ten years later")
     s.set_defaults(fn=cmd_ledger)
+
+    s = sub.add_parser("challenge", help="beat the graph: forecast on a sealed capsule, scored beyond size (brief, score, leaderboard)")
+    s.add_argument("action", choices=["brief", "score", "leaderboard"]); s.add_argument("forecast", nargs="?")
+    s.add_argument("--round", type=int, default=2005); s.add_argument("--capsules", default="capsules"); s.add_argument("--out")
+    s.add_argument("--weights-from", default="results/backtest.json", help="frozen weights for the graph predictor")
+    s.set_defaults(fn=cmd_challenge)
 
     s = sub.add_parser("capsule", help="build a sealed, blinded time capsule file")
     s.add_argument("csv_dir"); s.add_argument("--as-of", type=int, required=True); s.add_argument("--out", required=True)

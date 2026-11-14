@@ -119,6 +119,21 @@ with sync_playwright() as p:
     # the tree page links to the matrix, keeping the year and score
     href=pg.get_attribute("#tomatrix","href")
     ok("tree page links to the matrix with year and score", href.startswith("/matrix#year=") and "score=" in href, href)
+    # ---- field profile ----
+    fpg=ctx.new_page(); ferrs=[]; freqs=[]
+    fpg.on("pageerror",lambda e: ferrs.append(str(e))); fpg.on("console",lambda m: ferrs.append(m.text) if m.type=="error" else None)
+    fpg.on("request",lambda r: freqs.append(r.url))
+    fpg.goto(BASE+"field#code=G06N&year=2005"); fpg.wait_for_function("document.querySelector('#fcode').textContent.trim()==='G06N'",timeout=60000); fpg.wait_for_timeout(800)
+    ok("field: profile shows the field, two charts and seven lists", fpg.locator("#c1 svg").count()==1 and fpg.locator("#c2 svg").count()==1 and fpg.locator("#lists > div").count()>=6)
+    m05=fpg.inner_text("#fmeta"); fpg.evaluate("load('G06N',2015)"); fpg.wait_for_timeout(1200); m15=fpg.inner_text("#fmeta")
+    ok("field: moving the year changes the as-of figures", "through 2005" in m05 and "through 2015" in m15 and m05!=m15, (m05[-60:], m15[-60:]))
+    tgt=fpg.evaluate("document.querySelector('[data-go]').dataset.go"); fpg.click("[data-go]"); fpg.wait_for_timeout(1500)
+    ok("field: clicking a field code opens that field's profile", fpg.inner_text("#fcode").strip()==tgt, tgt)
+    ok("field: links to the other views carry the field", f"field={tgt}" in (fpg.get_attribute("#totree","href") or "") and f"field={tgt}" in (fpg.get_attribute("#tomatrix","href") or ""))
+    ok("field: footer credits PatentsView, no external requests, no console errors", "PatentsView" in fpg.inner_text("footer") and not [u for u in freqs if not u.startswith(BASE) and not u.startswith("data:")] and not ferrs, ferrs[:2])
+    href=pg.evaluate("(selectField('G06F'),null)") or pg.wait_for_timeout(800) or pg.get_attribute("#tofield","href")
+    ok("tree: the Field link opens the selected field's profile", "code=G06F" in (href or ""), href)
+    pg.keyboard.press("Escape")
     # ---- matrix view ----
     mp=ctx.new_page(); merrs=[]; mreqs=[]
     mp.on("console",lambda m: merrs.append(m.text) if m.type=="error" else None)

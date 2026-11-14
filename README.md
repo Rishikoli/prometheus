@@ -112,13 +112,14 @@ The Relate CLI collects anonymous usage metrics by default; `relate telemetry of
 
 Small samples, a 1976 start that hides field ages, and other caveats are in [docs/RESULTS.md](docs/RESULTS.md).
 
-## The three views
+## The views
 
-`prometheus serve` opens a local page with three views of the same graph:
+`prometheus serve` opens a local page with three views of the same graph, plus a page per field:
 
 - **Tree** (front page): the fields around a circle, grouped by shared foundations, with arcs for combinations.
 - **Matrix:** every pair of fields as a cell.
 - **Landscape:** the matrix as 3D terrain.
+- **Field profile:** one field at a time: its patents and partners over time, what it builds on, its likely next pairs, stalled pairs and what breaks without it.
 
 Each view has a year slider, the evidence for any pair, and the prediction check. Details are in [docs/GUIDE.md](docs/GUIDE.md).
 
@@ -134,6 +135,18 @@ claude --mcp-config agent/mcp.json                                 # or add the 
 Then give the agent [agent/PROMPT.md](agent/PROMPT.md): the schema, the rules for answering "as of" a year, and twelve Cypher recipes, each checked
 against the store with `python scripts/mcp_query.py data/prometheus.rl --check agent/PROMPT.md`.
 An example, with the agent's exact answer and queries: [results/agent_ask/G06E_G06M.md](results/agent_ask/G06E_G06M.md).
+
+## Beat the graph
+
+A forecast challenge on the sealed capsules: pick 10 pairs that will combine, but not the easy big-field pairs, and get scored next to the graph,
+the size rule and chance on exactly the same pairs. The graph scored 2, 4 and 4 of 10 in the three rounds; chance expects less than one.
+
+```bash
+prometheus challenge brief --round 2005
+prometheus challenge score my_forecast.json --round 2005
+```
+
+Rules, the leaderboard and fair play: [challenge/README.md](challenge/README.md).
 
 ## Documentation
 

@@ -79,7 +79,7 @@ details p{margin:6px 0}
   <div>
     <h1>Prometheus</h1>
     <p class="sub" id="sub">&nbsp;</p>
-    <nav class="views" aria-label="Views"><a href="/landscape" id="tolandscape">Landscape</a><a href="/" id="totree">Tree</a><a href="/matrix" aria-current="page">Matrix</a></nav>
+    <nav class="views" aria-label="Views"><a href="/landscape" id="tolandscape">Landscape</a><a href="/" id="totree">Tree</a><a href="/matrix" aria-current="page">Matrix</a><a href="/field" id="tofield">Field</a></nav>
   </div>
   <div><p id="verdict" class="sub" style="color:var(--ink);margin-top:2px"></p></div>
 </header>
@@ -219,7 +219,7 @@ function render(){
     +`<span>Not combined yet, ranked by the selected score:</span>`+[["lower",0],["middle",1],["top third",2]].map(([t,i])=>`<span><i style="background:var(${FIRE[i]})"></i>${t}</span>`).join("")
     +(S.stalled?`<span><i style="background:var(--grey-2)"></i>stalled: co-classified ${STL?STL.minYears:3}+ years, under the threshold, and not among the ranked pairs${STL?` (${STL.pairs.length})`:""}</span>`:"");
   const ff=S.focus?"&field="+S.focus:"";
-  $("#totree").href="/#year="+S.year+"&score="+S.score+ff;$("#tolandscape").href="/landscape#year="+S.year+"&score="+S.score+ff;
+  $("#totree").href="/#year="+S.year+"&score="+S.score+ff;$("#tofield").href="/field#year="+S.year+(S.focus?"&code="+S.focus:S.sel?"&code="+S.sel.a:"");$("#tolandscape").href="/landscape#year="+S.year+"&score="+S.score+ff;
   $("#tnote").textContent=`Fields are ordered by shared foundations, so related fields sit together. Every candidate pair is a cell; the page colours the ${ST.gaps.length.toLocaleString()} the graph ranks highest. Not a tree of descent.`;
 }
 async function pick(a,b){S.sel={a,b};S.focus=null;EV=null;render();try{EV=await api(`/api/evidence?a=${a}&b=${b}&year=${S.year}`)}catch(e){EV=null}render()}
