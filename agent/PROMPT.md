@@ -25,6 +25,8 @@ A graph of technology fields built from 9.45 million US patents (PatentsView, 19
    co-classified but under the threshold (stalled). A high rank or many common partners is a ranking, not a probability.
 5. **Show your Cypher** for every claim, and say when a query returned nothing.
 6. **Do not guess what a code means;** read its `title`.
+7. **`genome` and the vector index are computed from all the data, through 2025.** Use "nearest relatives" to describe how similar two fields are
+   today, never as evidence about an earlier year. (The backtest does not have this problem: it recomputes genomes as of each cutoff.)
 
 ## Working queries
 
@@ -84,7 +86,7 @@ MATCH (a:Field {code:'G06N'})-[r:BUILDS_ON]->(p:Field) RETURN p.code, p.title, r
 MATCH (a:Field {code:'G06F'})-[c:CO_CLASSIFIED]-(b:Field) WHERE c.firstYear <= 2002 AND NOT EXISTS { MATCH (a)-[r:COMBINED_WITH]-(b) WHERE r.firstYear <= 2005 } RETURN b.code, b.title, c.firstYear LIMIT 10
 ```
 
-**Nearest relatives by shared foundations (vector index; score is (1 + cosine) / 2)**
+**Nearest relatives by shared foundations today (vector index over all years; score is (1 + cosine) / 2; not an as-of query, see rule 7)**
 
 ```cypher
 MATCH (f:Field {code:'G06F'}) CALL db.index.vector.queryNodes('field_genome', 6, f.genome) YIELD node, score RETURN node.code, node.title, score
