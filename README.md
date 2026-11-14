@@ -44,6 +44,9 @@ flowchart LR
   - **Time travel:** "the graph as of 1995" is a Cypher filter on `firstYear`, not a copy.
   - **Evidence:** every page asks Relate live for bridge fields, shared prerequisites, ancestry and knock-out effects.
   - **Vector search:** nearest relatives come from a vector index on the genome.
+  - **Shared state for agents:** several agents write their forecasts into one ledger (`results/ledger/ledger.rl`) through a single
+    `relate serve --mcp` server, each in one statement that Relate runs as one transaction; the grader writes the outcomes back into the same file.
+    See [results/ledger/REPORT.md](results/ledger/REPORT.md).
   - **Agents:** a sealed capsule is served with `relate serve --mcp stdio --read-only`. A forecaster agent gets only `get_schema` and
     `read_cypher`, and writes are refused.
 - **What it does not do:** the one-off reduction of the raw patent tables runs in DuckDB, and the scoring math runs in Python over snapshots
@@ -80,6 +83,7 @@ To rebuild everything from the raw patent data, see [docs/GUIDE.md](docs/GUIDE.m
 |---|---|
 | `data/prometheus.rl` | the graph: real PatentsView data, 123 fields, 4,138 combined pairs, 9,639 dependencies |
 | `capsules/*.rl` | sealed, blinded stores for 1995, 2005, 2010, 2015 and 2020, used by the forecaster agents |
+| `results/ledger/ledger.rl` | the shared forecast ledger: three agents' picks, reasons, Cypher and graded outcomes |
 | `data/csv/` | the small CSVs the store is built from |
 | `results/` | the backtest, the analyses, the agents' prompts, forecasts and grades |
 

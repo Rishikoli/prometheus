@@ -280,3 +280,7 @@ This is a demonstration of shared graph state, not a measurement. Three fresh ag
 writes its ten picks into one shared ledger (`results/ledger/ledger.rl`) through a single `relate serve --mcp` server, in one statement each.
 The grader then writes the outcomes into the same file, judged on the 2015 capsule. The hit counts are reported for completeness, but they are **not**
 pooled with A3 or A4 and carry no conclusion: the agents are the same model family as before, and three runs of ten pairs is a tiny sample.
+
+**Ran 14 Nov 2026.** All three wrote ten picks each in one transaction, at the same time, through one server; the ledger holds 30 forecasts about 17 distinct pairs,
+5 picked by all three agents. Combined within ten years: 10, 8 and 10 of 10, where chance expects about 1.4 of 10. As in A3, the agents ranked by shared partners and
+the top of the 2005 ranking is saturated, so this says nothing new about prediction. Details and the audit: [results/ledger/REPORT.md](../results/ledger/REPORT.md).

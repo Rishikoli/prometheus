@@ -1,0 +1,78 @@
+{
+ "agent": "agent-3",
+ "asOf": 2005,
+ "capsule": "2005.rl",
+ "at": "2026-11-14T00:00:00Z",
+ "picks": [
+  {
+   "a": "F0046",
+   "b": "F0089",
+   "rank": 1,
+   "why": "Not yet combined, but already linked by BUILDS_ON and sharing 53 common COMBINED_WITH neighbours, among the highest in the capsule.",
+   "cypher": "MATCH (a:Field {code:'F0046'}), (b:Field {code:'F0089'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) AND (a)-[:BUILDS_ON]-(b) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS commonNeighbours"
+  },
+  {
+   "a": "F0069",
+   "b": "F0085",
+   "rank": 2,
+   "why": "Not yet combined, but already linked by BUILDS_ON and sharing 52 common COMBINED_WITH neighbours, among the highest in the capsule.",
+   "cypher": "MATCH (a:Field {code:'F0069'}), (b:Field {code:'F0085'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) AND (a)-[:BUILDS_ON]-(b) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS commonNeighbours"
+  },
+  {
+   "a": "F0039",
+   "b": "F0074",
+   "rank": 3,
+   "why": "Not yet combined, but already linked by BUILDS_ON and sharing 50 common COMBINED_WITH neighbours, among the highest in the capsule.",
+   "cypher": "MATCH (a:Field {code:'F0039'}), (b:Field {code:'F0074'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) AND (a)-[:BUILDS_ON]-(b) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS commonNeighbours"
+  },
+  {
+   "a": "F0056",
+   "b": "F0091",
+   "rank": 4,
+   "why": "Not yet combined, but already linked by BUILDS_ON and sharing 49 common COMBINED_WITH neighbours, among the highest in the capsule.",
+   "cypher": "MATCH (a:Field {code:'F0056'}), (b:Field {code:'F0091'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) AND (a)-[:BUILDS_ON]-(b) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS commonNeighbours"
+  },
+  {
+   "a": "F0104",
+   "b": "F0119",
+   "rank": 5,
+   "why": "Not yet combined, but already linked by BUILDS_ON and sharing 48 common COMBINED_WITH neighbours, among the highest in the capsule.",
+   "cypher": "MATCH (a:Field {code:'F0104'}), (b:Field {code:'F0119'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) AND (a)-[:BUILDS_ON]-(b) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS commonNeighbours"
+  },
+  {
+   "a": "F0025",
+   "b": "F0042",
+   "rank": 6,
+   "why": "Not yet combined, but already linked by BUILDS_ON and sharing 47 common COMBINED_WITH neighbours, among the highest in the capsule.",
+   "cypher": "MATCH (a:Field {code:'F0025'}), (b:Field {code:'F0042'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) AND (a)-[:BUILDS_ON]-(b) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS commonNeighbours"
+  },
+  {
+   "a": "F0036",
+   "b": "F0054",
+   "rank": 7,
+   "why": "Not yet combined, but already linked by BUILDS_ON and sharing 47 common COMBINED_WITH neighbours, among the highest in the capsule.",
+   "cypher": "MATCH (a:Field {code:'F0036'}), (b:Field {code:'F0054'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) AND (a)-[:BUILDS_ON]-(b) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS commonNeighbours"
+  },
+  {
+   "a": "F0010",
+   "b": "F0046",
+   "rank": 8,
+   "why": "Not yet combined, but already linked by BUILDS_ON and sharing 47 common COMBINED_WITH neighbours, among the highest in the capsule.",
+   "cypher": "MATCH (a:Field {code:'F0010'}), (b:Field {code:'F0046'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) AND (a)-[:BUILDS_ON]-(b) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS commonNeighbours"
+  },
+  {
+   "a": "F0018",
+   "b": "F0047",
+   "rank": 9,
+   "why": "Not yet combined, but already linked by BUILDS_ON and sharing 46 common COMBINED_WITH neighbours, among the highest in the capsule.",
+   "cypher": "MATCH (a:Field {code:'F0018'}), (b:Field {code:'F0047'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) AND (a)-[:BUILDS_ON]-(b) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS commonNeighbours"
+  },
+  {
+   "a": "F0011",
+   "b": "F0076",
+   "rank": 10,
+   "why": "Not yet combined, but already linked by BUILDS_ON and sharing 46 common COMBINED_WITH neighbours, among the highest in the capsule.",
+   "cypher": "MATCH (a:Field {code:'F0011'}), (b:Field {code:'F0076'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) AND (a)-[:BUILDS_ON]-(b) MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) RETURN count(DISTINCT c) AS commonNeighbours"
+  }
+ ]
+}

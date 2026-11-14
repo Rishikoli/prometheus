@@ -85,6 +85,7 @@ A prediction made as of year Y must not be able to see anything after Y. The des
 | `backtest.py` | cutoffs, positives, AUC, hits@K, lift, tuning, the gate |
 | `beyond.py` | A2 and A2b: AUC on pairs a size proxy ranks in the bottom half, with a paired bootstrap |
 | `capsule.py` | the sealed per-year store, the brief, the MCP config; the A4 eligibility brief |
+| `ledger.py` | the shared forecast ledger: agents record picks through `relate serve --mcp` (one statement, one transaction each); `grade` writes outcomes back |
 | `grade.py` | scores a forecast against a later capsule, with optional `--pa-max` candidate restriction |
 | `server.py` | the local read-only HTTP server and its API (section 7) |
 | `cli.py` | `prometheus` commands: `toy pipeline build info gaps evidence knockout breakthrough backtest beyond genome relatives order serve capsule pa-threshold baseline-forecast grade` |

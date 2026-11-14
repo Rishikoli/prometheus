@@ -158,6 +158,24 @@ def cmd_agent_config(a):
     print(f"Claude Code: claude --mcp-config {out}    then give the agent agent/PROMPT.md")
 
 
+def cmd_ledger(a):
+    from . import ledger
+    if a.action == "init":
+        print(f"created {ledger.init(a.path)}")
+        print(f"serve it to agents with:  relate serve --mcp 8799 --database {a.path}   (access token: {a.path}.auth-token)")
+    elif a.action == "record":
+        picks = json.loads(Path(a.picks).read_text())
+        picks = picks["pairs"] if isinstance(picks, dict) else picks
+        rows = [{"a": p["a"], "b": p["b"], "rank": i + 1, "why": p.get("why", ""), "cypher": p.get("cypher", "")} for i, p in enumerate(picks)]
+        ledger.record(a.path, a.agent, a.as_of, a.capsule, rows)
+        print(f"recorded {len(rows)} picks for {a.agent}")
+    elif a.action == "grade":
+        res = ledger.grade(a.path, a.against, a.as_of)
+        print(json.dumps(res, indent=2))
+    else:
+        print(json.dumps(ledger.report(a.path, a.as_of), indent=2))
+
+
 def cmd_capsule(a):
     from . import capsule
     print(json.dumps(capsule.build_capsule(a.csv_dir, a.as_of, a.out, seed=a.seed, horizon=a.horizon), indent=2))
@@ -272,6 +290,12 @@ def main(argv=None):
     s = sub.add_parser("agent-config", help="MCP settings for an agent to query a store read-only (see agent/PROMPT.md)")
     s.add_argument("store"); s.add_argument("--out", default="agent/mcp.json"); s.add_argument("--name", default="prometheus")
     s.set_defaults(fn=cmd_agent_config)
+
+    s = sub.add_parser("ledger", help="a shared forecast ledger that several agents write into (init, record, grade, report)")
+    s.add_argument("action", choices=["init", "record", "grade", "report"]); s.add_argument("path")
+    s.add_argument("--agent"); s.add_argument("--as-of", type=int); s.add_argument("--capsule", default="")
+    s.add_argument("--picks", help="record: a forecast.json"); s.add_argument("--against", help="grade: the capsule ten years later")
+    s.set_defaults(fn=cmd_ledger)
 
     s = sub.add_parser("capsule", help="build a sealed, blinded time capsule file")
     s.add_argument("csv_dir"); s.add_argument("--as-of", type=int, required=True); s.add_argument("--out", required=True)

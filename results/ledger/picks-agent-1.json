@@ -1,0 +1,78 @@
+{
+ "agent": "agent-1",
+ "asOf": 2005,
+ "capsule": "2005.rl",
+ "at": "2026-11-14T00:00:00Z",
+ "picks": [
+  {
+   "a": "F0069",
+   "b": "F0085",
+   "rank": 1,
+   "why": "Not yet combined but share 52 COMBINED_WITH partners and 87 BUILDS_ON neighbours, with a direct BUILDS_ON link between them.",
+   "cypher": "MATCH (a:Field {code:'F0069'}), (b:Field {code:'F0085'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) WITH a, b, count(DISTINCT c) AS cn OPTIONAL MATCH (a)-[:BUILDS_ON]-(s:Field)-[:BUILDS_ON]-(b) RETURN cn, count(DISTINCT s) AS sharedBuildsOn"
+  },
+  {
+   "a": "F0046",
+   "b": "F0089",
+   "rank": 2,
+   "why": "Not yet combined but share 53 COMBINED_WITH partners and 83 BUILDS_ON neighbours, with a direct BUILDS_ON link between them.",
+   "cypher": "MATCH (a:Field {code:'F0046'}), (b:Field {code:'F0089'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) WITH a, b, count(DISTINCT c) AS cn OPTIONAL MATCH (a)-[:BUILDS_ON]-(s:Field)-[:BUILDS_ON]-(b) RETURN cn, count(DISTINCT s) AS sharedBuildsOn"
+  },
+  {
+   "a": "F0073",
+   "b": "F0119",
+   "rank": 3,
+   "why": "Not yet combined but share 45 COMBINED_WITH partners and 84 BUILDS_ON neighbours, with a direct BUILDS_ON link between them.",
+   "cypher": "MATCH (a:Field {code:'F0073'}), (b:Field {code:'F0119'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) WITH a, b, count(DISTINCT c) AS cn OPTIONAL MATCH (a)-[:BUILDS_ON]-(s:Field)-[:BUILDS_ON]-(b) RETURN cn, count(DISTINCT s) AS sharedBuildsOn"
+  },
+  {
+   "a": "F0056",
+   "b": "F0091",
+   "rank": 4,
+   "why": "Not yet combined but share 49 COMBINED_WITH partners and 80 BUILDS_ON neighbours, with a direct BUILDS_ON link between them.",
+   "cypher": "MATCH (a:Field {code:'F0056'}), (b:Field {code:'F0091'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) WITH a, b, count(DISTINCT c) AS cn OPTIONAL MATCH (a)-[:BUILDS_ON]-(s:Field)-[:BUILDS_ON]-(b) RETURN cn, count(DISTINCT s) AS sharedBuildsOn"
+  },
+  {
+   "a": "F0066",
+   "b": "F0069",
+   "rank": 5,
+   "why": "Not yet combined but share 42 COMBINED_WITH partners and 86 BUILDS_ON neighbours, with a direct BUILDS_ON link between them.",
+   "cypher": "MATCH (a:Field {code:'F0066'}), (b:Field {code:'F0069'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) WITH a, b, count(DISTINCT c) AS cn OPTIONAL MATCH (a)-[:BUILDS_ON]-(s:Field)-[:BUILDS_ON]-(b) RETURN cn, count(DISTINCT s) AS sharedBuildsOn"
+  },
+  {
+   "a": "F0039",
+   "b": "F0074",
+   "rank": 6,
+   "why": "Not yet combined but share 50 COMBINED_WITH partners and 78 BUILDS_ON neighbours, with a direct BUILDS_ON link between them.",
+   "cypher": "MATCH (a:Field {code:'F0039'}), (b:Field {code:'F0074'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) WITH a, b, count(DISTINCT c) AS cn OPTIONAL MATCH (a)-[:BUILDS_ON]-(s:Field)-[:BUILDS_ON]-(b) RETURN cn, count(DISTINCT s) AS sharedBuildsOn"
+  },
+  {
+   "a": "F0011",
+   "b": "F0076",
+   "rank": 7,
+   "why": "Not yet combined but share 46 COMBINED_WITH partners and 82 BUILDS_ON neighbours, with a direct BUILDS_ON link between them.",
+   "cypher": "MATCH (a:Field {code:'F0011'}), (b:Field {code:'F0076'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) WITH a, b, count(DISTINCT c) AS cn OPTIONAL MATCH (a)-[:BUILDS_ON]-(s:Field)-[:BUILDS_ON]-(b) RETURN cn, count(DISTINCT s) AS sharedBuildsOn"
+  },
+  {
+   "a": "F0025",
+   "b": "F0042",
+   "rank": 8,
+   "why": "Not yet combined but share 47 COMBINED_WITH partners and 80 BUILDS_ON neighbours, with a direct BUILDS_ON link between them.",
+   "cypher": "MATCH (a:Field {code:'F0025'}), (b:Field {code:'F0042'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) WITH a, b, count(DISTINCT c) AS cn OPTIONAL MATCH (a)-[:BUILDS_ON]-(s:Field)-[:BUILDS_ON]-(b) RETURN cn, count(DISTINCT s) AS sharedBuildsOn"
+  },
+  {
+   "a": "F0077",
+   "b": "F0091",
+   "rank": 9,
+   "why": "Not yet combined but share 41 COMBINED_WITH partners and 86 BUILDS_ON neighbours, with a direct BUILDS_ON link between them.",
+   "cypher": "MATCH (a:Field {code:'F0077'}), (b:Field {code:'F0091'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) WITH a, b, count(DISTINCT c) AS cn OPTIONAL MATCH (a)-[:BUILDS_ON]-(s:Field)-[:BUILDS_ON]-(b) RETURN cn, count(DISTINCT s) AS sharedBuildsOn"
+  },
+  {
+   "a": "F0104",
+   "b": "F0119",
+   "rank": 10,
+   "why": "Not yet combined but share 48 COMBINED_WITH partners and 78 BUILDS_ON neighbours, with a direct BUILDS_ON link between them.",
+   "cypher": "MATCH (a:Field {code:'F0104'}), (b:Field {code:'F0119'}) WHERE NOT (a)-[:COMBINED_WITH]-(b) OPTIONAL MATCH (a)-[:COMBINED_WITH]-(c:Field)-[:COMBINED_WITH]-(b) WITH a, b, count(DISTINCT c) AS cn OPTIONAL MATCH (a)-[:BUILDS_ON]-(s:Field)-[:BUILDS_ON]-(b) RETURN cn, count(DISTINCT s) AS sharedBuildsOn"
+  }
+ ]
+}

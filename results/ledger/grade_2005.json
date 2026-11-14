@@ -1,0 +1,117 @@
+{
+  "agents": [
+    {
+      "agent": "agent-1",
+      "picks": 10,
+      "hits": 10,
+      "valid": 10
+    },
+    {
+      "agent": "agent-2",
+      "picks": 10,
+      "hits": 8,
+      "valid": 10
+    },
+    {
+      "agent": "agent-3",
+      "picks": 10,
+      "hits": 10,
+      "valid": 10
+    }
+  ],
+  "shared_pairs": [
+    {
+      "a": "F0039",
+      "b": "F0074",
+      "by": [
+        "agent-1",
+        "agent-3",
+        "agent-2"
+      ],
+      "outcome": "combined",
+      "combinedIn": 2012
+    },
+    {
+      "a": "F0046",
+      "b": "F0089",
+      "by": [
+        "agent-1",
+        "agent-3",
+        "agent-2"
+      ],
+      "outcome": "combined",
+      "combinedIn": 2009
+    },
+    {
+      "a": "F0056",
+      "b": "F0091",
+      "by": [
+        "agent-1",
+        "agent-3",
+        "agent-2"
+      ],
+      "outcome": "combined",
+      "combinedIn": 2006
+    },
+    {
+      "a": "F0069",
+      "b": "F0085",
+      "by": [
+        "agent-1",
+        "agent-3",
+        "agent-2"
+      ],
+      "outcome": "combined",
+      "combinedIn": 2011
+    },
+    {
+      "a": "F0104",
+      "b": "F0119",
+      "by": [
+        "agent-1",
+        "agent-3",
+        "agent-2"
+      ],
+      "outcome": "combined",
+      "combinedIn": 2007
+    },
+    {
+      "a": "F0011",
+      "b": "F0076",
+      "by": [
+        "agent-1",
+        "agent-3"
+      ],
+      "outcome": "combined",
+      "combinedIn": 2013
+    },
+    {
+      "a": "F0025",
+      "b": "F0042",
+      "by": [
+        "agent-1",
+        "agent-3"
+      ],
+      "outcome": "combined",
+      "combinedIn": 2006
+    },
+    {
+      "a": "F0036",
+      "b": "F0054",
+      "by": [
+        "agent-3",
+        "agent-2"
+      ],
+      "outcome": "combined",
+      "combinedIn": 2013
+    }
+  ],
+  "distinct_pairs": 17,
+  "distinct_hits": 15,
+  "as_of": 2005,
+  "horizon": 10,
+  "graded_against": "2015.rl",
+  "candidates": 4887,
+  "positives": 660,
+  "base_rate": 0.13505217925107427
+}

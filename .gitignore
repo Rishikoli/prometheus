@@ -23,3 +23,6 @@ data/csv_all/
 
 # written by `prometheus agent-config` with absolute paths for this machine
 agent/mcp.json
+
+# relate serve writes an access token next to a store it serves; never commit it
+*.auth-token
