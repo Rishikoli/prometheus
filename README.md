@@ -131,7 +131,8 @@ An example, with the agent's exact answer and queries: [results/agent_ask/G06E_G
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | how the parts fit, what runs on Relate, the no-peeking rules |
 | [docs/DATA.md](docs/DATA.md) | where the data comes from, sizes and checksums |
 | [docs/DESIGN.md](docs/DESIGN.md) | the design of the pages |
-| [docs/DEMO.md](docs/DEMO.md) | the demo script |
+| [docs/DEMO_90.md](docs/DEMO_90.md) | the 90-second demo video script |
+| [docs/DEMO.md](docs/DEMO.md) | the longer, 4-minute demo script |
 | [docs/AI_USE.md](docs/AI_USE.md) | how AI was used |
 
 ## Credits and licence
