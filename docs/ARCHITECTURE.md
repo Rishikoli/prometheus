@@ -2,7 +2,7 @@
 
 PROMETHEUS turns patent data into a small graph of technology fields, keeps it in one Relate file, and uses that graph three ways: to rank
 which pairs of fields may combine next, to grade that ranking against history, and to let people and agents inspect the evidence.
-About 2,500 lines of Python (`src/prometheus/`), three single-file web pages, nine `.cypher` queries, 63 unit tests and a 77-check browser script.
+About 2,500 lines of Python (`src/prometheus/`), three single-file web pages, nine `.cypher` queries, 63 unit tests and a 91-check browser script.
 
 ## 1. The whole picture
 

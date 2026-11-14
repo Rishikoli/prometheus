@@ -248,6 +248,10 @@ Differences, with the reason:
   camera move to the selection (pan, and come closer only if farther than a set distance); Oblique, Low angle, Top down and Reset; fog and a hemisphere light for depth; a corner scale for
   height. Labels never take the pointer; clicks are matched to label boxes in the canvas handler. Edge labels go to the near edges (codes) and far edges (names) so they stay clear of the tree
   and the empty backdrop, because perspective squeezes far-edge text and near-edge text collides with the tree lines.
+- **Second readability pass (all views, 14 Nov 2026).** Matrix: field codes every fourth field, domain bands and names in right and bottom gutters (the tree stays on top and left);
+  a crosshair and both field names in the gutters on hover; Find a field; stalled pairs in grey (never fire). Tree: Find a field, and **Newest only** (pairs combined in the last
+  three years) because hiding only arcs older than ten years changed almost nothing: those arcs were already nearly transparent, and the dense mass is the recent decade.
+  All views: a focused or selected field carries over through the top bar links, and a footer credits PatentsView.
 - **The landscape's cross-section is a smoothed stacked area chart** (decided 14 Nov 2026), not bars: along the bottom the other fields in order; stacked heights are the share of
   nearby fields combined with the selected field (by age) and ranked as candidates (by rank third). Smoothing follows the Surface toggle; Each pair draws steps.
 - **Not built:** the breakthrough button (hidden while the check is a NO-GO, as designed).

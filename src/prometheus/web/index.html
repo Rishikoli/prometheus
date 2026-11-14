@@ -62,6 +62,10 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-of
 details{margin-top:8px;color:var(--ink-2);font-size:12px;max-width:640px}
 summary{cursor:pointer}
 details p{margin:6px 0}
+.finder{display:flex;gap:6px;align-items:baseline}
+.finder input[type=text]{font:inherit;color:inherit;background:var(--paper);border:1px solid var(--ink-2);border-radius:2px;padding:2px 6px;width:150px}
+.chk{display:flex;gap:6px;align-items:baseline;cursor:pointer}
+footer{padding:0 32px 28px;color:var(--ink-2);font-size:12px}
 .tnote{margin:8px 0 0;color:var(--ink-2);font-size:12px;max-width:640px}
 #note{min-width:0}
 #note h2{font:400 20px/1.2 var(--serif);margin:0 0 4px}
@@ -112,6 +116,9 @@ details p{margin:6px 0}
         <button data-score="hybrid" aria-pressed="false">Graph score</button>
         <button data-score="size" aria-pressed="false">Size alone</button>
       </div>
+      <label class="chk" title="Show only pairs that combined in the last three years, so each year's new layer stands out"><input type="checkbox" id="recent"> Newest only</label>
+      <div class="finder"><label for="findfield" style="color:var(--ink-2)">Find a field:</label>
+        <input type="text" id="findfield" list="fieldlist" placeholder="e.g. G06F" autocomplete="off" spellcheck="false"><datalist id="fieldlist"></datalist></div>
     </div>
     <div class="legend" id="legend"></div>
     <p class="tnote" id="tnote"></p>
@@ -136,6 +143,7 @@ details p{margin:6px 0}
   <label id="slab" title="Some patents carry both classes, but fewer than the combination threshold, for three years or more"><input type="checkbox" id="stalled"> Show stalled pairs</label>
   <label id="hlab"><input type="checkbox" id="happened"> Show what happened</label>
 </div>
+<footer>Data: PatentsView (USPTO), granted US patents 1976 to 2025, grouped by CPC subclass. Stored and queried with Relate. A ranking, not a probability.</footer>
 <table class="sr-only" id="srgaps"><caption>Top gaps this year</caption>
   <thead><tr><th>Field A</th><th>Field B</th><th>Graph rank</th><th>Size rank</th></tr></thead><tbody></tbody></table>
 <div id="tip"></div>
@@ -151,7 +159,8 @@ const api=async p=>{const r=await fetch(p);if(!r.ok){let m=r.status;try{m=(await
 const clip=(s,n)=>{s=(s||"").trim();if(s.length<=n)return s;const c=s.slice(0,n+1),i=c.lastIndexOf(" ");return (i>n*.5?c.slice(0,i):s.slice(0,n)).replace(/[ ,;]+$/,"")+"…"};
 const titleCase=s=>{s=(s||"").trim().toLowerCase();return s.charAt(0).toUpperCase()+s.slice(1)};
 
-const S={year:2005,mode:"combos",score:"beyond",sel:null,happened:false,stalled:false,play:null};
+const S={year:2005,mode:"combos",score:"beyond",sel:null,happened:false,stalled:false,recent:false,play:null};
+let DRAWN=0;   // combined arcs drawn in the last frame (read by the browser checks)
 let META,ST,FUT=null,CHECK=null,KO=null,REACH=null,EV=null,STL=null,tok=0;
 let N=0,D=640,R=320,RL=224,nodes={},parent={},byCode={},idx={},ctx,dpr=1,paths=new Map(),hit=[];
 const CUTOFFS=[2005,2010,2014],MAXHAPP=2014;
@@ -293,7 +302,8 @@ function drawArcs(pulse){
     bands[ageBand(y-fy)].push([a,b])}
   const base=(S.mode==="combos")?1:.25, dim=dimOn?.35:1;
   ctx.setLineDash([]);ctx.lineJoin="round";
-  bands.forEach((list,bi)=>{if(!list.length)return;const recent=bi>=2;
+  DRAWN=bands.reduce((t,l,bi)=>t+((S.recent&&bi<4)?0:l.length),0)+mine.length;   // Newest only: just the last three years (band 4)
+  bands.forEach((list,bi)=>{if(!list.length||(S.recent&&bi<4))return;const recent=bi>=2;
     ctx.beginPath();list.forEach(([a,b])=>line(arc(a,b).pts));
     ctx.strokeStyle=css(HIST[bi]);ctx.lineWidth=recent?1.4:.6;
     const al=[.12,.16,.45,.75,1][bi];ctx.globalAlpha=al*dim*(recent&&S.mode!=="combos"?.25:1);ctx.stroke()});   // newest strongest, so the age layers read as density
@@ -371,10 +381,10 @@ function canvasMove(e){
 function canvasClick(e){const h=hitArc(e);if(h&&h.gap)selectPair(h.gap.a,h.gap.b);else clearSel()}
 
 /* ---------- selection ---------- */
-async function selectField(c){S.sel={type:"field",code:c};EV=null;await loadModeData();render()}
+async function selectField(c){if(!byCode[c])return;S.sel={type:"field",code:c};EV=null;await loadModeData();render();matrixLink()}
 async function selectPair(a,b){S.sel={type:"pair",a,b};EV=null;render();
   try{EV=await api(`/api/evidence?a=${a}&b=${b}&year=${S.year}`)}catch(e){EV=null}render()}
-function clearSel(){S.sel=null;EV=null;KO=null;REACH=null;render()}
+function clearSel(){S.sel=null;EV=null;KO=null;REACH=null;const f=$("#findfield");if(f)f.value="";render();matrixLink()}
 async function loadModeData(){
   const f=selField();KO=null;REACH=null;if(!f)return;
   if(S.mode==="breaks"&&byCode[f].firstYear<=S.year)KO=await api(`/api/knockout?code=${f}&year=${S.year}`);
@@ -488,7 +498,7 @@ async function loadYear(y,pulseIt){
 }
 function setMode(m){S.mode=m;document.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===m));
   loadModeData().catch(()=>{}).then(render)}
-function matrixLink(){const a=$("#tomatrix"),l=$("#tolandscape");if(a)a.href="/matrix#year="+S.year+"&score="+S.score;if(l)l.href="/landscape#year="+S.year+"&score="+S.score}
+function matrixLink(){const a=$("#tomatrix"),l=$("#tolandscape"),f=selField(),ff=f?"&field="+f:"";if(a)a.href="/matrix#year="+S.year+"&score="+S.score+ff;if(l)l.href="/landscape#year="+S.year+"&score="+S.score+ff}
 function setScore(s){S.score=s;matrixLink();document.querySelectorAll("[data-score]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.score===s));render()}
 function play(){const b=$("#play");if(S.play){clearInterval(S.play);S.play=null;b.textContent="Play";return}
   b.textContent="Pause";if(S.year>=META.end)loadYear(META.start);
@@ -512,6 +522,10 @@ async function init(){
   $("#play").onclick=play;
   $("#happened").onchange=async e=>{S.happened=e.target.checked;await loadYear(S.year)};
   $("#stalled").onchange=async e=>{S.stalled=e.target.checked;await loadYear(S.year)};
+  $("#recent").onchange=e=>{S.recent=e.target.checked;render()};
+  $("#fieldlist").innerHTML=META.fields.map(f=>`<option value="${esc(f.code)}">${esc(titleCase(f.title))}</option>`).join("");
+  const ffd=$("#findfield"),tryFind=()=>{const c=(ffd.value||"").trim().toUpperCase().split(/\s/)[0];if(byCode[c]){ffd.value=c;selectField(c)}};
+  ffd.addEventListener("change",tryFind);ffd.addEventListener("keydown",e=>{if(e.key==="Enter")tryFind()});
   document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
   document.querySelectorAll("[data-score]").forEach(b=>b.onclick=()=>setScore(b.dataset.score));
   document.addEventListener("keydown",e=>{if(e.key==="Escape")clearSel()});
@@ -526,7 +540,8 @@ async function init(){
   if(h.get("score"))setScore(h.get("score"));
   if(h.get("stalled")==="1"){$("#stalled").checked=true;S.stalled=true;await loadYear(S.year)}
   if(h.get("happened")==="1"&&S.year<=MAXHAPP){$("#happened").checked=true;S.happened=true;await loadYear(S.year)}
-  if(h.get("field"))await selectField(h.get("field"));
+  if(h.get("field")){const fc=h.get("field").toUpperCase();if(byCode[fc]){$("#findfield").value=fc;await selectField(fc)}}
+  if(h.get("recent")==="1"){$("#recent").checked=true;S.recent=true;render()}
   if(h.get("gap")){const g=topGaps()[+h.get("gap")-1];if(g)await selectPair(g.a,g.b)}
   if(h.get("details")){const c=$("#check");c.hidden=false}
 }

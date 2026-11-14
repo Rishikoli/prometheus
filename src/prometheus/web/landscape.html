@@ -42,6 +42,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:40px;padding:6px
 .finder{display:flex;gap:6px;align-items:baseline}
 .finder input[type=text]{font:inherit;color:inherit;background:var(--paper);border:1px solid var(--ink-2);border-radius:2px;padding:2px 6px;width:170px}
 .chk{display:flex;gap:6px;align-items:baseline;cursor:pointer}
+footer{padding:0 32px 28px;color:var(--ink-2);font-size:12px}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
 #cv:active{cursor:grabbing}
 #cv:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
@@ -149,6 +150,7 @@ summary{cursor:pointer}
   <div class="slider"><input id="year" type="range" aria-label="Year"><span id="ticks"></span></div>
   <button class="link" id="play">Play</button>
 </div>
+<footer>Data: PatentsView (USPTO), granted US patents 1976 to 2025, grouped by CPC subclass. Stored and queried with Relate. A ranking, not a probability.</footer>
 <table class="sr-only"><caption>Top gaps this year</caption>
   <thead><tr><th>Field A</th><th>Field B</th><th>Graph rank</th><th>Size rank</th></tr></thead><tbody id="srgaps"></tbody></table>
 <div id="tip"></div>
@@ -422,7 +424,7 @@ function render(){
   $("#yr").textContent=S.year;
   $("#hstxt").textContent=S.smooth?"Hill height: more high-ranked gaps nearby, relative to the tallest":"Spike height: higher rank under the selected score";
   $("#clearfocus").hidden=!(S.focus||S.sel);
-  $("#totree").href="/#year="+S.year+"&score="+S.score;$("#tomatrix").href="/matrix#year="+S.year+"&score="+S.score;
+  const lf=S.sel?S.sel.a:S.focus,ff=lf?"&field="+lf:"";$("#totree").href="/#year="+S.year+"&score="+S.score+ff;$("#tomatrix").href="/matrix#year="+S.year+"&score="+S.score+ff;
   crossSection();history_();placePin();
 }
 const XS_COLORS=["--hist-2","--hist-3","--hist-4","--hist-5","--fire-2","--fire-3","--fire-4"];

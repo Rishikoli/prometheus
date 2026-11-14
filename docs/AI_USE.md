@@ -43,7 +43,7 @@ the same model family, and a language model might recognise the shape of the gra
 
 - 63 unit tests, including a placebo (no planted structure, so the analyses must find nothing) and checks that nothing from a later year leaks into an earlier one.
 - Regression checks after every pipeline change: the three original CSVs were regenerated from the real files and compared byte for byte; the main backtest and the original A2 were rerun and matched to the last digit.
-- A browser script (`scripts/ui_check.py`, 77 checks) drives all three pages: clicks, keyboard, Play, picking in 3D, offline use, no console errors, the no-WebGL fallback.
+- A browser script (`scripts/ui_check.py`, 91 checks) drives all three pages: clicks, keyboard, Play, picking in 3D, offline use, no console errors, the no-WebGL fallback.
 - Counts shown on the pages were compared with the API; the as-of patent counts were compared with the end-of-data totals to confirm they differ.
 - The author's own review. [Say what you read, ran and changed yourself.]
 

@@ -176,6 +176,8 @@ arcs; fire means a predicted pair and nothing else. The prediction check, includ
 | What breaks | leaves shaded by how exposed they are if the selected field disappeared, with the number of citing links behind each |
 | Score: Beyond size, Graph score, Size alone | how the gaps are ranked; Beyond size is graph rank minus what field size alone predicts |
 | Show what happened | up to 2014: gaps that combined within ten years are solid, the rest hollow grey |
+| Newest only | only the pairs combined in the last three years, so each year's new layer stands out (the full history makes years look alike) |
+| Find a field | type a code (`G06F`) to select it; the selection carries over to the matrix and landscape |
 | Show stalled pairs | grey dotted arcs for pairs where some patents carry both classes, for three years or more, but fewer than the 3-patent combination threshold (about 800 a year). A display overlay: it is not a score and not a prediction |
 | Details (top right) | the per-cutoff backtest table and a chart of graph vs size alone, all pairs and beyond-size |
 
@@ -194,13 +196,15 @@ browser has no WebGL the page says so and still lists the numbers and the top ga
 ![The landscape view, 2010, one pair selected](docs/screenshots/landscape_2010_pair.png)
 
 **Matrix view.** The `Matrix` link in the top bar opens `/matrix`, the same year slider, score toggle and evidence panel on a
-grid of every field pair, ordered by shared foundations with the clustering tree on both edges. Blue cells already combined (darker is
+grid of every field pair, ordered by shared foundations with the clustering tree on two edges and field codes, domain bands and domain names on the other two.
+Hovering a cell outlines its row and column and names both fields in the margins; **Find a field** outlines one field's row and column and lists its candidates;
+**Show stalled pairs** greys the pairs that are co-classified but under the threshold. Blue cells already combined (darker is
 newer); fire cells are the 1,500 pairs the graph ranks highest. The tree shows about 25 arcs; the matrix shows where size and the
 graph disagree across all of them, so it carries the beyond-size finding more honestly. `Tree` goes back, keeping the year. The tree stays the front page.
 
 Deep links: `#year=1998`, `#year=2005&stalled=1`, `#tree=fixed`, `#year=2005&gap=1`, `#mode=deps&field=G06F`, `#mode=breaks&field=H01L`, `#year=2005&happened=1&gap=2&details=1`.
 Screenshots at 1985, 1998 and 2010 are in `docs/screenshots/`; the design and the choices made while building it are in
-`docs/DESIGN.md`. `python scripts/ui_check.py` drives all three pages in a real browser (77 checks: keyboard, clicks, 3D picking, Play, modes, offline, no-WebGL fallback).
+`docs/DESIGN.md`. `python scripts/ui_check.py` drives all three pages in a real browser (91 checks: keyboard, clicks, 3D picking, Play, modes, offline, no-WebGL fallback).
 
 ![Prometheus in 1998](docs/screenshots/tree_1998.png)
 
@@ -465,7 +469,7 @@ other than common neighbours was not tested.
 |---|---|
 | Pipeline, store, queries, predictor, backtest, genome, capsules, grading, CLI | built; tested on toy data and a fixture |
 | Real PatentsView run, real backtest numbers | done 2026-11-13, see [Real-data results](#real-data-results) |
-| Tree-of-life page: year slider, three modes, three scores, evidence panel, prediction check (`prometheus serve`) | built, plus a matrix view at `/matrix` and a 3D landscape at `/landscape`; 77 browser checks pass on the real store |
+| Tree-of-life page: year slider, three modes, three scores, evidence panel, prediction check (`prometheus serve`) | built, plus a matrix view at `/matrix` and a 3D landscape at `/landscape`; 91 browser checks pass on the real store |
 | Dependencies and knock-out modes on the page | built; field ages are not shown because 109 of 123 fields are left-censored at 1976 |
 | MCP agent against a capsule | A3 (saturated, cannot separate methods) and A4 (beyond size: 9/30 vs 1.5 random, 4/30 PA control) run |
 | Paper-side edges (OpenAlex) and lead time | skipped on purpose |

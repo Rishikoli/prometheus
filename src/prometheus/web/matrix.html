@@ -14,6 +14,7 @@
   --paper:#EEF1EC;--ink:#16211C;--ink-2:#4B5750;--hair:#C9D0C8;--wedge:#E5E9E2;
   --hist-1:#80A3CF;--hist-2:#5589C2;--hist-3:#3470AF;--hist-4:#235791;--hist-5:#143E6B;
   --fire-2:#E4572E;--fire-3:#BF3A16;--fire-4:#8E2208;
+  --grey-1:#9AA59E;--grey-2:#6E7A73;
   --serif:"Newsreader",Georgia,serif;--sans:"Instrument Sans",system-ui,sans-serif;
 }
 *{box-sizing:border-box}
@@ -33,7 +34,13 @@ h1{margin:0;font:600 28px/1.1 var(--serif)}
 main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:40px;padding:6px 32px 0}
 #stage{position:relative;margin:0 auto;overflow:visible}
 #stage svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
-#cv{position:absolute}
+#cv,#ov{position:absolute}
+#ov{pointer-events:none}
+#gut{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.finder{display:flex;gap:6px;align-items:baseline}
+.finder input[type=text]{font:inherit;color:inherit;background:var(--paper);border:1px solid var(--ink-2);border-radius:2px;padding:2px 6px;width:150px}
+.chk{display:flex;gap:6px;align-items:baseline;cursor:pointer}
+footer{padding:0 32px 28px;color:var(--ink-2);font-size:12px}
 .controls{display:flex;flex-wrap:wrap;gap:10px 28px;align-items:baseline;margin-top:8px}
 .seg{display:flex;gap:16px;align-items:baseline}
 .seg .lab{color:var(--ink-2)}
@@ -79,13 +86,17 @@ details p{margin:6px 0}
 <div id="err"></div>
 <main>
   <section>
-    <div id="stage" aria-label="Matrix of field pairs"><svg id="dtop"></svg><svg id="dleft"></svg><canvas id="cv"></canvas></div>
+    <div id="stage" aria-label="Matrix of field pairs"><svg id="dtop"></svg><svg id="dleft"></svg><canvas id="cv"></canvas><canvas id="ov"></canvas><svg id="gut" aria-hidden="true"></svg></div>
     <div class="controls">
       <div class="seg" id="scores"><span class="lab">Score:</span>
         <button data-score="beyond" aria-pressed="true">Beyond size</button>
         <button data-score="hybrid" aria-pressed="false">Graph score</button>
         <button data-score="size" aria-pressed="false">Size alone</button>
       </div>
+      <label class="chk" title="Some patents carry both classes, for three years or more, but fewer than the combination threshold"><input type="checkbox" id="stalled"> Show stalled pairs</label>
+      <div class="finder"><label for="findfield" style="color:var(--ink-2)">Find a field:</label>
+        <input type="text" id="findfield" list="fieldlist" placeholder="e.g. G06F" autocomplete="off" spellcheck="false"><datalist id="fieldlist"></datalist>
+        <button class="link" id="clearfocus" hidden>Clear</button></div>
     </div>
     <div class="legend" id="legend"></div>
     <p class="tnote" id="tnote"></p>
@@ -101,6 +112,7 @@ details p{margin:6px 0}
   <div class="slider"><input id="year" type="range" aria-label="Year"><span id="ticks"></span></div>
   <button class="link" id="play">Play</button>
 </div>
+<footer>Data: PatentsView (USPTO), granted US patents 1976 to 2025, grouped by CPC subclass. Stored and queried with Relate. A ranking, not a probability.</footer>
 <table class="sr-only"><caption>Top gaps this year</caption>
   <thead><tr><th>Field A</th><th>Field B</th><th>Graph rank</th><th>Size rank</th></tr></thead><tbody id="srgaps"></tbody></table>
 <div id="tip"></div>
@@ -114,9 +126,9 @@ const api=async p=>{const r=await fetch(p);if(!r.ok){let m=r.status;try{m=(await
 const clip=(s,n)=>{s=(s||"").trim();if(s.length<=n)return s;const c=s.slice(0,n+1),i=c.lastIndexOf(" ");return (i>n*.5?c.slice(0,i):s.slice(0,n)).replace(/[ ,;]+$/,"")+"…"};
 const titleCase=s=>{s=(s||"").trim().toLowerCase();return s.charAt(0).toUpperCase()+s.slice(1)};
 const HIST=["--hist-1","--hist-2","--hist-3","--hist-4","--hist-5"],FIRE=["--fire-2","--fire-3","--fire-4"],CUTOFFS=[2005,2010,2014];
-const S={year:2005,score:"beyond",sel:null,play:null};
-let META,ST,CHECK,EV,tok=0,N=0,cell=5,pad=0,ctx,dpr=1,idx={},byCode={};
-const LEFT=64,TOP=64;
+const S={year:2005,score:"beyond",sel:null,focus:null,stalled:false,play:null};
+let META,ST,CHECK,EV,STL=null,tok=0,N=0,cell=5,pad=0,ctx,octx,dpr=1,idx={},byCode={},hover=null,RUNS=[];
+const LEFT=64,TOP=64,RG=170,BG=46;   // dendrograms on the top and left; codes, domain bands and names in the right and bottom gutters
 
 const scoreOf=g=>S.score==="beyond"?g.beyond:S.score==="hybrid"?g.hybrid:g.size;
 const find=(a,b)=>ST&&ST.gaps.find(g=>(g.a===a&&g.b===b)||(g.a===b&&g.b===a));
@@ -125,10 +137,37 @@ function tiers(){const vs=ST.gaps.map(scoreOf).sort((a,b)=>a-b),t1=vs[Math.floor
   ST.gaps.forEach(g=>{const v=scoreOf(g);g._tier=v>=t2?2:v>=t1?1:0})}
 
 function layout(){
-  const w=$("#stage").parentElement.clientWidth-LEFT-8;cell=Math.max(3,Math.floor(Math.min(w,740,innerHeight-300)/N));pad=cell*N;
-  const st=$("#stage");st.style.width=(LEFT+pad)+"px";st.style.height=(TOP+pad)+"px";
-  const cv=$("#cv");dpr=devicePixelRatio||1;cv.width=cv.height=pad*dpr;cv.style.width=cv.style.height=pad+"px";cv.style.left=LEFT+"px";cv.style.top=TOP+"px";
-  ctx=cv.getContext("2d");dendro();
+  const w=$("#stage").parentElement.clientWidth-LEFT-RG-8;cell=Math.max(3,Math.floor(Math.min(w,740,innerHeight-300)/N));pad=cell*N;
+  const st=$("#stage");st.style.width=(LEFT+pad+RG)+"px";st.style.height=(TOP+pad+BG)+"px";
+  dpr=devicePixelRatio||1;
+  ["#cv","#ov"].forEach(id=>{const c=$(id);c.width=c.height=pad*dpr;c.style.width=c.style.height=pad+"px";c.style.left=LEFT+"px";c.style.top=TOP+"px"});
+  ctx=$("#cv").getContext("2d");octx=$("#ov").getContext("2d");dendro();gutters();
+}
+function gutters(){ // domain bands, every fourth field code, and domain names, along the right and bottom edges
+  const g=d3.select("#gut").attr("width",LEFT+pad+RG).attr("height",TOP+pad+BG);g.selectAll("*").remove();
+  RUNS=[];META.order.forEach((c,i)=>{const d=META.domains[c];if(RUNS.length&&RUNS[RUNS.length-1].d===d)RUNS[RUNS.length-1].j=i;else RUNS.push({d,i,j:i})});
+  const xr=LEFT+pad+3,yb=TOP+pad+3;
+  RUNS.forEach((r,k)=>{const fill=k%2?css("--hair"):css("--wedge");
+    g.append("rect").attr("x",xr).attr("y",TOP+r.i*cell).attr("width",7).attr("height",(r.j-r.i+1)*cell).attr("fill",fill);
+    g.append("rect").attr("x",LEFT+r.i*cell).attr("y",yb).attr("width",(r.j-r.i+1)*cell).attr("height",7).attr("fill",fill);
+    const hgt=(r.j-r.i+1)*cell;if(hgt>=15)g.append("text").attr("class","dn").attr("x",xr+54).attr("y",TOP+(r.i+r.j+1)/2*cell).attr("dominant-baseline","middle").attr("font-size",11).attr("fill",css("--ink-2")).text(clip(r.d||"",17)).append("title").text(r.d||"")});
+  META.order.forEach((c,i)=>{if(i%4)return;
+    g.append("text").attr("class","cd").attr("x",xr+12).attr("y",TOP+(i+.5)*cell).attr("dominant-baseline","middle").attr("font-size",10).attr("fill",css("--ink-2")).text(c);
+    const x=LEFT+(i+.5)*cell,y=yb+11;g.append("text").attr("class","cd").attr("transform",`translate(${x},${y}) rotate(90)`).attr("dominant-baseline","middle").attr("font-size",10).attr("fill",css("--ink-2")).text(c)});
+  g.append("g").attr("id","marks");
+}
+function overlay(){ // the crosshair for the hovered pair and the focused field, plus their names in the gutters
+  if(!octx)return;octx.setTransform(dpr,0,0,dpr,0,0);octx.clearRect(0,0,pad,pad);
+  const mk=d3.select("#marks");mk.selectAll("*").remove();
+  const xr=LEFT+pad+3,yb=TOP+pad+3,label=(code,x,y,vertical,strong)=>{const w=code.length*7+8,gg=mk.append("g").attr("opacity",strong?1:.85);
+    if(vertical){gg.append("rect").attr("x",x-7).attr("y",y).attr("width",14).attr("height",w).attr("fill",css("--ink"));gg.append("text").attr("transform",`translate(${x},${y+4}) rotate(90)`).attr("dominant-baseline","middle").attr("font-size",11).attr("font-weight",600).attr("fill",css("--paper")).text(code)}
+    else{gg.append("rect").attr("x",x).attr("y",y-7).attr("width",w).attr("height",14).attr("fill",css("--ink"));gg.append("text").attr("x",x+4).attr("y",y).attr("dominant-baseline","middle").attr("font-size",11).attr("font-weight",600).attr("fill",css("--paper")).text(code)}};
+  if(S.focus&&S.focus in idx){const k=idx[S.focus];octx.fillStyle=css("--ink");octx.globalAlpha=.10;octx.fillRect(0,k*cell,pad,cell);octx.fillRect(k*cell,0,cell,pad);
+    octx.globalAlpha=.9;octx.strokeStyle=css("--ink");octx.lineWidth=1;octx.strokeRect(.5,k*cell+.5,pad-1,cell-1);octx.strokeRect(k*cell+.5,.5,cell-1,pad-1);octx.globalAlpha=1;
+    label(S.focus,xr+10,TOP+(k+.5)*cell,false,true);label(S.focus,LEFT+(k+.5)*cell,yb+9,true,true)}
+  if(hover){const [i,j]=hover;octx.fillStyle=css("--ink");octx.globalAlpha=.07;octx.fillRect(0,j*cell,pad,cell);octx.fillRect(i*cell,0,cell,pad);
+    octx.globalAlpha=1;octx.strokeStyle=css("--ink");octx.lineWidth=1.5;octx.strokeRect(i*cell+.75,j*cell+.75,cell-1.5,cell-1.5);
+    label(META.order[j],xr+10,TOP+(j+.5)*cell,false,false);label(META.order[i],LEFT+(i+.5)*cell,yb+9,true,false)}
 }
 function dendro(){
   const top=d3.select("#dtop").attr("width",LEFT+pad).attr("height",TOP),left=d3.select("#dleft").attr("width",LEFT).attr("height",TOP+pad);
@@ -145,8 +184,10 @@ function draw(){
   const y=S.year,rect=(a,b)=>ctx.fillRect(idx[a]*cell,idx[b]*cell,cell,cell);
   ctx.fillStyle=css("--wedge");META.order.forEach((c,i)=>{if(byCode[c].firstYear>y){ctx.fillRect(i*cell,0,cell,pad);ctx.fillRect(0,i*cell,pad,cell)}});
   ST.combined.forEach(([a,b,fy])=>{if(fy>y||!(a in idx)||!(b in idx))return;ctx.fillStyle=css(HIST[ageBand(y-fy)]);rect(a,b);rect(b,a)});
+  if(S.stalled&&STL){ctx.fillStyle=css("--grey-2");STL.pairs.forEach(([a,b])=>{if(a in idx&&b in idx){rect(a,b);rect(b,a)}})}   // grey, never fire: stalled is not a prediction
   ST.gaps.forEach(g=>{ctx.fillStyle=css(FIRE[g._tier]);rect(g.a,g.b);rect(g.b,g.a)});
   if(S.sel){ctx.strokeStyle=css("--ink");ctx.lineWidth=2;[[S.sel.a,S.sel.b],[S.sel.b,S.sel.a]].forEach(([a,b])=>ctx.strokeRect(idx[a]*cell+1,idx[b]*cell+1,cell-2,cell-2))}
+  overlay();
 }
 const rankText=g=>({graph:g.rank,size:Math.round((1-g.size)*ST.candidates)+1,n:ST.candidates});
 const topGaps=()=>[...ST.gaps].sort((a,b)=>scoreOf(b)-scoreOf(a)).slice(0,10);
@@ -154,7 +195,13 @@ function gapRow(g){const r=rankText(g),A=byCode[g.a],B=byCode[g.b];
   return `<li><button class="row" data-a="${g.a}" data-b="${g.b}"><span class="code">${esc(g.a)} × ${esc(g.b)}</span> <span class="mute t" title="${esc(titleCase(A.title))} × ${esc(titleCase(B.title))}">${esc(clip(titleCase(A.title),18))} × ${esc(clip(titleCase(B.title),18))}</span><br><span class="mute">graph #${r.graph} · size ≈#${r.size} of ${r.n}</span></button></li>`}
 function render(){
   if(!ST)return;draw();let h="";
-  if(!S.sel)h+=`<h2>Matrix</h2><p class="mute">Click a coloured cell, or pick a gap below, to see why two fields might combine. Blue cells already combined; fire cells are the ${ST.gaps.length} pairs the graph ranks highest of ${ST.candidates.toLocaleString()}.</p>`;
+  if(!S.sel&&S.focus){const f=byCode[S.focus],cands=ST.gaps.filter(g=>g.a===S.focus||g.b===S.focus).sort((a,b)=>scoreOf(b)-scoreOf(a)).slice(0,8),
+      comb=ST.combined.filter(c=>c[2]<=S.year&&(c[0]===S.focus||c[1]===S.focus)).length;
+    h+=`<h2>${esc(f.code)}</h2><p>${esc(titleCase(f.title))}</p><p class="mute">${(f.nPatents||0).toLocaleString()} patents in all · in the data since ${f.firstYear}${f.firstYear<=META.start?" (when the data starts)":""}</p>`;
+    if(f.firstYear>S.year)h+=`<p class="mute">Not in the data yet in ${S.year} (needs 5 patents a year).</p>`;
+    h+=`<p>Combined with ${comb} fields so far. Its row and column are outlined: every pair it is part of.</p>`;
+    h+=cands.length?`<h3>Its top ranked candidates</h3><ul>${cands.map(gapRow).join("")}</ul>`:`<p class="mute">No ranked candidates this year.</p>`}
+  else if(!S.sel)h+=`<h2>Matrix</h2><p class="mute">Click a coloured cell, or pick a gap below, to see why two fields might combine. Blue cells already combined; fire cells are the ${ST.gaps.length} pairs the graph ranks highest of ${ST.candidates.toLocaleString()}.</p>`;
   else{const a=byCode[S.sel.a],b=byCode[S.sel.b],g=find(S.sel.a,S.sel.b),r=g?rankText(g):null;
     h+=`<h2>${esc(a.code)} × ${esc(b.code)}</h2><p>${esc(titleCase(a.title))}<br>× ${esc(titleCase(b.title))}</p>`;
     if(r)h+=`<p class="mute">Not combined yet. Graph rank #${r.graph} of ${r.n}; size rank ≈#${r.size}. Beyond size: ${g.beyond>=0?"+":""}${(g.beyond*100).toFixed(0)} percentile points.</p>`;
@@ -167,28 +214,35 @@ function render(){
   const tg=topGaps();h+=`<h3>Top gaps in ${S.year}</h3><ul>${tg.map(gapRow).join("")}</ul>`;
   $("#note").innerHTML=h;$("#note").querySelectorAll(".row").forEach(b=>b.onclick=()=>pick(b.dataset.a,b.dataset.b));
   $("#srgaps").innerHTML=tg.map(g=>{const r=rankText(g);return `<tr><td>${esc(g.a)}</td><td>${esc(g.b)}</td><td>${r.graph}</td><td>${r.size}</td></tr>`}).join("");
+  $("#clearfocus").hidden=!(S.focus||S.sel);
   $("#legend").innerHTML=`<span>Combined:</span>`+[["over 10 years ago",1],["7 to 10 years ago",2],["4 to 6",3],["last 3 years",4]].map(([t,i])=>`<span><i style="background:var(${HIST[i]})"></i>${t}</span>`).join("")
-    +`<span>Not combined yet, ranked by the selected score:</span>`+[["lower",0],["middle",1],["top third",2]].map(([t,i])=>`<span><i style="background:var(${FIRE[i]})"></i>${t}</span>`).join("");
-  $("#totree").href="/#year="+S.year+"&score="+S.score;$("#tolandscape").href="/landscape#year="+S.year+"&score="+S.score;
+    +`<span>Not combined yet, ranked by the selected score:</span>`+[["lower",0],["middle",1],["top third",2]].map(([t,i])=>`<span><i style="background:var(${FIRE[i]})"></i>${t}</span>`).join("")
+    +(S.stalled?`<span><i style="background:var(--grey-2)"></i>stalled: co-classified ${STL?STL.minYears:3}+ years, under the threshold, and not among the ranked pairs${STL?` (${STL.pairs.length})`:""}</span>`:"");
+  const ff=S.focus?"&field="+S.focus:"";
+  $("#totree").href="/#year="+S.year+"&score="+S.score+ff;$("#tolandscape").href="/landscape#year="+S.year+"&score="+S.score+ff;
   $("#tnote").textContent=`Fields are ordered by shared foundations, so related fields sit together. Every candidate pair is a cell; the page colours the ${ST.gaps.length.toLocaleString()} the graph ranks highest. Not a tree of descent.`;
 }
-async function pick(a,b){S.sel={a,b};EV=null;render();try{EV=await api(`/api/evidence?a=${a}&b=${b}&year=${S.year}`)}catch(e){EV=null}render()}
-function clear(){S.sel=null;EV=null;render()}
+async function pick(a,b){S.sel={a,b};S.focus=null;EV=null;render();try{EV=await api(`/api/evidence?a=${a}&b=${b}&year=${S.year}`)}catch(e){EV=null}render()}
+function clear(){S.sel=null;S.focus=null;EV=null;const f=$("#findfield");if(f)f.value="";render()}
+function focusField(code){if(!byCode[code])return;S.focus=code;S.sel=null;EV=null;render()}
 function cellAt(e){const r=$("#cv").getBoundingClientRect(),i=Math.floor((e.clientX-r.left)/cell),j=Math.floor((e.clientY-r.top)/cell);
   return(i<0||j<0||i>=N||j>=N||i===j)?null:[META.order[i],META.order[j]]}
 const tip=$("#tip");
-$("#cv").addEventListener("mousemove",e=>{if(!ST)return;const p=cellAt(e);if(!p){tip.style.display="none";return}
+$("#cv").addEventListener("mousemove",e=>{if(!ST)return;const p=cellAt(e);if(!p){tip.style.display="none";if(hover){hover=null;overlay()}return}
+  const ni=[idx[p[0]],idx[p[1]]];if(!hover||hover[0]!==ni[0]||hover[1]!==ni[1]){hover=ni;overlay()}
   const [a,b]=p,g=find(a,b),c=ST.combined.find(x=>(x[0]===a&&x[1]===b)||(x[0]===b&&x[1]===a));
   let t=`<b>${esc(a)}</b> × <b>${esc(b)}</b><br>${esc(clip(titleCase(byCode[a].title),40))}<br>${esc(clip(titleCase(byCode[b].title),40))}`;
   if(c)t+=`<br>`+(c[2]<=META.start?`already combined when the data starts (${META.start})`:`combined in ${c[2]}`);else if(g){const r=rankText(g);t+=`<br>has not combined · graph #${r.graph} · size ≈#${r.size}`}
+  if(!c&&S.stalled&&STL){const sp=STL.pairs.find(x=>(x[0]===a&&x[1]===b)||(x[0]===b&&x[1]===a));if(sp)t+=`<br>stalled: co-classified since ${sp[2]}, under the threshold`}
   tip.innerHTML=t;tip.style.display="block";tip.style.left=Math.min(innerWidth-310,e.clientX+14)+"px";tip.style.top=(e.clientY+14)+"px"});
-$("#cv").addEventListener("mouseleave",()=>tip.style.display="none");
+$("#cv").addEventListener("mouseleave",()=>{tip.style.display="none";hover=null;overlay()});
 $("#cv").addEventListener("click",e=>{const p=cellAt(e);if(!p){clear();return}const g=find(p[0],p[1]);if(g)pick(g.a,g.b);else clear()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")clear()});
 
 async function loadYear(y){
   const my=++tok;y=Math.max(META.start,Math.min(META.end,y));S.year=y;$("#year").value=y;
   const st=await api("/api/state?year="+y);if(my!==tok)return;ST=st;tiers();
+  STL=null;if(S.stalled){try{const sl=await api("/api/stalled?year="+y);if(my!==tok)return;STL=sl}catch(e){STL=null}}
   if(S.sel&&!find(S.sel.a,S.sel.b))S.sel=null;EV=null;
   if(S.sel)api(`/api/evidence?a=${S.sel.a}&b=${S.sel.b}&year=${y}`).then(e=>{if(my===tok){EV=e;render()}}).catch(()=>{});
   render();
@@ -215,12 +269,18 @@ async function init(){
     +`<span class="tk" style="left:0;transform:none">${META.start}</span><span class="tk" style="right:0;left:auto;transform:none">${META.end}</span>`;
   yr.addEventListener("input",()=>loadYear(+yr.value));$("#play").onclick=play;
   document.querySelectorAll("[data-score]").forEach(b=>b.onclick=()=>setScore(b.dataset.score));
+  $("#stalled").onchange=async e=>{S.stalled=e.target.checked;await loadYear(S.year)};
+  $("#fieldlist").innerHTML=META.fields.map(f=>`<option value="${esc(f.code)}">${esc(titleCase(f.title))}</option>`).join("");
+  const ff=$("#findfield"),tryFind=()=>{const c=(ff.value||"").trim().toUpperCase().split(/\s/)[0];if(byCode[c]){ff.value=c;focusField(c)}};
+  ff.addEventListener("change",tryFind);ff.addEventListener("keydown",e=>{if(e.key==="Enter")tryFind()});$("#clearfocus").onclick=clear;
   layout();let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{layout();draw()},150)});
   try{CHECK=await api("/api/check")}catch(e){CHECK=null}$("#verdict").innerHTML=checkSentence();
   const h=new URLSearchParams(location.hash.slice(1));
   if(h.get("score")&&["beyond","hybrid","size"].includes(h.get("score")))setScore(h.get("score"));
   await loadYear(h.get("year")?+h.get("year"):S.year);
+  if(h.get("stalled")==="1"){$("#stalled").checked=true;S.stalled=true;await loadYear(S.year)}
   if(h.get("gap")){const g=topGaps()[+h.get("gap")-1];if(g)await pick(g.a,g.b)}
+  if(h.get("field")&&byCode[h.get("field").toUpperCase()]){$("#findfield").value=h.get("field").toUpperCase();focusField(h.get("field").toUpperCase())}
 }
 init();
 </script>
