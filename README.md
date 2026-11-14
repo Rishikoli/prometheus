@@ -22,6 +22,19 @@ The relationships that matter, each stamped with the year it first appeared:
 
 ## How it uses Relate
 
+```mermaid
+flowchart LR
+  raw["PatentsView tables<br/>9.45M patents"] -->|"DuckDB, once"| csv["small CSVs"]
+  csv -->|"prometheus build"| store[("Relate file<br/>data/prometheus.rl")]
+  csv -->|"prometheus capsule"| caps[("sealed capsules<br/>capsules/YYYY.rl")]
+  store -->|"Cypher, read-only"| app["predictor and backtest<br/>(Python)"]
+  store -->|"Cypher, live per request"| web["web pages<br/>tree, matrix, landscape"]
+  store -->|"vector index"| rel["nearest relatives"]
+  caps -->|"relate serve --mcp --read-only"| agent["forecaster agent"]
+  agent -->|"10 picks + Cypher"| grade["grader"]
+  caps -->|"the capsule ten years later"| grade
+```
+
 - **Mode: single file.** The graph is `data/prometheus.rl` (3.9 MB), plus one sealed `.rl` file per year in `capsules/`.
 - **Why this mode:** the graph is written once by a pipeline and then only read. One file ships in the repo, opens with the Relate CLI or
   Python package with no server, and a sealed capsule is naturally one file per moment in time.
