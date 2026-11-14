@@ -76,6 +76,19 @@ prometheus evidence data/prometheus.rl G06E G06M --as-of 2005    # why: bridge f
 ```
 
 To rebuild everything from the raw patent data, see [docs/GUIDE.md](docs/GUIDE.md) and [docs/DATA.md](docs/DATA.md).
+The Relate CLI collects anonymous usage metrics by default; `relate telemetry off` turns that off.
+
+## Dataset
+
+| | |
+|---|---|
+| **Source** | [PatentsView](https://patentsview.org) granted-patent tables, published by the USPTO and now hosted on the [USPTO Open Data Portal](https://data.uspto.gov/bulkdata/datasets/pvgpatdis) |
+| **Release** | dated 10 to 12 Feb 2026, downloaded 13 Nov 2026 |
+| **Tables used** | `g_patent` (grant dates; 9,454,161 US patents, 1976 to 2025), `g_cpc_current` (CPC classes), `g_us_patent_citation` (citations), `g_cpc_title` (class titles) |
+| **What we keep** | 123 CPC subclasses in deep-tech areas (AI and computing, semiconductors, biotech, medical devices, energy, robotics, photonics and sensing), inventive classifications only, aggregated to fields and pairs of fields. No individual patent is stored in this repository. |
+| **Size** | about 15.5 GB of raw tables (not in the repository) reduced to a 3.9 MB Relate file |
+| **Licence** | PatentsView publishes its data under [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) and asks to be credited as "Source: PatentsView (www.patentsview.org)". Check the current terms on the portal before reusing the data. |
+| **Reproduce** | file names, sizes, SHA-256 checksums and column names: [docs/DATA.md](docs/DATA.md) |
 
 ## Where the data lives
 
@@ -137,4 +150,5 @@ An example, with the agent's exact answer and queries: [results/agent_ask/G06E_G
 
 ## Credits and licence
 
-Patent data from [PatentsView](https://patentsview.org) (USPTO). Code under the MIT licence, see [LICENSE](LICENSE).
+Patent data: Source: PatentsView (www.patentsview.org), USPTO, used under CC BY 4.0. The derived graph in this repository is aggregated from it.
+Code under the MIT licence, see [LICENSE](LICENSE).

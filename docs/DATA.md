@@ -58,4 +58,6 @@ Notes
 - Memory: the citation join is the heavy step. `--memory-limit` and `--temp-dir` are settings; point `--temp-dir` at a disk
   with tens of GB free if you can. With a slice, patents outside the slice drop out before the join. The 25 second figure above was
   measured on the real files.
-- **Credit:** the README must credit PatentsView. Check their current licence and attribution wording before submitting.
+- **Credit and licence:** PatentsView publishes its data under Creative Commons Attribution 4.0 and asks for the credit "Source: PatentsView
+  (www.patentsview.org)"; the README and every page carry it. Found on PatentsView's published pages on 14 Nov 2026; the old pages now redirect to the
+  USPTO Open Data Portal, so check the current terms there before reusing the data.
