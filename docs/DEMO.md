@@ -49,7 +49,7 @@ a Cypher query on the store, and the ranks side by side. Turn on **Show what hap
 > 0.23, 0.17 and 0.09 AUC at 2005, 2010 and 2014, with intervals that exclude zero. We defined that test after seeing the
 > failure, so it is exploratory, and the advantage shrinks over time."
 
-**Optional (20 s):** click **Landscape** in the top bar and drag to rotate: "The same grid as terrain. Low blue ground is pairs that already combined; the orange hills are where the graph ranks many gaps among related fields. Switch Surface to Each pair to see every ranked pair as its own spike." Then **Matrix**. "The tree shows the top gaps. This is every pair: blue already combined, fire the ones the graph ranks highest. Same slider, same evidence."
+**Optional (30 s):** click **Landscape** in the top bar, hover a hill (its row and column light up and both fields are named on the edges), type `G06F` in **Find a field**, then drag to rotate: "The same grid as terrain. Low blue ground is pairs that already combined; the orange hills are where the graph ranks many gaps among related fields. Switch Surface to Each pair to see every ranked pair as its own spike." Then **Matrix**. "The tree shows the top gaps. This is every pair: blue already combined, fire the ones the graph ranks highest. Same slider, same evidence."
 
 **Optional (15 s):** tick **Show stalled pairs**. "Grey dotted arcs are pairs where some patents already carry both classes, for three years or more, but not enough to count as combined. It is a display, not a prediction." Drag the year slider and point out that the tree is recomputed each year and leaves drift instead of scrambling.
 

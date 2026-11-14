@@ -242,6 +242,12 @@ Differences, with the reason:
 - **Stalled-pair overlay: built.** Grey dotted arcs (never fire) for pairs whose first co-classified patent is at least 3 years old and that are still under the combination
   threshold; derived from two first-years in the store (`CO_CLASSIFIED`, `COMBINED_WITH`), so no totals. Off by default (about 800 arcs make a grey haze in the middle).
   Pair evidence on all three pages says when a pair has been co-classified without reaching the threshold. It is a display, not a score.
+- **Landscape readability pass (14 Nov 2026).** The first 3D version had no way to say which fields a point was. Added: field codes on the near edges and domain names on the far edges
+  (greedy de-cluttering in screen space, longest domain runs first); clickable labels on the top ten hills (one per hill, nearest copy of the symmetric surface); a crosshair (row and column
+  strips on the terrain) and edge markers for the hovered pair, the selected pair or a focused field; **Find a field** with cross-section and candidates for a field on its own; a gentle
+  camera move to the selection (pan, and come closer only if farther than a set distance); Oblique, Low angle, Top down and Reset; fog and a hemisphere light for depth; a corner scale for
+  height. Labels never take the pointer; clicks are matched to label boxes in the canvas handler. Edge labels go to the near edges (codes) and far edges (names) so they stay clear of the tree
+  and the empty backdrop, because perspective squeezes far-edge text and near-edge text collides with the tree lines.
 - **The landscape's cross-section is a smoothed stacked area chart** (decided 14 Nov 2026), not bars: along the bottom the other fields in order; stacked heights are the share of
   nearby fields combined with the selected field (by age) and ranked as candidates (by rank third). Smoothing follows the Surface toggle; Each pair draws steps.
 - **Not built:** the breakthrough button (hidden while the check is a NO-GO, as designed).

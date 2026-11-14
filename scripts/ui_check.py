@@ -175,6 +175,43 @@ with sync_playwright() as p:
     ok("landscape: Play advances years", y>=2008, y)
     lp.click("[data-score=size]"); lp.wait_for_timeout(800)
     ok("landscape: score toggle re-ranks", lp.evaluate("S.score")=="size")
+    # ---- landscape readability: labels, crosshair, search, camera ----
+    lp.keyboard.press("Escape"); lp.evaluate("loadYear(2005)"); lp.wait_for_timeout(2500)
+    ok("landscape: domain names and field codes label the edges", lp.evaluate("[...document.querySelectorAll('#labels .dl')].filter(e=>e.style.display==='block').length")>=3 and lp.evaluate("[...document.querySelectorAll('#labels .cd')].filter(e=>e.style.display==='block').length")>=10)
+    overlap_js = """(sel)=>{const r=[...document.querySelectorAll(sel)].filter(e=>e.style.display==='block').map(e=>e.getBoundingClientRect());
+      let bad=0;for(let i=0;i<r.length;i++)for(let j=i+1;j<r.length;j++){const a=r[i],b=r[j];if(!(a.right<=b.left+1||a.left>=b.right-1||a.bottom<=b.top+1||a.top>=b.bottom-1))bad++}return {n:r.length,bad}}"""
+    dl=lp.evaluate(overlap_js,"#labels .dl"); pk=lp.evaluate(overlap_js,"#labels .pk")
+    ok("landscape: domain labels do not overlap each other", dl["bad"]==0 and dl["n"]>=3, dl)
+    ok("landscape: 3 to 8 peak labels, none overlapping", 3<=pk["n"]<=8 and pk["bad"]==0, pk)
+    pkl=lp.evaluate("(()=>{const e=[...document.querySelectorAll('#labels .pk')].find(e=>e.style.display==='block');return e?{g:e._g.a+' '+e._g.b,txt:e.textContent}:null})()")
+    lp.evaluate("[...document.querySelectorAll('#labels .pk')].find(e=>e.style.display==='block').click()"); lp.wait_for_timeout(1500)
+    ok("landscape: clicking a peak label selects that pair", pkl and lp.evaluate("!!S.sel && (S.sel.a+' '+S.sel.b)==='%s' || (S.sel.b+' '+S.sel.a)==='%s'"%(pkl['g'],pkl['g'])), pkl)
+    ok("landscape: the selected pair is marked on the edges and by crosshair lines", lp.evaluate("[...document.querySelectorAll('#labels .mk')].filter(e=>e.style.display==='block').length")>=2 and lp.evaluate("ribbons.filter(r=>r.visible).length")>=4)
+    lp.keyboard.press("Escape"); lp.wait_for_timeout(1200)   # let the camera finish flying to the previous selection before aiming at anything
+    ok("landscape: Esc removes the crosshair", lp.evaluate("ribbons.filter(r=>r.visible).length")==0)
+    lp.evaluate("scrollTo(0,0)"); lp.click("[data-cam=oblique]"); lp.evaluate("scrollTo(0,0)"); lp.wait_for_timeout(500)   # page at the top and a known view, then aim at a top gap that is actually in frame
+    pt2=lp.evaluate("""(()=>{const r=document.querySelector('#cv').getBoundingClientRect();
+      for(const g of topGaps()){const p=cellScreen(g.a,g.b);if(p.x>r.left+60&&p.x<r.right-60&&p.y>r.top+80&&p.y<r.bottom-60)return {x:p.x,y:p.y}}return {x:r.left+r.width/2,y:r.top+r.height/2}})()""")
+    lp.mouse.move(pt2["x"]-25,pt2["y"]-25); lp.wait_for_timeout(120); lp.mouse.move(pt2["x"],pt2["y"]); lp.wait_for_timeout(500)
+    st=lp.evaluate("({hover:!!hover, sel:!!S.sel, focus:S.focus, ribbons:ribbons.filter(r=>r.visible).length, markers:[...document.querySelectorAll('#labels .mk')].filter(e=>e.style.display==='block').length, score:S.score, year:S.year, fly:!!fly, under:(e=>e?e.tagName+'#'+e.id:null)(document.elementFromPoint(%f,%f))})"%(pt2["x"],pt2["y"]))
+    ok("landscape: hovering a point lights its row and column and names both fields on the edges", st["hover"] and st["ribbons"]>=4 and st["markers"]>=2, st)
+    lp.mouse.move(5,5); lp.wait_for_timeout(300)
+    lp.fill("#findfield","g06f"); lp.dispatch_event("#findfield","change"); lp.wait_for_timeout(1500)
+    ok("landscape: 'Find a field' focuses it (case-insensitive), with its crosshair and cross-section", lp.evaluate("S.focus==='G06F' && ribbons.filter(r=>r.visible).length>=2") and lp.inner_text("#note h2")=="G06F" and lp.locator("#xs svg path[data-layer]").count()>=3 and lp.is_visible("#clearfocus"), lp.inner_text("#note h2"))
+    lp.keyboard.press("Escape"); lp.wait_for_timeout(500)
+    ok("landscape: Esc clears the focus and the search box", lp.evaluate("S.focus===null") and lp.input_value("#findfield")=="")
+    lp.fill("#findfield","not a field"); lp.dispatch_event("#findfield","change"); lp.wait_for_timeout(300)
+    ok("landscape: an unknown field is ignored", lp.evaluate("S.focus===null"))
+    lp.fill("#findfield","")
+    y_obl=lp.evaluate("camera.position.y"); lp.click("[data-cam=low]"); lp.wait_for_timeout(300); y_low=lp.evaluate("camera.position.y")
+    ok("landscape: Low angle lowers the camera", y_low<y_obl-30, (round(y_obl),round(y_low)))
+    lp.click("[data-cam=oblique]"); lp.evaluate("controls.target.set(40,0,40);camera.position.set(80,60,80)"); lp.click("#resetview"); lp.wait_for_timeout(300)
+    ok("landscape: Reset returns to the chosen view", abs(lp.evaluate("camera.position.y")-98)<1 and abs(lp.evaluate("controls.target.x"))<1, round(lp.evaluate("camera.position.y")))
+    lp.evaluate("pick(topGaps()[0].a,topGaps()[0].b)"); lp.wait_for_timeout(1800)
+    ok("landscape: selecting a pair moves the camera to it", lp.evaluate("(()=>{const g=S.sel,i=idx[g.a],j=idx[g.b];const c=[[i,j],[j,i]].map(([a,b])=>Math.hypot(controls.target.x-xAt(a),controls.target.z-xAt(b)));return Math.min(...c)<8})()"))
+    lp.keyboard.press("Escape"); lp.click("#pklab"); lp.wait_for_timeout(400)
+    ok("landscape: the Peak labels switch hides them", lp.evaluate("[...document.querySelectorAll('#labels .pk')].filter(e=>e.style.display==='block').length")==0)
+    lp.click("#pklab"); lp.click("[data-cam=oblique]"); lp.wait_for_timeout(300)
     ext=[u for u in lreqs if not u.startswith(BASE) and not u.startswith("data:")]
     ok("landscape: no request leaves localhost", len(ext)==0, ext[:3])
     ok("landscape: no console errors", len(lerrs)==0, lerrs[:3])

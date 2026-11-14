@@ -158,7 +158,10 @@ Every point on the surface is a pair of fields, in the same genome order as the 
 edges. The low ground is pairs that already combined, shaded blue by age; fire-coloured peaks are ranked gaps. Two honest settings:
 **Smooth** (default) blurs the surface over about two neighbouring fields, so a hill means many high-ranked gaps among related fields and
 heights are relative to the tallest hill that year; **Each pair** draws every ranked pair as its own spike, taller for a higher rank. Drag to
-rotate, scroll to zoom, right-drag to pan; hover and click snap to the nearest ranked pair. A cross-section panel is a stacked area chart of the selected field
+rotate, scroll to zoom, right-drag to pan; hover and click snap to the nearest ranked pair. **Reading it:** field codes run along the two near edges (every sixth field) and domain
+names along the two far ones, de-cluttered so they never overlap; the top ranked hills carry labels you can click; hovering a point lights its row and column across the terrain and
+marks both fields on the edges; **Find a field** (type `G06F`) draws that field's row and column and shows its own cross-section and top candidates; selecting a pair or a field moves
+the camera gently to it; **Oblique, Low angle, Top down** and **Reset** set the view; a small scale in the corner says what height means for the current surface setting. A cross-section panel is a stacked area chart of the selected field
 against every other field (smoothed like the surface, or stepped on Each pair): the share of nearby fields it has combined with, by age, and that are ranked candidates, by rank third. It uses true values, not the blur; and a table shows how many pairs first combined in each period up to the slider year. If the
 browser has no WebGL the page says so and still lists the numbers and the top gaps. It is a ranking, not a probability, like every other view.
 
@@ -171,7 +174,7 @@ graph disagree across all of them, so it carries the beyond-size finding more ho
 
 Deep links: `#year=1998`, `#year=2005&stalled=1`, `#tree=fixed`, `#year=2005&gap=1`, `#mode=deps&field=G06F`, `#mode=breaks&field=H01L`, `#year=2005&happened=1&gap=2&details=1`.
 Screenshots at 1985, 1998 and 2010 are in `docs/screenshots/`; the design and the choices made while building it are in
-`docs/DESIGN.md`. `python scripts/ui_check.py` drives all three pages in a real browser (63 checks: keyboard, clicks, 3D picking, Play, modes, offline, no-WebGL fallback).
+`docs/DESIGN.md`. `python scripts/ui_check.py` drives all three pages in a real browser (77 checks: keyboard, clicks, 3D picking, Play, modes, offline, no-WebGL fallback).
 
 ![Prometheus in 1998](docs/screenshots/tree_1998.png)
 
@@ -436,7 +439,7 @@ other than common neighbours was not tested.
 |---|---|
 | Pipeline, store, queries, predictor, backtest, genome, capsules, grading, CLI | built; tested on toy data and a fixture |
 | Real PatentsView run, real backtest numbers | done 2026-11-13, see [Real-data results](#real-data-results) |
-| Tree-of-life page: year slider, three modes, three scores, evidence panel, prediction check (`prometheus serve`) | built, plus a matrix view at `/matrix` and a 3D landscape at `/landscape`; 63 browser checks pass on the real store |
+| Tree-of-life page: year slider, three modes, three scores, evidence panel, prediction check (`prometheus serve`) | built, plus a matrix view at `/matrix` and a 3D landscape at `/landscape`; 77 browser checks pass on the real store |
 | Dependencies and knock-out modes on the page | built; field ages are not shown because 109 of 123 fields are left-censored at 1976 |
 | MCP agent against a capsule | A3 (saturated, cannot separate methods) and A4 (beyond size: 9/30 vs 1.5 random, 4/30 PA control) run |
 | Paper-side edges (OpenAlex) and lead time | skipped on purpose |
