@@ -40,7 +40,7 @@ The headline gate measured the one place where the methods are indistinguishable
   is nearly flat. Field labels use today's CPC on old patents. See [Limitations](#limitations).
 
 **What exists:** pipeline, store, queries, predictor, backtest, genome vectors, sealed capsules, grading, a local web page
-(circular tree of fields recomputed per year, with arcs, a year slider, dependencies, knock-out and stalled-pair overlays, an evidence panel and the prediction check), and 63 tests. **Not done:** OpenAlex paper-side edges (skipped on purpose).
+(circular tree of fields recomputed per year, with arcs, a year slider, dependencies, knock-out and stalled-pair overlays, an evidence panel and the prediction check), and 67 tests. **Not done:** OpenAlex paper-side edges (skipped on purpose).
 
 ## Grading rules (fixed before any result)
 

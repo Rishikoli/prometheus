@@ -3,7 +3,7 @@ Usage: python3 query.py 'MATCH (f:Field) RETURN count(f) AS n' ['SECOND QUERY' .
 Prints the result rows as JSON. Writes are refused by the server."""
 import glob, json, subprocess, sys
 db = glob.glob("*.rl")[0]
-p = subprocess.Popen(["/home/aditya/.local/bin/relate", "serve", "--mcp", "stdio", "--database", db, "--read-only"],
+p = subprocess.Popen(["relate", "serve", "--mcp", "stdio", "--database", db, "--read-only"],
                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
 def rpc(i, m, params=None):
     p.stdin.write(json.dumps({"jsonrpc": "2.0", "id": i, "method": m, "params": params or {}}) + "\n"); p.stdin.flush()

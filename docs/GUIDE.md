@@ -194,7 +194,7 @@ src/prometheus/   pipeline.py  build.py  graph.py  predict.py  genome.py  backte
                   slice.py  server.py  cli.py  config.py  toy.py      (slices/*.json: the CPC slices)
 src/prometheus/web/   index.html (tree, the front page)  matrix.html  landscape.html  + bundled D3, Three.js and fonts
 queries/          the Cypher behind each feature, one file each, run by the tests
-tests/            63 tests (pipeline fixture, Cypher vs Python, no-peeking, placebo, capsule sealing, grading, CLI, server, A2/A2b)
+tests/            67 tests (pipeline fixture, Cypher vs Python, no-peeking, placebo, capsule sealing, grading, ledger, CLI, server, A2/A2b)
 scripts/          ui_check.py: 91 browser checks across the three pages
 data/             prometheus.rl (the real store), narrow.rl, csv/ (the small CSVs); the raw TSVs are git-ignored
 capsules/         one sealed, blinded .rl per year for the forecaster experiments

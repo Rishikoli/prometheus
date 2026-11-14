@@ -1,10 +1,13 @@
-# Prometheus
+<picture>
+  <source media="(prefers-reduced-motion: reduce)" srcset="assets/readme/hero.png">
+  <img src="assets/readme/hero.gif" width="100%" alt="Prometheus: which technology fields will combine next? By 1979, control systems (G05D) and reading and recognising data (G06K) had each combined with the same ten fields, but not with each other. In 2005 the graph ranked this pair first. They combined in 2011.">
+</picture>
 
 Which technology fields will combine next, and can a graph predict it better than "big fields combine with big fields"?
 Prometheus builds a graph of 123 technology fields from 9.45 million US patents, keeps it in one [Relate](https://relatedb.ai) file,
 and grades its own predictions against what actually happened. Built for the Relate by Neo4j hackathon.
 
-![The tree of technology fields in 1998](docs/screenshots/tree_1998.png)
+<img src="assets/readme/proof-board.webp" width="100%" alt="Four views of the same graph: the tree of fields with arcs for pairs that combined, the landscape where hills show clusters of ranked gaps, the matrix of every pair of fields, and the profile of one field over time.">
 
 ## Use case
 
@@ -22,18 +25,7 @@ The relationships that matter, each stamped with the year it first appeared:
 
 ## How it uses Relate
 
-```mermaid
-flowchart LR
-  raw["PatentsView tables<br/>9.45M patents"] -->|"DuckDB, once"| csv["small CSVs"]
-  csv -->|"prometheus build"| store[("Relate file<br/>data/prometheus.rl")]
-  csv -->|"prometheus capsule"| caps[("sealed capsules<br/>capsules/YYYY.rl")]
-  store -->|"Cypher, read-only"| app["predictor and backtest<br/>(Python)"]
-  store -->|"Cypher, live per request"| web["web pages<br/>tree, matrix, landscape"]
-  store -->|"vector index"| rel["nearest relatives"]
-  caps -->|"relate serve --mcp --read-only"| agent["forecaster agent"]
-  agent -->|"10 picks + Cypher"| grade["grader"]
-  caps -->|"the capsule ten years later"| grade
-```
+<img src="assets/readme/architecture.svg" width="100%" alt="Architecture: PatentsView tables are reduced by DuckDB to small CSVs and built into one Relate file, data/prometheus.rl. The web views, the predictor and your own agent query it. Sealed per-year capsules serve forecaster agents over read-only MCP. Agents write their forecasts into a shared ledger file, one transaction per forecast, and a grader writes the outcomes back.">
 
 - **Mode: single file.** The graph is `data/prometheus.rl` (3.9 MB), plus one sealed `.rl` file per year in `capsules/`.
 - **Why this mode:** the graph is written once by a pipeline and then only read. One file ships in the repo, opens with the Relate CLI or
@@ -62,7 +54,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
 make demo     # synthetic data, a few seconds: builds a store, runs the backtest, grades a sealed-capsule forecast
-make test     # 63 tests
+make test     # 67 tests
 
 prometheus serve data/prometheus.rl --weights-from results/backtest.json --open    # the real graph at http://127.0.0.1:8765/
 ```
@@ -101,6 +93,8 @@ The Relate CLI collects anonymous usage metrics by default; `relate telemetry of
 | `results/` | the backtest, the analyses, the agents' prompts, forecasts and grades |
 
 ## What we found
+
+<img src="assets/readme/result-card.svg" width="100%" alt="Results: the pre-registered test failed, 1.04 times the size rule against 2 times required. Beyond size, the graph adds 0.09 to 0.23 AUC (exploratory). Agents reading the graph through Relate picked 9 of 30 pairs that came true, where chance expects 1.5 and the graph alone got 10.">
 
 - **The pre-registered test failed.** The graph's top 100 predictions beat the size rule by 1.04 times, against the 2 times we required
   in advance (NO-GO). It does predict (AUC about 0.84 against 0.5 for random), but at the top of the ranking big fields combining with big
