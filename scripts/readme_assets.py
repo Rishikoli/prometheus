@@ -10,6 +10,8 @@ Writes to assets/readme/:
   result-card.svg   the honest result in three numbers (pure SVG, system fonts)
   architecture.svg  how the parts fit (pure SVG, system fonts)
   dataset.svg       what went in: the patent data in four numbers and a growth line
+  schema-graph.svg  the Relate schema of the graph, with live counts
+  schema-ledger.svg the Relate schema of the shared ledger
   headers/*.svg     a section card per heading in the README, the docs, the agent briefs and the challenge; each draws a
                     real predicted pair (the list is in src/header-pairs.json); headings are swapped for cards in place
 The spark is a generated raster supplied by the author: assets/readme/src/spark.png. Without it a drawn placeholder is used.
@@ -389,6 +391,7 @@ DOC_YEAR = {"readme": 2005, "results": 2010, "guide": 1995, "architecture": 2000
 HEADERS = [
     ("readme", "## Use case", "THE PROBLEM", "Use case", None),
     ("readme", "## How it uses Relate", "THE DATABASE", "How it uses Relate", None),
+    ("readme", "## Relate schema", "THE DATA MODEL", "Relate schema", None),
     ("readme", "## Setup and run", "GET STARTED", "Setup and run", None),
     ("readme", "## Dataset", "SOURCE", "Dataset", None),
     ("readme", "## Where the data lives", "FILES", "Where the data lives", None),
@@ -588,6 +591,78 @@ def build_dataset_card():
     (OUT / "dataset.svg").write_text(svg)
 
 
+# ---------------------------------------------------------------- the Relate schema
+def build_schema():
+    """The Relate schemas with live counts, one image per file: the graph (fields and their links) and the shared ledger."""
+    from prometheus.graph import TechGraph
+    count = lambda g, q: g.q(q)[0]["n"]
+    with TechGraph(ROOT / "data" / "prometheus.rl") as g:
+        n = {k: count(g, q) for k, q in (
+            ("field", "MATCH (f:Field) RETURN count(f) AS n"), ("fy", "MATCH (y:FieldYear) RETURN count(y) AS n"),
+            ("cw", "MATCH ()-[r:COMBINED_WITH]->() RETURN count(r) AS n"), ("bo", "MATCH ()-[r:BUILDS_ON]->() RETURN count(r) AS n"),
+            ("cc", "MATCH ()-[r:CO_CLASSIFIED]->() RETURN count(r) AS n"))}
+    with TechGraph(ROOT / "results" / "ledger" / "ledger.rl") as g:
+        n.update({k: count(g, f"MATCH (x:{lab}) RETURN count(x) AS n") for k, lab in (("agent", "Agent"), ("fc", "Forecast"), ("pair", "Pair"))})
+    f = lambda v: f"{v:,}"
+    t = lambda x, y, text, size=18, weight=400, fill=C["muted"], anchor="start": (
+        f'<text x="{x}" y="{y}" text-anchor="{anchor}" font-size="{size}" font-weight="{weight}" fill="{fill}" font-family="{SYS_SANS}">{text}</text>')
+
+    def node(x, y, w, h, title, lines, dark=False, edge=None):
+        fill, head, sub = (C["ink"], C["bg"], C["stone"]) if dark else (C["stone"], C["ink"], C["muted"])
+        out = f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="14" fill="{fill}"/>'
+        if edge:
+            out += f'<rect x="{x}" y="{y + 12}" width="5" height="{h - 24}" rx="2.5" fill="{edge}"/>'
+        out += t(x + 22, y + 38, title, 22, 700, head)
+        for i, line in enumerate(lines):
+            out += t(x + 22, y + 66 + 24 * i, line, 18, 400, sub)
+        return out
+
+    def label(x, y, name, props):
+        return t(x, y, name, 18, 700, C["ink"], "middle") + t(x, y + 23, props, 17, 400, C["muted"], "middle")
+
+    def marker(mid, col):
+        return (f'<marker id="{mid}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+                f'<path d="M0,0 L10,5 L0,10 z" fill="{col}"/></marker>')
+
+    def card(w, h, aria, body, defs=""):
+        return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" width="100%" role="img" aria-label="{aria}">'
+                f'<defs>{defs}</defs><rect x="1" y="1" width="{w - 2}" height="{h - 2}" rx="18" fill="{C["bg"]}" stroke="{C["stone"]}" stroke-width="2"/>'
+                f'{body}</svg>')
+
+    head = lambda kick, path: kicker(40, 50, kick, C["muted"], size=16).replace("{sans}", SYS_SANS) + t(40, 78, path)
+    graph = (head("THE GRAPH", "data/prometheus.rl: written once by the pipeline, then only read")
+             + node(60, 186, 260, 144, f"Field · {f(n['field'])}", ["code, title, firstYear", "nPatents, genome", "(vector index)"], dark=True)
+             + node(880, 186, 260, 144, "Field", ["a technology field:", "one CPC subclass"], dark=True)
+             + f'<path d="M320,216 Q600,70 880,216" fill="none" stroke="{C["teal"]}" stroke-width="3.5" stroke-linecap="round"/>'
+             + label(600, 104, f"COMBINED_WITH · {f(n['cw'])}", "firstYear, count: 3+ patents carry both classes")
+             + f'<line x1="320" y1="258" x2="872" y2="258" stroke="{C["teal"]}" stroke-width="2.5" marker-end="url(#st)"/>'
+             + t(600, 246, f"BUILDS_ON · {f(n['bo'])}", 18, 700, C["ink"], "middle")
+             + t(600, 284, "firstYear, count: 5+ citations from one field to the other", 17, 400, C["muted"], "middle")
+             + f'<path d="M320,300 Q600,440 880,300" fill="none" stroke="{C["muted"]}" stroke-width="2.5" stroke-dasharray="7 6" stroke-linecap="round"/>'
+             + label(600, 406, f"CO_CLASSIFIED · {f(n['cc'])}", "firstYear: shared patents, too few to count")
+             + node(60, 462, 330, 92, f"FieldYear · {f(n['fy'])}", ["code, year, n: patents per year"])
+             + node(435, 462, 330, 92, "Meta · 1", ["source, slice, thresholds"])
+             + node(810, 462, 330, 92, "capsules/YYYY.rl", ["same schema, cut at a year, blinded"]))
+    (OUT / "schema-graph.svg").write_text(card(1200, 590,
+        f"Relate schema of the graph, data/prometheus.rl: {n['field']} Field nodes (code, title, firstYear, nPatents, genome with a vector index) "
+        f"linked by COMBINED_WITH ({f(n['cw'])}, firstYear and count), BUILDS_ON ({f(n['bo'])}, firstYear and count) and CO_CLASSIFIED "
+        f"({f(n['cc'])}, firstYear); {f(n['fy'])} FieldYear nodes with patents per field per year; one Meta node. The per-year capsules use the "
+        f"same schema cut at their year, blinded.", graph, marker("st", C["teal"])))
+
+    ledger = (head("THE SHARED LEDGER", "results/ledger/ledger.rl: agents write here through relate serve --mcp")
+              + node(60, 112, 280, 116, f"Agent · {n['agent']}", ["name", "one per forecaster"])
+              + node(460, 112, 280, 116, f"Forecast · {n['fc']}", ["asOf, rank, why", "cypher, capsule, at"], edge=C["coral"])
+              + node(860, 112, 280, 116, f"Pair · {n['pair']}", ["a, b, asOf, horizon", "outcome, combinedIn"])
+              + f'<line x1="460" y1="170" x2="348" y2="170" stroke="{C["muted"]}" stroke-width="2.5" marker-end="url(#sm)"/>'
+              + t(400, 158, "BY", 18, 700, C["ink"], "middle")
+              + f'<line x1="740" y1="170" x2="852" y2="170" stroke="{C["muted"]}" stroke-width="2.5" marker-end="url(#sm)"/>'
+              + t(796, 158, "ABOUT", 18, 700, C["ink"], "middle")
+              + t(60, 270, "Each forecast is one statement, so one transaction. The grader writes the outcome back onto the Pair.", 17))
+    (OUT / "schema-ledger.svg").write_text(card(1200, 300,
+        f"Relate schema of the shared ledger, results/ledger/ledger.rl: {n['fc']} Forecast nodes (asOf, rank, why, cypher), each BY one of "
+        f"{n['agent']} Agent nodes and ABOUT one of {n['pair']} Pair nodes, which carry the graded outcome.", ledger, marker("sm", C["muted"])))
+
+
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     SRC.mkdir(parents=True, exist_ok=True)
@@ -600,6 +675,7 @@ if __name__ == "__main__":
     build_headers()
     apply_headers()
     build_dataset_card()
+    build_schema()
     print(f"hero pair {d['a']} x {d['b']}: graph rank #{d['rank']} in {YEAR}, combined {d['combined']}; "
           f"spark: {'the generated image' if real else 'a drawn PLACEHOLDER (add assets/readme/src/spark.png)'}")
     for f in sorted(OUT.glob("*.*")):

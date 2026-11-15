@@ -32,8 +32,6 @@ The relationships that matter, each stamped with the year it first appeared:
 - **Mode: single file.** The graph is `data/prometheus.rl` (3.9 MB), plus one sealed `.rl` file per year in `capsules/`.
 - **Why this mode:** the graph is written once by a pipeline and then only read. One file ships in the repo, opens with the Relate CLI or
   Python package with no server, and a sealed capsule is naturally one file per moment in time.
-- **What the graph models:** technology fields (CPC subclasses) as nodes, each with a genome vector; `COMBINED_WITH`, `BUILDS_ON` and
-  `CO_CLASSIFIED` relationships, each with `firstYear`; per-year patent counts; and a `Meta` node recording how the store was made.
 - **What Relate does here:**
   - **Time travel:** "the graph as of 1995" is a Cypher filter on `firstYear`, not a copy.
   - **Evidence:** every page asks Relate live for bridge fields, shared prerequisites, ancestry and knock-out effects.
@@ -46,8 +44,38 @@ The relationships that matter, each stamped with the year it first appeared:
 - **What it does not do:** the one-off reduction of the raw patent tables runs in DuckDB, and the scoring math runs in Python over snapshots
   read from Relate (a test checks the Cypher and Python scorers agree). See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+<a id="relate-schema"></a>
+<img src="assets/readme/headers/readme-03.svg" width="100%" alt="03. Relate schema">
+
+Two Relate files, two schemas. The graph holds technology fields and the links between them, each stamped with the year it first appeared:
+
+<img src="assets/readme/schema-graph.svg" width="100%" alt="Relate schema of the graph, data/prometheus.rl: 123 Field nodes (code, title, firstYear, nPatents, genome with a vector index) linked by COMBINED_WITH (4,138), BUILDS_ON (9,639) and CO_CLASSIFIED (4,943), each with firstYear; 6,021 FieldYear nodes; one Meta node. The per-year capsules use the same schema cut at their year, blinded.">
+
+The shared ledger is where agents write their forecasts and the grader writes back what happened:
+
+<img src="assets/readme/schema-ledger.svg" width="100%" alt="Relate schema of the shared ledger, results/ledger/ledger.rl: 30 Forecast nodes, each BY one of 3 Agent nodes and ABOUT one of 17 Pair nodes, which carry the graded outcome.">
+
+<details>
+<summary>The schema as text</summary>
+
+```
+// data/prometheus.rl  (capsules/YYYY.rl: the same, cut at their year, blinded)
+(:Field {code, title, firstYear, nPatents, genome})       // genome has a vector index
+(:Field)-[:COMBINED_WITH {firstYear, count}]->(:Field)     // 3+ patents carry both classes; stored a < b
+(:Field)-[:BUILDS_ON {firstYear, count}]->(:Field)         // 5+ citations from one field's patents to the other's
+(:Field)-[:CO_CLASSIFIED {firstYear}]->(:Field)            // some shared patents, too few to count
+(:FieldYear {code, year, n})                               // patents of a field granted in one year
+(:Meta {source, slice, dataEndYear, minPairPatents, ...})  // how the store was made, thresholds included
+
+// results/ledger/ledger.rl
+(:Forecast {asOf, rank, why, cypher, capsule, at})-[:BY]->(:Agent {name})
+(:Forecast)-[:ABOUT]->(:Pair {a, b, asOf, horizon, outcome, combinedIn})
+```
+
+</details>
+
 <a id="setup-and-run"></a>
-<img src="assets/readme/headers/readme-03.svg" width="100%" alt="03. Setup and run">
+<img src="assets/readme/headers/readme-04.svg" width="100%" alt="04. Setup and run">
 
 Prerequisites: Python 3.10 or newer. Optional, for the agent experiments: the Relate CLI (`curl -sSfL https://relatedb.ai/install.sh | bash`).
 
@@ -74,7 +102,7 @@ To rebuild everything from the raw patent data, see [docs/GUIDE.md](docs/GUIDE.m
 The Relate CLI collects anonymous usage metrics by default; `relate telemetry off` turns that off.
 
 <a id="dataset"></a>
-<img src="assets/readme/headers/readme-04.svg" width="100%" alt="04. Dataset">
+<img src="assets/readme/headers/readme-05.svg" width="100%" alt="05. Dataset">
 
 <img src="assets/readme/dataset.svg" width="100%" alt="Dataset: 9.45 million US patents granted 1976 to 2025, four PatentsView tables, 123 deep-tech fields kept; 15.5 GB of raw tables reduced to a 3.9 MB Relate file. Licence CC BY 4.0. No individual patent is stored.">
 
@@ -84,7 +112,7 @@ The Relate CLI collects anonymous usage metrics by default; `relate telemetry of
 - **Reproduce:** file names, sizes and column names are in [docs/DATA.md](docs/DATA.md).
 
 <a id="where-the-data-lives"></a>
-<img src="assets/readme/headers/readme-05.svg" width="100%" alt="05. Where the data lives">
+<img src="assets/readme/headers/readme-06.svg" width="100%" alt="06. Where the data lives">
 
 | Path | What it holds |
 |---|---|
@@ -95,7 +123,7 @@ The Relate CLI collects anonymous usage metrics by default; `relate telemetry of
 | `results/` | the backtest, the analyses, the agents' prompts, forecasts and grades |
 
 <a id="what-we-found"></a>
-<img src="assets/readme/headers/readme-06.svg" width="100%" alt="06. What we found">
+<img src="assets/readme/headers/readme-07.svg" width="100%" alt="07. What we found">
 
 <img src="assets/readme/result-card.svg" width="100%" alt="Results: the pre-registered test failed, 1.04 times the size rule against 2 times required. Beyond size, the graph adds 0.09 to 0.23 AUC (exploratory). Agents reading the graph through Relate picked 9 of 30 pairs that came true, where chance expects 1.5 and the graph alone got 10.">
 
@@ -110,7 +138,7 @@ The Relate CLI collects anonymous usage metrics by default; `relate telemetry of
 Small samples, a 1976 start that hides field ages, and other caveats are in [docs/RESULTS.md](docs/RESULTS.md).
 
 <a id="the-views"></a>
-<img src="assets/readme/headers/readme-07.svg" width="100%" alt="07. The views">
+<img src="assets/readme/headers/readme-08.svg" width="100%" alt="08. The views">
 
 `prometheus serve` opens a local page with three views of the same graph, plus a page per field:
 
@@ -122,7 +150,7 @@ Small samples, a 1976 start that hides field ages, and other caveats are in [doc
 Each view has a year slider, the evidence for any pair, and the prediction check. Details are in [docs/GUIDE.md](docs/GUIDE.md).
 
 <a id="ask-the-graph-with-your-own-agent"></a>
-<img src="assets/readme/headers/readme-08.svg" width="100%" alt="08. Ask the graph with your own agent">
+<img src="assets/readme/headers/readme-09.svg" width="100%" alt="09. Ask the graph with your own agent">
 
 Any MCP-capable agent can query the real graph, read-only, through Relate's own server:
 
@@ -136,7 +164,7 @@ against the store with `python scripts/mcp_query.py data/prometheus.rl --check a
 An example, with the agent's exact answer and queries: [results/agent_ask/G06E_G06M.md](results/agent_ask/G06E_G06M.md).
 
 <a id="beat-the-graph"></a>
-<img src="assets/readme/headers/readme-09.svg" width="100%" alt="09. Beat the graph">
+<img src="assets/readme/headers/readme-10.svg" width="100%" alt="10. Beat the graph">
 
 A forecast challenge on the sealed capsules: pick 10 pairs that will combine, but not the easy big-field pairs, and get scored next to the graph,
 the size rule and chance on exactly the same pairs. The graph scored 2, 4 and 4 of 10 in the three rounds; chance expects less than one.
@@ -149,7 +177,7 @@ prometheus challenge score my_forecast.json --round 2005
 Rules, the leaderboard and fair play: [challenge/README.md](challenge/README.md).
 
 <a id="documentation"></a>
-<img src="assets/readme/headers/readme-10.svg" width="100%" alt="10. Documentation">
+<img src="assets/readme/headers/readme-11.svg" width="100%" alt="11. Documentation">
 
 | File | Contents |
 |---|---|
@@ -159,7 +187,7 @@ Rules, the leaderboard and fair play: [challenge/README.md](challenge/README.md)
 | [docs/DATA.md](docs/DATA.md) | where the data comes from, file sizes and columns |
 
 <a id="credits-and-licence"></a>
-<img src="assets/readme/headers/readme-11.svg" width="100%" alt="11. Credits and licence">
+<img src="assets/readme/headers/readme-12.svg" width="100%" alt="12. Credits and licence">
 
 Patent data: Source: PatentsView (www.patentsview.org), USPTO, used under CC BY 4.0. The derived graph in this repository is aggregated from it.
 Code under the MIT licence, see [LICENSE](LICENSE).
