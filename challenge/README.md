@@ -26,7 +26,7 @@ Ineligible, unknown or already-combined pairs are rejected and listed.
 
 Scored on the same eligible pairs; "combined" means first combined within ten years of the round.
 
-| Round | Eligible pairs | Combined within 10 years | Chance (expected) | Size rule | Graph predictor | A4 agent (Claude, 14 Nov 2026) |
+| Round | Eligible pairs | Combined within 10 years | Chance (expected) | Size rule | Graph predictor | A4 agent |
 |---|---|---|---|---|---|---|
 | 1995 (deg product at most 450) | 2,614 | 83 | 0.3 | 1 / 10 | **2 / 10** | 3 / 10 |
 | 2005 (deg product at most 738) | 2,449 | 113 | 0.5 | 2 / 10 | **4 / 10** | 3 / 10 |

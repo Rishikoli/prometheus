@@ -191,7 +191,7 @@ The grader rejects pairs that are unknown or already combined, counts how many f
 forecaster with random, preferential attachment and the graph predictor on the same candidate pairs.
 **Limits:** blinding reduces hindsight leakage but cannot prove it is zero, because a model might recognise the shape of the
 graph; and ten forecasts is a small sample. Treat the agent result as an experiment. The graph predictor has no such leak and is
-the headline number. The MCP server was smoke-tested on the **toy** capsule on 2026-11-13 (Relate CLI v1.0.1, `relate serve --mcp stdio --read-only`): it exposes `read_cypher` and `get_schema`, runs MATCH queries, and rejects writes ("Only MATCH queries are allowed"). A forecaster (Claude in a coding session, using only queries against the 1995 capsule) returned ten pairs with Cypher and the grader accepted all ten. They scored 0 of 10 hits against 59 positives among 6,171 candidates, which on synthetic data and ten forecasts means nothing. The real-capsule experiment (A3) has since been run; see its result under Pre-declared analyses. It used a read-only Cypher helper over the same `relate serve --mcp stdio` server, not an MCP-native client.
+the headline number. The MCP server (`relate serve --mcp stdio --read-only`) exposes `read_cypher` and `get_schema`, runs MATCH queries and rejects writes ("Only MATCH queries are allowed"). The real-capsule results are in [RESULTS.md](RESULTS.md#agents-reading-relate).
 
 <a id="layout"></a>
 <img src="../assets/readme/headers/guide-08.svg" width="100%" alt="08. Layout">
