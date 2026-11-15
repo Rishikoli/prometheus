@@ -36,10 +36,10 @@ flowchart LR
   end
   build --> store
   csv --> capsule["capsule.py"] --> caps
-  store --> graph["graph.py<br/>Cypher, read-only"]
-  graph --> predict["predict.py<br/>scoring"]
+  store --> tg["graph.py<br/>Cypher, read-only"]
+  tg --> predict["predict.py<br/>scoring"]
   predict --> backtest["backtest.py / beyond.py<br/>grading"]
-  graph --> server["server.py"] --> pages["web pages"]
+  tg --> server["server.py"] --> pages["web pages"]
   caps --> mcp["relate serve --mcp"] --> agent["forecaster agent"] --> grade["grade.py"]
 ```
 
