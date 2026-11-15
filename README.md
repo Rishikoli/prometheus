@@ -81,7 +81,7 @@ The Relate CLI collects anonymous usage metrics by default; `relate telemetry of
 - **Source:** [PatentsView](https://patentsview.org) granted-patent tables from the USPTO, hosted on the [USPTO Open Data Portal](https://data.uspto.gov/bulkdata/datasets/pvgpatdis): `g_patent`, `g_cpc_current`, `g_us_patent_citation` and `g_cpc_title`.
 - **What we keep:** 123 CPC subclasses in AI and computing, semiconductors, biotech, medical devices, energy, robotics, photonics and sensing, aggregated to fields and pairs of fields.
 - **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), credited as "Source: PatentsView (www.patentsview.org)". Check the current terms on the portal before reusing the data.
-- **Reproduce:** file names, sizes, SHA-256 checksums and column names are in [docs/DATA.md](docs/DATA.md).
+- **Reproduce:** file names, sizes and column names are in [docs/DATA.md](docs/DATA.md).
 
 <a id="where-the-data-lives"></a>
 <img src="assets/readme/headers/readme-05.svg" width="100%" alt="05. Where the data lives">
@@ -156,8 +156,7 @@ Rules, the leaderboard and fair play: [challenge/README.md](challenge/README.md)
 | [docs/RESULTS.md](docs/RESULTS.md) | the results in short: the backtest, beyond size, agents on Relate, limitations |
 | [docs/GUIDE.md](docs/GUIDE.md) | rebuilding from raw data, all commands, the views in detail, slices, the agent experiments |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | how the parts fit, what runs on Relate, the no-peeking rules |
-| [docs/DATA.md](docs/DATA.md) | where the data comes from, sizes and checksums |
-| [docs/DESIGN.md](docs/DESIGN.md) | the design of the pages |
+| [docs/DATA.md](docs/DATA.md) | where the data comes from, file sizes and columns |
 
 <a id="credits-and-licence"></a>
 <img src="assets/readme/headers/readme-11.svg" width="100%" alt="11. Credits and licence">

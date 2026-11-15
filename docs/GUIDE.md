@@ -115,8 +115,7 @@ newer); fire cells are the 1,500 pairs the graph ranks highest. The tree shows a
 graph disagree across all of them, so it carries the beyond-size finding more honestly. `Tree` goes back, keeping the year. The tree stays the front page.
 
 Deep links: `#year=1998`, `#year=2005&stalled=1`, `#tree=fixed`, `#year=2005&gap=1`, `#mode=deps&field=G06F`, `#mode=breaks&field=H01L`, `#year=2005&happened=1&gap=2&details=1`.
-Screenshots at 1985, 1998 and 2010 are in `docs/screenshots/`; the design and the choices made while building it are in
-`docs/DESIGN.md`. `python scripts/ui_check.py` drives all three pages in a real browser (91 checks: keyboard, clicks, 3D picking, Play, modes, offline, no-WebGL fallback).
+Screenshots at 1985, 1998 and 2010 are in `docs/screenshots/`. `python scripts/ui_check.py` drives all three pages in a real browser (91 checks: keyboard, clicks, 3D picking, Play, modes, offline, no-WebGL fallback).
 
 ![Prometheus in 1998](screenshots/tree_1998.png)
 
@@ -208,6 +207,6 @@ scripts/          ui_check.py: 91 browser checks across the three pages
 data/             prometheus.rl (the real store), narrow.rl, csv/ (the small CSVs); the raw TSVs are git-ignored
 capsules/         one sealed, blinded .rl per year for the forecaster experiments
 results/          backtest, sensitivity runs, A2/A2b, narrowed slice, forecaster prompts, forecasts and grades
-docs/             ARCHITECTURE.md  DESIGN.md  DATA.md  screenshots/
+docs/             ARCHITECTURE.md  DATA.md  screenshots/
 ```
 

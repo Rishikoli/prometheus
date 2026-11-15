@@ -8,6 +8,22 @@ which pairs of fields may combine next, to grade that ranking against history, a
 <img src="../assets/readme/headers/architecture-01.svg" width="100%" alt="01. The whole picture">
 
 ```mermaid
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "background": "#F5F1E9",
+    "primaryColor": "#F5F1E9",
+    "primaryTextColor": "#172033",
+    "primaryBorderColor": "#E6E1D6",
+    "lineColor": "#63D3BE",
+    "secondaryColor": "#E6E1D6",
+    "tertiaryColor": "#F5F1E9",
+    "clusterBkg": "#E6E1D6",
+    "clusterBorder": "#E6E1D6",
+    "edgeLabelBackground": "#F5F1E9",
+    "titleColor": "#172033"
+  }
+}}%%
 flowchart LR
   subgraph prep["Preparation (DuckDB, runs once)"]
     raw["PatentsView TSVs<br/>9.45M patents"] --> pipe["pipeline.py<br/>aggregate to fields and pairs"]
@@ -69,6 +85,7 @@ A prediction made as of year Y must not see anything after Y:
 <a id="5-the-agent-path"></a>
 <img src="../assets/readme/headers/architecture-05.svg" width="100%" alt="05. The agent path">
 
+```mermaid
 %%{init: {
   "theme": "base",
   "themeVariables": {
@@ -97,19 +114,18 @@ A prediction made as of year Y must not see anything after Y:
     "sequenceNumberColor": "#F5F1E9"
   }
 }}%%
-
 sequenceDiagram
-    participant C as capsule.py
-    participant R as relate serve --mcp (read-only)
-    participant A as forecaster agent
-    participant G as grade.py
-
-    C->>R: capsules/1995.rl (blind, sealed)
-    A->>R: get_schema
-    A->>R: read_cypher (MATCH only, writes refused)
-    R-->>A: rows as JSON
-    A->>G: forecast.json with 10 pairs, each with its Cypher
-    G->>G: compare with the capsule ten years later
+  participant C as capsule.py
+  participant R as relate serve --mcp (read-only)
+  participant A as forecaster agent
+  participant G as grade.py
+  C->>R: capsules/1995.rl (blind, sealed)
+  A->>R: get_schema
+  A->>R: read_cypher (MATCH only, writes refused)
+  R-->>A: rows as JSON
+  A->>G: forecast.json with 10 pairs, each with its Cypher
+  G->>G: compare with the capsule ten years later
+```
 
 The agent sees two tools and an anonymous graph. Every pick must carry the Cypher behind it, and the grader rejects pairs that are unknown
 or already combined. `prometheus agent-config` gives any MCP client the same read-only access to the full store, briefed by [agent/PROMPT.md](../agent/PROMPT.md).
@@ -119,7 +135,7 @@ or already combined. `prometheus agent-config` gives any MCP client the same rea
 
 `prometheus serve STORE` opens the store read-only and serves the pages plus a JSON API (`/api/state`, `/api/tree`, `/api/evidence`,
 `/api/field`, `/api/check`). It binds to 127.0.0.1, has no write route, and is single-threaded because a Relate connection belongs to
-the thread that opened it. Design choices are in [DESIGN.md](DESIGN.md).
+the thread that opened it.
 
 <a id="7-trade-offs"></a>
 <img src="../assets/readme/headers/architecture-07.svg" width="100%" alt="07. Trade-offs">

@@ -14,8 +14,9 @@ Writes to assets/readme/:
                     real predicted pair (the list is in src/header-pairs.json); headings are swapped for cards in place
 The spark is a generated raster supplied by the author: assets/readme/src/spark.png. Without it a drawn placeholder is used.
 
-The README palette (navy and cream cards, coral, teal and violet accents) is separate from the app's own design tokens.
-Coral always means a prediction, teal a link that already exists, violet a prediction that came true.
+The README palette: warm ivory background, deep navy text and nodes, slate grey secondary text, coral accent, mint
+turquoise network lines, warm stone borders. Coral always means a prediction (dashed until it comes true, then solid);
+turquoise is a link that already exists. It is separate from the app's own design tokens.
 """
 import json
 import math
@@ -34,9 +35,12 @@ from prometheus.server import Service  # noqa: E402
 OUT = ROOT / "assets" / "readme"
 SRC = OUT / "src"
 FONTS = ROOT / "src" / "prometheus" / "web" / "fonts"
-C = dict(navy="#121827", navy2="#1B2336", pill="#252F42", cream="#F5F1E9", ink="#172033", panel="#EEF0F4", white="#FFFFFF",
-         line="#C9CED7", muted="#777E88", dim="#8A919D", soft="#AEB4BF", faint="#E6E1D6",
-         coral="#FF7458", teal="#63D3BE", violet="#6A62D9", violet2="#8F88F0")
+C = dict(bg="#F5F1E9",      # background: warm ivory
+         ink="#172033",     # primary text and network nodes: deep navy
+         muted="#777E88",   # secondary text: muted slate grey
+         coral="#FF7458",   # accent: coral orange, a prediction
+         teal="#63D3BE",    # network lines: soft mint turquoise
+         stone="#E6E1D6")   # borders and decorative elements: warm stone
 FACE = (f"@font-face{{font-family:'Instrument Sans';font-weight:400;src:url('file://{FONTS}/instrument-sans-latin-400-normal.woff2')}}"
         f"@font-face{{font-family:'Instrument Sans';font-weight:600;src:url('file://{FONTS}/instrument-sans-latin-600-normal.woff2')}}")
 SYS_SANS = "system-ui, -apple-system, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif"
@@ -126,48 +130,48 @@ def hero_svg(d, year=YEAR, show_fire=True, reveal=False, show_spark_slot=False, 
 
     graph = []
     if not reveal:   # the year, faint, under the arcs (the GIF needs it; the static hero says it in the pills)
-        graph.append(f'<text x="{CX}" y="{CY + 118}" text-anchor="middle" font-size="52" font-weight="600" fill="{C["pill"]}" '
+        graph.append(f'<text x="{CX}" y="{CY + 118}" text-anchor="middle" font-size="52" font-weight="600" fill="{C["stone"]}" '
                      f'font-family="{sans}">{year}</text>')
     for x, y, fy in sorted(d["arcs"], key=lambda t: -t[2]):
         if fy > year or not ({x, y} & {a, b}) or {x, y} == {a, b}:
             continue
         path, _ = arc_path(pos[x], pos[y], bend=0.25)
         age = year - fy
-        op, sw = (1.0, 2.6) if age <= 3 else (0.75, 2.2) if age <= 10 else (0.45, 1.8)
+        op, sw = (1.0, 3.0) if age <= 3 else (0.85, 2.6) if age <= 10 else (0.6, 2.2)
         graph.append(f'<path d="{path}" fill="none" stroke="{C["teal"]}" stroke-width="{sw}" stroke-opacity="{op}" stroke-linecap="round"/>')
     pair_path, mid = arc_path(pos[a], pos[b], bend=0)
     if combined_now:
-        graph.append(f'<path d="{pair_path}" fill="none" stroke="{C["violet2"]}" stroke-width="4.5" stroke-linecap="round"/>')
+        graph.append(f'<path d="{pair_path}" fill="none" stroke="{C["coral"]}" stroke-width="4.5" stroke-linecap="round"/>')
     elif show_fire:
         graph.append(f'<path d="{pair_path}" fill="none" stroke="{C["coral"]}" stroke-width="3.6" stroke-dasharray="11 7" stroke-linecap="round"/>')
     for n, (x, y, t) in pos.items():
         key = n in (a, b)
-        graph.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{9 if key else 5.5}" fill="{C["cream"]}"/>')
+        graph.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{9 if key else 5.5}" fill="{C["ink"]}"/>')
         lx, ly = CX + (R + 20) * math.cos(t), CY + (R + 20) * math.sin(t)
         anchor = "start" if math.cos(t) > 0.2 else "end" if math.cos(t) < -0.2 else "middle"
         dy = 7 if abs(math.sin(t)) < 0.5 else (16 if math.sin(t) > 0 else 0)
         graph.append(f'<text x="{lx:.1f}" y="{ly + dy:.1f}" text-anchor="{anchor}" font-size="{22 if key else 18}" '
-                     f'font-weight="{600 if key else 400}" fill="{C["cream"] if key else C["dim"]}" font-family="{sans}">{n}</text>')
-    slot = (f'<circle cx="{mid[0]:.1f}" cy="{mid[1]:.1f}" r="30" fill="none" stroke="{C["soft"]}" stroke-dasharray="3 4"/>'
+                     f'font-weight="{600 if key else 400}" fill="{C["ink"] if key else C["muted"]}" font-family="{sans}">{n}</text>')
+    slot = (f'<circle cx="{mid[0]:.1f}" cy="{mid[1]:.1f}" r="30" fill="none" stroke="{C["muted"]}" stroke-dasharray="3 4"/>'
             if show_spark_slot else "")
 
     left = (f'<rect x="64" y="58" width="40" height="5" rx="2.5" fill="{C["coral"]}"/>'
-            + kicker(64, 94, "PATENT GRAPH  ·  ONE RELATE FILE", C["dim"])
-            + f'<text x="62" y="170" font-size="80" font-weight="600" fill="{C["cream"]}" font-family="{{sans}}">Prometheus</text>'
-            f'<text x="64" y="216" font-size="28" font-weight="600" fill="{C["cream"]}" font-family="{{sans}}">Which technology fields will combine next?</text>'
-            f'<text x="64" y="256" font-size="20" fill="{C["soft"]}" font-family="{{sans}}">A graph of 123 fields from 9.45 million US patents</text>'
-            f'<text x="64" y="284" font-size="20" fill="{C["soft"]}" font-family="{{sans}}">that grades its own predictions against history.</text>')
+            + kicker(64, 94, "PATENT GRAPH  ·  ONE RELATE FILE", C["muted"])
+            + f'<text x="62" y="170" font-size="80" font-weight="600" fill="{C["ink"]}" font-family="{{sans}}">Prometheus</text>'
+            f'<text x="64" y="216" font-size="28" font-weight="600" fill="{C["ink"]}" font-family="{{sans}}">Which technology fields will combine next?</text>'
+            f'<text x="64" y="256" font-size="20" fill="{C["muted"]}" font-family="{{sans}}">A graph of 123 fields from 9.45 million US patents</text>'
+            f'<text x="64" y="284" font-size="20" fill="{C["muted"]}" font-family="{{sans}}">that grades its own predictions against history.</text>')
     sub = "control systems × reading and recognising data" if (a, b) == ("G05D", "G06K") else ""
-    panel = (f'<rect x="64" y="318" width="540" height="160" rx="16" fill="{C["navy2"]}"/>'
-             + kicker(88, 352, f"THE GRAPH'S #{d['rank']} PICK IN {YEAR}", C["dim"], size=16)
-             + f'<text x="88" y="392" font-size="32" font-weight="600" fill="{C["cream"]}" font-family="{{sans}}">{a} × {b}</text>'
-             f'<text x="88" y="420" font-size="18" fill="{C["soft"]}" font-family="{{sans}}">{sub}</text>')
+    panel = (f'<rect x="64" y="318" width="540" height="160" rx="16" fill="{C["stone"]}"/>'
+             + kicker(88, 352, f"THE GRAPH'S #{d['rank']} PICK IN {YEAR}", C["muted"], size=16)
+             + f'<text x="88" y="392" font-size="32" font-weight="600" fill="{C["ink"]}" font-family="{{sans}}">{a} × {b}</text>'
+             f'<text x="88" y="420" font-size="18" fill="{C["muted"]}" font-family="{{sans}}">{sub}</text>')
     if reveal or combined_now:
-        pills = [(f"PICKED {YEAR}", C["coral"], C["navy"]), (f"COMBINED {d['combined']}", C["violet"], C["cream"])]
+        pills = [(f"PICKED {YEAR}", C["coral"], C["ink"]), (f"COMBINED {d['combined']}", C["ink"], C["bg"])]
     elif show_fire:
-        pills = [(f"PICKED {YEAR}", C["coral"], C["navy"]), ("NOT COMBINED YET", C["pill"], C["soft"])]
+        pills = [(f"PICKED {YEAR}", C["coral"], C["ink"]), ("NOT COMBINED YET", C["bg"], C["muted"])]
     else:
-        pills = [(f"SHOWING {year}", C["pill"], C["soft"])]
+        pills = [(f"SHOWING {year}", C["bg"], C["muted"])]
     px = 88
     for text, fill, color in pills:
         s, w = pill(px, 432, text, fill, color)
@@ -176,17 +180,17 @@ def hero_svg(d, year=YEAR, show_fire=True, reveal=False, show_spark_slot=False, 
 
     legend, lx = "", 64
     shared = f"{n_bridges} shared partners, all by {by}" if year >= by or reveal else f"links made by {year}"
-    for kind, text in (("teal", shared), ("coral", "prediction"), ("violet2", "came true")):
-        dash = ' stroke-dasharray="8 5"' if kind == "coral" else ""
+    for kind, dashed, text in (("teal", False, shared), ("coral", True, "prediction"), ("coral", False, "came true")):
+        dash = ' stroke-dasharray="8 5"' if dashed else ""
         legend += (f'<line x1="{lx}" y1="{511}" x2="{lx + 26}" y2="511" stroke="{C[kind]}" stroke-width="3.5"{dash} stroke-linecap="round"/>'
-                   f'<text x="{lx + 36}" y="517" font-size="18" fill="{C["dim"]}" font-family="{{sans}}">{text}</text>')
+                   f'<text x="{lx + 36}" y="517" font-size="18" fill="{C["muted"]}" font-family="{{sans}}">{text}</text>')
         lx += 36 + round(len(text) * 9.4) + 28
 
     style = f"<style>{FACE}</style>" if published else ""
     body = (left + panel + legend).replace("{sans}", sans)
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" '
             f'aria-label="Prometheus: a graph of technology fields that predicts which will combine next">{style}'
-            f'<rect width="{W}" height="{H}" fill="{C["navy"]}"/>{body}{"".join(graph)}{slot}</svg>'), mid
+            f'<rect width="{W}" height="{H}" fill="{C["bg"]}"/>{body}{"".join(graph)}{slot}</svg>'), mid
 
 
 def spark_image():
@@ -251,7 +255,7 @@ def build_hero(d):
             render_svg(svg_i, f, scale=1)
             frames.append(composite(f, mid_i, 1, spark, spk).convert("RGB"))
             durations.append(ms)
-        # one palette for every frame, taken from the first and last frames together (bright new teal, then coral, violet
+        # one palette for every frame, taken from the first and last frames together (bright new turquoise, then coral
         # and the flame), so small accents keep their colour and nothing flickers between frames
         both = Image.new("RGB", (W, 2 * H))
         both.paste(frames[0], (0, 0))
@@ -282,7 +286,7 @@ def build_proof_board():
              ("matrix_2005.png", (100, 120, 1420, 870), "MATRIX", "every pair of fields is a cell"),
              ("field_G06N.png", (20, 110, 1360, 872), "FIELD", "one field over time")]
     tw, th, gap, cap, pad = 1120, 638, 64, 84, 48
-    board = Image.new("RGB", (2 * tw + gap + 2 * pad, 2 * (th + cap) + gap + pad), C["navy"])
+    board = Image.new("RGB", (2 * tw + gap + 2 * pad, 2 * (th + cap) + gap + pad), C["bg"])
     dr = ImageDraw.Draw(board)
     f_num, f_kick, f_text = _font(True, 40), _font(True, 32), _font(False, 34)
     for k, (name, box, kick, label) in enumerate(tiles):
@@ -292,12 +296,12 @@ def build_proof_board():
         x0 = pad + (k % 2) * (tw + gap) + (tw - im.width) // 2
         y0 = pad + (k // 2) * (th + cap + gap)
         top = y0 + (th - im.height) // 2
-        dr.rounded_rectangle([x0 - 10, top - 10, x0 + im.width + 9, top + im.height + 9], radius=18, fill=C["cream"])
+        dr.rounded_rectangle([x0 - 10, top - 10, x0 + im.width + 9, top + im.height + 9], radius=18, fill=C["stone"])
         board.paste(im, (x0, top))
         tx, ty = pad + (k % 2) * (tw + gap), y0 + th + 24
         dr.text((tx, ty), f"0{k + 1}", fill=C["coral"], font=f_num)
-        dr.text((tx + 70, ty + 5), kick, fill=C["cream"], font=f_kick)
-        dr.text((tx + 70 + dr.textlength(kick, font=f_kick) + 20, ty + 3), label, fill=C["soft"], font=f_text)
+        dr.text((tx + 70, ty + 5), kick, fill=C["ink"], font=f_kick)
+        dr.text((tx + 70 + dr.textlength(kick, font=f_kick) + 20, ty + 3), label, fill=C["muted"], font=f_text)
     # WebP keeps the screenshots sharp at a quarter of the PNG size; GitHub renders it
     board.save(OUT / "proof-board.webp", quality=88, method=6)
 
@@ -305,7 +309,7 @@ def build_proof_board():
 # ---------------------------------------------------------------- result card and architecture (pure SVG, system fonts)
 def build_result_card():
     def col(x, n, kick, big, line1, line2):
-        return (f'<text x="{x + 330}" y="86" text-anchor="end" font-size="60" font-weight="700" fill="{C["faint"]}" font-family="{SYS_SANS}">0{n}</text>'
+        return (f'<text x="{x + 330}" y="86" text-anchor="end" font-size="60" font-weight="700" fill="{C["stone"]}" font-family="{SYS_SANS}">0{n}</text>'
                 f'<circle cx="{x + 330 - 92}" cy="76" r="6" fill="{C["teal"]}"/>'
                 + kicker(x, 54, kick, C["muted"], size=16).replace("{sans}", SYS_SANS)
                 + f'<rect x="{x}" y="68" width="36" height="5" rx="2.5" fill="{C["coral"]}"/>'
@@ -313,32 +317,32 @@ def build_result_card():
                 f'<text x="{x}" y="174" font-size="20" fill="{C["ink"]}" font-family="{SYS_SANS}">{line1}</text>'
                 f'<text x="{x}" y="202" font-size="18" fill="{C["muted"]}" font-family="{SYS_SANS}">{line2}</text>')
     body = (col(40, 1, "PRE-REGISTERED TEST", "Failed", "1.04x the size rule, 2x required", "top 100 pairs, 2005 to 2014")
-            + f'<line x1="410" y1="40" x2="410" y2="206" stroke="{C["faint"]}" stroke-width="2"/>'
+            + f'<line x1="410" y1="40" x2="410" y2="206" stroke="{C["stone"]}" stroke-width="2"/>'
             + col(440, 2, "BEYOND SIZE", "+0.09 to 0.23", "AUC over the size rule", "exploratory: defined afterwards")
-            + f'<line x1="810" y1="40" x2="810" y2="206" stroke="{C["faint"]}" stroke-width="2"/>'
+            + f'<line x1="810" y1="40" x2="810" y2="206" stroke="{C["stone"]}" stroke-width="2"/>'
             + col(840, 3, "AGENTS ON RELATE", "9 of 30", "came true; chance expects 1.5", "the graph alone: 10 of 30"))
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 240" width="100%" role="img" '
            f'aria-label="Results: the pre-registered test failed, 1.04 times the size rule against 2 times required. Beyond size, the graph adds 0.09 to 0.23 AUC (exploratory, defined afterwards). Agents reading the graph through Relate picked 9 of 30 pairs that came true, where chance expects 1.5 and the graph alone got 10.">'
-           f'<rect x="1" y="1" width="1198" height="238" rx="18" fill="{C["cream"]}"/>{body}</svg>')
+           f'<rect x="1" y="1" width="1198" height="238" rx="18" fill="{C["bg"]}" stroke="{C["stone"]}" stroke-width="2"/>{body}</svg>')
     (OUT / "result-card.svg").write_text(svg)
 
 
 def build_architecture():
     def box(x, y, w, h, title, sub, kind="step"):
-        """step: a white card; store: a navy card (a Relate file); agent: a white card with a violet edge."""
+        """step: a stone card; store: a navy card (a Relate file); agent: a stone card with a turquoise edge."""
         if kind == "store":
-            return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="14" fill="{C["navy"]}"/>'
+            return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="14" fill="{C["ink"]}"/>'
                     f'<circle cx="{x + w - 22}" cy="{y + 24}" r="6" fill="{C["teal"]}"/>'
-                    f'<text x="{x + 18}" y="{y + 38}" font-size="20" font-weight="700" fill="{C["cream"]}" font-family="{SYS_SANS}">{title}</text>'
-                    f'<text x="{x + 18}" y="{y + 66}" font-size="18" fill="{C["soft"]}" font-family="{SYS_SANS}">{sub}</text>')
-        edge = (f'<rect x="{x}" y="{y + 12}" width="5" height="{h - 24}" rx="2.5" fill="{C["violet"]}"/>' if kind == "agent" else "")
-        return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="12" fill="{C["white"]}" stroke="{C["line"]}" stroke-width="1.5"/>{edge}'
+                    f'<text x="{x + 18}" y="{y + 38}" font-size="20" font-weight="700" fill="{C["bg"]}" font-family="{SYS_SANS}">{title}</text>'
+                    f'<text x="{x + 18}" y="{y + 66}" font-size="18" fill="{C["stone"]}" font-family="{SYS_SANS}">{sub}</text>')
+        edge = (f'<rect x="{x}" y="{y + 12}" width="5" height="{h - 24}" rx="2.5" fill="{C["teal"]}"/>' if kind == "agent" else "")
+        return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="12" fill="{C["stone"]}"/>{edge}'
                 f'<text x="{x + 18}" y="{y + 32}" font-size="20" font-weight="700" fill="{C["ink"]}" font-family="{SYS_SANS}">{title}</text>'
                 f'<text x="{x + 18}" y="{y + 58}" font-size="18" fill="{C["muted"]}" font-family="{SYS_SANS}">{sub}</text>')
 
     def arrow(x1, y1, x2, y2, label="", hot=False, at=None):
         """at = (x, y, anchor) places the label off a diagonal line; the default sits it above the middle."""
-        col, mk = (C["coral"], "ahc") if hot else (C["dim"], "ah")
+        col, mk = (C["coral"], "ahc") if hot else (C["muted"], "ah")
         lx, ly, anc = at or ((x1 + x2) / 2, (y1 + y2) / 2 - 10, "middle")
         lab = (f'<text x="{lx:.0f}" y="{ly:.0f}" text-anchor="{anc}" font-size="18" fill="{C["muted"]}" '
                f'font-family="{SYS_SANS}">{label}</text>') if label else ""
@@ -368,8 +372,8 @@ def build_architecture():
                                f'<path d="M0,0 L10,5 L0,10 z" fill="{col}"/></marker>')
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 580" width="100%" role="img" '
            f'aria-label="Architecture: PatentsView tables are reduced by DuckDB to small CSVs and built into one Relate file. Web views, the predictor and your own agent query it; sealed per-year capsules serve forecaster agents over read-only MCP; agents write forecasts into a shared ledger file, one transaction per forecast, and a grader writes the outcomes back.">'
-           f'<defs>{marker("ah", C["dim"])}{marker("ahc", C["coral"])}</defs>'
-           f'<rect x="1" y="1" width="1198" height="578" rx="18" fill="{C["panel"]}"/>'   # opaque: readable in dark mode
+           f'<defs>{marker("ah", C["muted"])}{marker("ahc", C["coral"])}</defs>'
+           f'<rect x="1" y="1" width="1198" height="578" rx="18" fill="{C["bg"]}" stroke="{C["stone"]}" stroke-width="2"/>'   # opaque: readable in dark mode
            f'<g transform="translate(0,52)">{body}</g></svg>')
     (OUT / "architecture.svg").write_text(svg)
 
@@ -478,9 +482,9 @@ def pair_glyph(gx, gy, r, pair):
     ang += [math.radians(155 - 130 * (i + 0.5) / max(1, len(bottom))) for i in range(len(bottom))]
     pa, pb = (gx - r, gy), (gx + r, gy)
     pts = [(gx + r * math.cos(t), gy + r * math.sin(t)) for t in ang]
-    s = f'<circle cx="{gx}" cy="{gy}" r="{r}" fill="none" stroke="{C["faint"]}" stroke-width="1.5"/>'
+    s = f'<circle cx="{gx}" cy="{gy}" r="{r}" fill="none" stroke="{C["stone"]}" stroke-width="1.5"/>'
     for (code, _), (x, y) in zip(top + bottom, pts):     # newer shared links are brighter, as on the tree page
-        op = 0.95 if age[code] <= 5 else 0.7 if age[code] <= 15 else 0.4
+        op = 1.0 if age[code] <= 5 else 0.8 if age[code] <= 15 else 0.55
         for ex, ey in (pa, pb):
             s += f'<line x1="{ex:.1f}" y1="{ey:.1f}" x2="{x:.1f}" y2="{y:.1f}" stroke="{C["teal"]}" stroke-width="1.6" stroke-opacity="{op}"/>'
     s += f'<line x1="{pa[0]}" y1="{gy}" x2="{pb[0]}" y2="{gy}" stroke="{C["coral"]}" stroke-width="2.2" stroke-dasharray="5 4"/>'
@@ -502,14 +506,14 @@ def header_svg(num, kick, title, pair, big=False):
            f'font-family="{SYS_SANS}">#{pair["rank"]} pick in {pair["year"]}</text>')
     if num:
         right = (tag + pair_glyph(gx, h / 2, gr, pair)
-                 + f'<text x="{1000 - 28}" y="{h / 2 + 22}" text-anchor="end" font-size="60" font-weight="700" fill="{C["faint"]}" '
+                 + f'<text x="{1000 - 28}" y="{h / 2 + 22}" text-anchor="end" font-size="60" font-weight="700" fill="{C["stone"]}" '
                  f'font-family="{SYS_SANS}">{num:02d}</text>')
     else:
         right = tag + pair_glyph(gx, h / 2, gr, pair)
     note = f'{pair["a"]} and {pair["b"]}, the graph\'s #{pair["rank"]} pick in {pair["year"]}'
     label = (f"{num:02d}. {title}" if num else title) + f" (drawn: {note})"
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 {h}" width="100%" role="img" aria-label="{label}">'
-            f'<rect x="0" y="0" width="1000" height="{h}" rx="16" fill="{C["cream"]}"/>'
+            f'<rect x="1" y="1" width="998" height="{h - 2}" rx="16" fill="{C["bg"]}" stroke="{C["stone"]}" stroke-width="2"/>'
             + kicker(28, 32, kick, C["muted"], size=14).replace("{sans}", SYS_SANS)
             + f'<rect x="28" y="42" width="32" height="4" rx="2" fill="{C["coral"]}"/>'
             f'<text x="28" y="{ty}" font-size="{size}" font-weight="700" fill="{C["ink"]}" font-family="{SYS_SANS}">{title}</text>'
@@ -556,31 +560,31 @@ def build_dataset_card():
     area = f"{x0},{yb} {pts} {x1},{yb}"
 
     def stat(x, big, line1, line2):
-        return (f'<text x="{x}" y="118" font-size="44" font-weight="700" fill="{C["cream"]}" font-family="{SYS_SANS}">{big}</text>'
-                f'<text x="{x}" y="152" font-size="20" fill="{C["cream"]}" font-family="{SYS_SANS}">{line1}</text>'
-                f'<text x="{x}" y="178" font-size="18" fill="{C["soft"]}" font-family="{SYS_SANS}">{line2}</text>')
+        return (f'<text x="{x}" y="118" font-size="44" font-weight="700" fill="{C["ink"]}" font-family="{SYS_SANS}">{big}</text>'
+                f'<text x="{x}" y="152" font-size="20" fill="{C["ink"]}" font-family="{SYS_SANS}">{line1}</text>'
+                f'<text x="{x}" y="178" font-size="18" fill="{C["muted"]}" font-family="{SYS_SANS}">{line2}</text>')
     pills, px = "", 40
-    for text, fill, color in (("CC BY 4.0", C["teal"], C["navy"]), ("USPTO  ·  PATENTSVIEW", C["pill"], C["soft"]),
-                              ("NO INDIVIDUAL PATENT STORED", C["pill"], C["soft"])):
+    for text, fill, color in (("CC BY 4.0", C["teal"], C["ink"]), ("USPTO  ·  PATENTSVIEW", C["stone"], C["ink"]),
+                              ("NO INDIVIDUAL PATENT STORED", C["stone"], C["ink"])):
         s, w = pill(px, 214, text, fill, color)
         pills += s.replace("{sans}", SYS_SANS)
         px += w + 12
     body = (f'<rect x="40" y="34" width="36" height="5" rx="2.5" fill="{C["coral"]}"/>'
-            + kicker(40, 64, "WHAT WENT IN", C["dim"], size=16).replace("{sans}", SYS_SANS)
+            + kicker(40, 64, "WHAT WENT IN", C["muted"], size=16).replace("{sans}", SYS_SANS)
             + stat(40, "9.45M", "US patents", f"granted {years[0]} to {years[-1]}")
             + stat(250, "4", "PatentsView tables", "dates, classes, citations, titles")
             + stat(560, "123", "deep-tech fields", "kept, as fields and pairs")
-            + f'<polygon points="{area}" fill="{C["teal"]}" fill-opacity="0.18"/>'
+            + f'<polygon points="{area}" fill="{C["teal"]}" fill-opacity="0.25"/>'
             f'<polyline points="{pts}" fill="none" stroke="{C["teal"]}" stroke-width="2.5" stroke-linejoin="round"/>'
-            + kicker(x1, 64, "15.5 GB  →  3.9 MB", C["dim"], size=16, anchor="end").replace("{sans}", SYS_SANS)
-            + f'<text x="{x0}" y="{yb + 24}" font-size="16" fill="{C["dim"]}" font-family="{SYS_SANS}">{years[0]}</text>'
-            f'<text x="{x1}" y="{yb + 24}" text-anchor="end" font-size="16" fill="{C["dim"]}" font-family="{SYS_SANS}">{years[-1]}</text>'
+            + kicker(x1, 64, "15.5 GB  →  3.9 MB", C["muted"], size=16, anchor="end").replace("{sans}", SYS_SANS)
+            + f'<text x="{x0}" y="{yb + 24}" font-size="16" fill="{C["muted"]}" font-family="{SYS_SANS}">{years[0]}</text>'
+            f'<text x="{x1}" y="{yb + 24}" text-anchor="end" font-size="16" fill="{C["muted"]}" font-family="{SYS_SANS}">{years[-1]}</text>'
             + pills)
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" width="100%" role="img" '
            f'aria-label="Dataset: 9.45 million US patents granted {years[0]} to {years[-1]}, four PatentsView tables, 123 deep-tech fields kept; '
            f'15.5 GB of raw tables reduced to a 3.9 MB Relate file. Licence CC BY 4.0. No individual patent is stored. The line shows '
            f'how patenting in these fields grew each year.">'
-           f'<rect x="0" y="0" width="1200" height="280" rx="18" fill="{C["navy"]}"/>{body}</svg>')
+           f'<rect x="1" y="1" width="1198" height="278" rx="18" fill="{C["bg"]}" stroke="{C["stone"]}" stroke-width="2"/>{body}</svg>')
     (OUT / "dataset.svg").write_text(svg)
 
 
