@@ -9,7 +9,8 @@ and grades its own predictions against what actually happened. Built for the Rel
 
 <img src="assets/readme/proof-board.webp" width="100%" alt="Four views of the same graph: the tree of fields with arcs for pairs that combined, the landscape where hills show clusters of ranked gaps, the matrix of every pair of fields, and the profile of one field over time.">
 
-## Use case
+<a id="use-case"></a>
+<img src="assets/readme/headers/readme-01.svg" width="100%" alt="01. Use case">
 
 New technology often appears where two existing fields meet. People who plan research or follow innovation want to know which pairs are
 about to combine, but such claims are rarely checked against history, and many "predictions" turn out to be a measure of size.
@@ -23,7 +24,8 @@ The relationships that matter, each stamped with the year it first appeared:
 - **Shared partners and shared prerequisites**: two fields that have not combined, but already connect to the same fields. This is the evidence for a pair.
 - **`CO_CLASSIFIED`**: some patents carry both classes, but too few to count. These pairs are stalled, not absent.
 
-## How it uses Relate
+<a id="how-it-uses-relate"></a>
+<img src="assets/readme/headers/readme-02.svg" width="100%" alt="02. How it uses Relate">
 
 <img src="assets/readme/architecture.svg" width="100%" alt="Architecture: PatentsView tables are reduced by DuckDB to small CSVs and built into one Relate file, data/prometheus.rl. The web views, the predictor and your own agent query it. Sealed per-year capsules serve forecaster agents over read-only MCP. Agents write their forecasts into a shared ledger file, one transaction per forecast, and a grader writes the outcomes back.">
 
@@ -44,7 +46,8 @@ The relationships that matter, each stamped with the year it first appeared:
 - **What it does not do:** the one-off reduction of the raw patent tables runs in DuckDB, and the scoring math runs in Python over snapshots
   read from Relate (a test checks the Cypher and Python scorers agree). See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Setup and run
+<a id="setup-and-run"></a>
+<img src="assets/readme/headers/readme-03.svg" width="100%" alt="03. Setup and run">
 
 Prerequisites: Python 3.10 or newer. Optional, for the agent experiments: the Relate CLI (`curl -sSfL https://relatedb.ai/install.sh | bash`).
 
@@ -70,19 +73,18 @@ prometheus evidence data/prometheus.rl G06E G06M --as-of 2005    # why: bridge f
 To rebuild everything from the raw patent data, see [docs/GUIDE.md](docs/GUIDE.md) and [docs/DATA.md](docs/DATA.md).
 The Relate CLI collects anonymous usage metrics by default; `relate telemetry off` turns that off.
 
-## Dataset
+<a id="dataset"></a>
+<img src="assets/readme/headers/readme-04.svg" width="100%" alt="04. Dataset">
 
-| | |
-|---|---|
-| **Source** | [PatentsView](https://patentsview.org) granted-patent tables, published by the USPTO and now hosted on the [USPTO Open Data Portal](https://data.uspto.gov/bulkdata/datasets/pvgpatdis) |
-| **Release** | dated 10 to 12 Feb 2026, downloaded 13 Nov 2026 |
-| **Tables used** | `g_patent` (grant dates; 9,454,161 US patents, 1976 to 2025), `g_cpc_current` (CPC classes), `g_us_patent_citation` (citations), `g_cpc_title` (class titles) |
-| **What we keep** | 123 CPC subclasses in deep-tech areas (AI and computing, semiconductors, biotech, medical devices, energy, robotics, photonics and sensing), inventive classifications only, aggregated to fields and pairs of fields. No individual patent is stored in this repository. |
-| **Size** | about 15.5 GB of raw tables (not in the repository) reduced to a 3.9 MB Relate file |
-| **Licence** | PatentsView publishes its data under [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) and asks to be credited as "Source: PatentsView (www.patentsview.org)". Check the current terms on the portal before reusing the data. |
-| **Reproduce** | file names, sizes, SHA-256 checksums and column names: [docs/DATA.md](docs/DATA.md) |
+<img src="assets/readme/dataset.svg" width="100%" alt="Dataset: 9.45 million US patents granted 1976 to 2025, four PatentsView tables, 123 deep-tech fields kept; 15.5 GB of raw tables reduced to a 3.9 MB Relate file. Licence CC BY 4.0. No individual patent is stored.">
 
-## Where the data lives
+- **Source:** [PatentsView](https://patentsview.org) granted-patent tables from the USPTO, hosted on the [USPTO Open Data Portal](https://data.uspto.gov/bulkdata/datasets/pvgpatdis): `g_patent`, `g_cpc_current`, `g_us_patent_citation` and `g_cpc_title`.
+- **What we keep:** 123 CPC subclasses in AI and computing, semiconductors, biotech, medical devices, energy, robotics, photonics and sensing, aggregated to fields and pairs of fields.
+- **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), credited as "Source: PatentsView (www.patentsview.org)". Check the current terms on the portal before reusing the data.
+- **Reproduce:** file names, sizes, SHA-256 checksums and column names are in [docs/DATA.md](docs/DATA.md).
+
+<a id="where-the-data-lives"></a>
+<img src="assets/readme/headers/readme-05.svg" width="100%" alt="05. Where the data lives">
 
 | Path | What it holds |
 |---|---|
@@ -92,7 +94,8 @@ The Relate CLI collects anonymous usage metrics by default; `relate telemetry of
 | `data/csv/` | the small CSVs the store is built from |
 | `results/` | the backtest, the analyses, the agents' prompts, forecasts and grades |
 
-## What we found
+<a id="what-we-found"></a>
+<img src="assets/readme/headers/readme-06.svg" width="100%" alt="06. What we found">
 
 <img src="assets/readme/result-card.svg" width="100%" alt="Results: the pre-registered test failed, 1.04 times the size rule against 2 times required. Beyond size, the graph adds 0.09 to 0.23 AUC (exploratory). Agents reading the graph through Relate picked 9 of 30 pairs that came true, where chance expects 1.5 and the graph alone got 10.">
 
@@ -106,7 +109,8 @@ The Relate CLI collects anonymous usage metrics by default; `relate telemetry of
 
 Small samples, a 1976 start that hides field ages, and other caveats are in [docs/RESULTS.md](docs/RESULTS.md).
 
-## The views
+<a id="the-views"></a>
+<img src="assets/readme/headers/readme-07.svg" width="100%" alt="07. The views">
 
 `prometheus serve` opens a local page with three views of the same graph, plus a page per field:
 
@@ -117,7 +121,8 @@ Small samples, a 1976 start that hides field ages, and other caveats are in [doc
 
 Each view has a year slider, the evidence for any pair, and the prediction check. Details are in [docs/GUIDE.md](docs/GUIDE.md).
 
-## Ask the graph with your own agent
+<a id="ask-the-graph-with-your-own-agent"></a>
+<img src="assets/readme/headers/readme-08.svg" width="100%" alt="08. Ask the graph with your own agent">
 
 Any MCP-capable agent can query the real graph, read-only, through Relate's own server:
 
@@ -130,7 +135,8 @@ Then give the agent [agent/PROMPT.md](agent/PROMPT.md): the schema, the rules fo
 against the store with `python scripts/mcp_query.py data/prometheus.rl --check agent/PROMPT.md`.
 An example, with the agent's exact answer and queries: [results/agent_ask/G06E_G06M.md](results/agent_ask/G06E_G06M.md).
 
-## Beat the graph
+<a id="beat-the-graph"></a>
+<img src="assets/readme/headers/readme-09.svg" width="100%" alt="09. Beat the graph">
 
 A forecast challenge on the sealed capsules: pick 10 pairs that will combine, but not the easy big-field pairs, and get scored next to the graph,
 the size rule and chance on exactly the same pairs. The graph scored 2, 4 and 4 of 10 in the three rounds; chance expects less than one.
@@ -142,20 +148,19 @@ prometheus challenge score my_forecast.json --round 2005
 
 Rules, the leaderboard and fair play: [challenge/README.md](challenge/README.md).
 
-## Documentation
+<a id="documentation"></a>
+<img src="assets/readme/headers/readme-10.svg" width="100%" alt="10. Documentation">
 
 | File | Contents |
 |---|---|
-| [docs/RESULTS.md](docs/RESULTS.md) | every result, the grading rules, the pre-declared analyses, limitations |
+| [docs/RESULTS.md](docs/RESULTS.md) | the results in short: the backtest, beyond size, agents on Relate, limitations |
 | [docs/GUIDE.md](docs/GUIDE.md) | rebuilding from raw data, all commands, the views in detail, slices, the agent experiments |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | how the parts fit, what runs on Relate, the no-peeking rules |
 | [docs/DATA.md](docs/DATA.md) | where the data comes from, sizes and checksums |
 | [docs/DESIGN.md](docs/DESIGN.md) | the design of the pages |
-| [docs/DEMO_90.md](docs/DEMO_90.md) | the 90-second demo video script |
-| [docs/DEMO.md](docs/DEMO.md) | the longer, 4-minute demo script |
-| [docs/AI_USE.md](docs/AI_USE.md) | how AI was used |
 
-## Credits and licence
+<a id="credits-and-licence"></a>
+<img src="assets/readme/headers/readme-11.svg" width="100%" alt="11. Credits and licence">
 
 Patent data: Source: PatentsView (www.patentsview.org), USPTO, used under CC BY 4.0. The derived graph in this repository is aggregated from it.
 Code under the MIT licence, see [LICENSE](LICENSE).

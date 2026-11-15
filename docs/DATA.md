@@ -1,4 +1,5 @@
-# Getting the data
+<a id="getting-the-data"></a>
+<img src="../assets/readme/headers/data-00.svg" width="100%" alt="Getting the data">
 
 The real run uses three tables from **PatentsView** (US patents granted since 1976). Put them, uncompressed and
 tab-separated, in `data/raw/`:
@@ -10,7 +11,8 @@ tab-separated, in `data/raw/`:
 | `g_us_patent_citation.tsv` | "builds on" links | `patent_id`, `citation_patent_id` |
 | `g_cpc_title.tsv` (optional) | field titles | `cpc_subclass`, and a column named like `cpc_subclass_title` |
 
-## Where to download, and exactly what was used
+<a id="where-to-download-and-exactly-what-was-used"></a>
+<img src="../assets/readme/headers/data-01.svg" width="100%" alt="01. Where to download">
 
 PatentsView now lives on the USPTO Open Data Portal. The files used for every number in this repository came from the
 bulk dataset page `https://data.uspto.gov/bulkdata/datasets/pvgpatdis` (PatentsView granted-patent tables), downloaded as

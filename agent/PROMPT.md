@@ -1,10 +1,14 @@
-# Ask the graph: a brief for an AI agent
+<a id="ask-the-graph-a-brief-for-an-ai-agent"></a>
+<img src="../assets/readme/headers/prompt-00.svg" width="100%" alt="Ask the graph">
+
+A brief for an AI agent.
 
 Give this file to an agent that is connected to the Prometheus store through Relate's MCP server
 (`prometheus agent-config` writes the connection settings; see the bottom of this file). The agent can then answer questions such as
 "why might G06E and G06M combine?" or "what does G06N build on?" with Cypher evidence from the real graph.
 
-## What the graph is
+<a id="what-the-graph-is"></a>
+<img src="../assets/readme/headers/prompt-01.svg" width="100%" alt="01. What the graph is">
 
 A graph of technology fields built from 9.45 million US patents (PatentsView, 1976 to 2025). It is **read-only**: the server refuses writes.
 
@@ -16,7 +20,8 @@ A graph of technology fields built from 9.45 million US patents (PatentsView, 19
 - `(:FieldYear {code, year, n})`: patents of a field granted in one year.
 - `(:Meta)`: where the store came from, and its thresholds.
 
-## Rules for answering
+<a id="rules-for-answering"></a>
+<img src="../assets/readme/headers/prompt-02.svg" width="100%" alt="02. Rules for answering">
 
 1. **Answer "as of" a year with `firstYear`.** The graph as of year Y is every node and edge with `firstYear <= Y`. Never use anything later when reasoning about Y.
 2. **`count` and `nPatents` are totals through 2025.** Use them only to describe size today, never as evidence about the past. For a count as of a year, sum `FieldYear.n`.
@@ -28,7 +33,8 @@ A graph of technology fields built from 9.45 million US patents (PatentsView, 19
 7. **`genome` and the vector index are computed from all the data, through 2025.** Use "nearest relatives" to describe how similar two fields are
    today, never as evidence about an earlier year. (The backtest does not have this problem: it recomputes genomes as of each cutoff.)
 
-## Working queries
+<a id="working-queries"></a>
+<img src="../assets/readme/headers/prompt-03.svg" width="100%" alt="03. Working queries">
 
 Every query below was run through `relate serve --mcp stdio --read-only` on `data/prometheus.rl`. Change the codes and years.
 
@@ -104,7 +110,8 @@ MATCH (y:FieldYear {code:'G06F'}) WHERE y.year <= 2005 RETURN sum(y.n) AS patent
 MATCH (m:Meta) RETURN m.source, m.slice, m.dataEndYear, m.minPairPatents
 ```
 
-## Connecting an agent
+<a id="connecting-an-agent"></a>
+<img src="../assets/readme/headers/prompt-04.svg" width="100%" alt="04. Connecting an agent">
 
 ```bash
 prometheus agent-config data/prometheus.rl --out agent/mcp.json   # writes absolute paths for your clone

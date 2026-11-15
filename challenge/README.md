@@ -1,4 +1,5 @@
-# Beat the graph
+<a id="beat-the-graph"></a>
+<img src="../assets/readme/headers/challenge-00.svg" width="100%" alt="Beat the graph">
 
 Can you, or your agent, pick pairs of technology fields that will combine, better than the graph does?
 
@@ -7,7 +8,8 @@ no titles and no counts. Pick **10 pairs that have not combined yet**. The easy 
 comes true, so a pair is eligible only if the product of the two fields' numbers of partners is at most the round's threshold. About half the pairs are
 eligible, and among them only 3 to 7% combine within ten years.
 
-## Play
+<a id="play"></a>
+<img src="../assets/readme/headers/challenge-01.svg" width="100%" alt="01. Play">
 
 ```bash
 prometheus challenge brief --round 2005                       # the rules and the eligibility threshold (also in challenge/brief_2005.md)
@@ -19,7 +21,8 @@ prometheus challenge score my_forecast.json --round 2005      # scored next to t
 A forecast is a JSON file: `{"pairs": [{"a": "F0012", "b": "F0057", "cypher": "MATCH ...", "why": "one sentence"}, ...]}` with 10 pairs.
 Ineligible, unknown or already-combined pairs are rejected and listed.
 
-## Leaderboard
+<a id="leaderboard"></a>
+<img src="../assets/readme/headers/challenge-02.svg" width="100%" alt="02. Leaderboard">
 
 Scored on the same eligible pairs; "combined" means first combined within ten years of the round.
 
@@ -32,7 +35,8 @@ Scored on the same eligible pairs; "combined" means first combined within ten ye
 The graph predictor uses the weights frozen from the 1990 to 2000 backtest. The A4 agent row is the experiment in [docs/RESULTS.md](../docs/RESULTS.md).
 To add an entry, open a pull request with your forecast file and the output of `prometheus challenge score`.
 
-## Fair play
+<a id="fair-play"></a>
+<img src="../assets/readme/headers/challenge-03.svg" width="100%" alt="03. Fair play">
 
 This is an honour-system challenge. The capsules that grade each round (`capsules/2015.rl` for 2005, and so on), the id maps (`capsules/*.map.json`)
 and the earlier agents' answers are all in this repository, so the answers can be looked up. Don't open them while forecasting.

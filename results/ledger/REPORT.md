@@ -1,6 +1,6 @@
 # Forecast ledger demonstration (14 Nov 2026)
 
-A demonstration of agents sharing one Relate graph, declared in `docs/RESULTS.md` before it ran. **Not an analysis**; nothing here is pooled with A3 or A4.
+A demonstration of agents sharing one Relate graph, declared before it ran (see the git history of `docs/RESULTS.md`). **Not an analysis**; nothing here is pooled with A3 or A4.
 
 ## What happened
 

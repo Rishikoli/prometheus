@@ -1,10 +1,12 @@
-# Architecture
+<a id="architecture"></a>
+<img src="../assets/readme/headers/architecture-00.svg" width="100%" alt="Architecture">
 
 PROMETHEUS turns patent data into a small graph of technology fields, keeps it in one Relate file, and uses that graph three ways: to rank
 which pairs of fields may combine next, to grade that ranking against history, and to let people and agents inspect the evidence.
 About 2,500 lines of Python (`src/prometheus/`), three single-file web pages, nine `.cypher` queries, 63 unit tests and a 91-check browser script.
 
-## 1. The whole picture
+<a id="1-the-whole-picture"></a>
+<img src="../assets/readme/headers/architecture-01.svg" width="100%" alt="01. The whole picture">
 
 ```mermaid
 flowchart LR
@@ -31,7 +33,8 @@ flowchart LR
   caps --> grade
 ```
 
-## 2. What runs where
+<a id="2-what-runs-where"></a>
+<img src="../assets/readme/headers/architecture-02.svg" width="100%" alt="02. What runs where">
 
 | Layer | Does | Does not do |
 |---|---|---|
@@ -43,7 +46,8 @@ flowchart LR
 A test checks that the Cypher common-neighbours query (`queries/gaps_common_neighbours.cypher`) and the in-memory scorer agree on every pair, so the
 scoring that happens in Python is not a different answer from the one Relate would give.
 
-## 3. The data model
+<a id="3-the-data-model"></a>
+<img src="../assets/readme/headers/architecture-03.svg" width="100%" alt="03. The data model">
 
 ```
 (:Field {code, title, firstYear, nPatents, genome})            a CPC subclass; genome is a vector with a vector index
@@ -58,7 +62,10 @@ A field exists from the first year it has `MIN_FIELD_PATENTS_PER_YEAR` (5) paten
 both classes, and one field builds on another once `MIN_BUILDS_CITATIONS` (5) citations link them. All thresholds are in `config.py` and are written
 into `Meta`, so a store says how it was made.
 
-## 4. The invariant everything else protects: nothing from the future
+<a id="4-the-invariant-everything-else-protects-nothing-from-the-future"></a>
+<img src="../assets/readme/headers/architecture-04.svg" width="100%" alt="04. Nothing from the future">
+
+The invariant everything else protects.
 
 A prediction made as of year Y must not be able to see anything after Y. The design enforces it in layers:
 
@@ -72,7 +79,8 @@ A prediction made as of year Y must not be able to see anything after Y. The des
 - **Tests.** `test_predict_backtest.py` includes the no-peeking checks and a placebo (no planted structure, so the harness must say NO-GO). `test_beyond.py` runs the same harness on structured
   and placebo toy data. `test_capsule.py` checks sealing.
 
-## 5. Modules
+<a id="5-modules"></a>
+<img src="../assets/readme/headers/architecture-05.svg" width="100%" alt="05. Modules">
 
 | File | Responsibility |
 |---|---|
@@ -93,7 +101,8 @@ A prediction made as of year Y must not be able to see anything after Y. The des
 | `toy.py` | synthetic data with planted structure (and a placebo), only for tests and the demo; every number from it is labelled synthetic |
 | `config.py` | every threshold and setting in one place; change them before looking at results, not after |
 
-## 6. The agent path
+<a id="6-the-agent-path"></a>
+<img src="../assets/readme/headers/architecture-06.svg" width="100%" alt="06. The agent path">
 
 ```mermaid
 sequenceDiagram
@@ -113,7 +122,8 @@ The agent sees two tools and an anonymous graph. Every pair it submits must carr
 Besides the sealed capsules, `prometheus agent-config` gives any MCP client read-only access to the full store, and `agent/PROMPT.md` briefs the agent
 (schema, as-of rules, twelve checked Cypher recipes; example in `results/agent_ask/`). The six forecaster agents used a small helper that speaks the MCP protocol to `relate serve`, not Claude Desktop; exact prompts are in `results/forecaster*/`.
 
-## 7. The web server and pages
+<a id="7-the-web-server-and-pages"></a>
+<img src="../assets/readme/headers/architecture-07.svg" width="100%" alt="07. The web server and pages">
 
 `prometheus serve STORE` opens the store read-only on the main thread (a Relate connection is tied to the thread that opened it, so the server is deliberately single-threaded)
 and serves static pages plus a JSON API. It binds to 127.0.0.1 and has no write route.
@@ -133,7 +143,8 @@ and serves static pages plus a JSON API. It binds to 127.0.0.1 and has no write 
 Rendering choices live in `docs/DESIGN.md`. Three decisions shape the code: arcs are drawn on a canvas under an SVG layer (4,000+ arcs stay smooth); the tree is re-laid-out per
 year with each branch flipped to stay near last year's position; the landscape blurs its surface by default and says so, with a switch to the raw per-pair spikes.
 
-## 8. Reproducibility and testing
+<a id="8-reproducibility-and-testing"></a>
+<img src="../assets/readme/headers/architecture-08.svg" width="100%" alt="08. Reproducibility and testing">
 
 - **From a clean clone:** `pip install -e ".[dev]"`, then `make demo` (synthetic data, a few seconds) and `make test`. The real-data store (`data/prometheus.rl`) and the capsules are committed, so `prometheus serve data/prometheus.rl` works without the raw data.
 - **From the raw data:** `docs/DATA.md` gives the source, sizes, checksums and verified column names; the pipeline took about 30 seconds on the author's 12-core machine with a 3 GB memory limit (more on fewer cores).
@@ -141,14 +152,16 @@ year with each branch flipped to stay near last year's position; the landscape b
 - **Determinism:** results are identical across Python hash seeds (checked on the real data; one toy-data bug that depended on set order was found and fixed).
 - **Browser checks:** `python scripts/ui_check.py` drives all three pages in a real browser (clicks, keyboard, Play, 3D picking, offline use, no console errors, the no-WebGL fallback). It is not part of `pytest` because it needs a browser.
 
-## 9. Extending it
+<a id="9-extending-it"></a>
+<img src="../assets/readme/headers/architecture-09.svg" width="100%" alt="09. Extending it">
 
 - **A new slice:** add `src/prometheus/slices/<name>.json` with CPC prefixes chosen from the titles, then `prometheus pipeline --slice <name>`. Declare it in the README before running.
 - **A new size proxy for A2:** add it to `beyond.run` (as of the cutoff, never an end-of-data total) and declare it first.
 - **A new view:** a new page reads `/api/state`, `/api/tree` and `/api/evidence`; keep fire colour for predicted pairs only and never put counts into a colour that implies a prediction.
 - **A new store:** `prometheus build` accepts any CSV directory with the three required files; the optional two enable the stalled overlay and the patent-count proxy.
 
-## 10. Known trade-offs
+<a id="10-known-trade-offs"></a>
+<img src="../assets/readme/headers/architecture-10.svg" width="100%" alt="10. Known trade-offs">
 
 - Most fields are dated 1976, the first year of data, so ages are unreliable and the tree shows none.
 - The server is single-threaded and local; it is a research tool, not a multi-user service.

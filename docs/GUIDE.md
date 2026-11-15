@@ -1,9 +1,11 @@
-# Guide
+<a id="guide"></a>
+<img src="../assets/readme/headers/guide-00.svg" width="100%" alt="Guide">
 
 How to rebuild the graph from the raw data, every command, the three views in detail, the field slices and the sealed-capsule experiments.
 For the design of the code see [ARCHITECTURE.md](ARCHITECTURE.md); for the results see [RESULTS.md](RESULTS.md).
 
-## Use case in more detail
+<a id="use-case-in-more-detail"></a>
+<img src="../assets/readme/headers/guide-01.svg" width="100%" alt="01. Use case in more detail">
 
 **The problem.** New technology often arrives where two existing fields meet: batteries and software, imaging and machine learning. People who plan research
 or follow innovation (R&D strategists, funders, analysts) would like to know which pairs of fields are about to combine. Anyone can claim to see it; very
@@ -25,11 +27,12 @@ the forecaster experiments give a language model only a sealed, blinded, read-on
 
 **What we found.** Not what we hoped. On the question we declared in advance, the graph's predictions do **not** beat the size rule (a clear NO-GO). Where we looked beyond
 size, afterwards and labelled as exploratory, the graph does carry real information. The honest answer to "which fields will combine next?" is therefore
-"big ones, mostly; the graph adds something real among the rest". See [What we found](RESULTS.md#what-we-found-real-patentsview-data-945-million-us-patents-1976-to-2025).
+"big ones, mostly; the graph adds something real among the rest". See [Where the graph adds most](RESULTS.md#where-the-graph-adds-most).
 
 It is a way to examine a claim, not a forecast to invest on: a high rank is a ranking, not a probability.
 
-## Run it on real patents
+<a id="run-it-on-real-patents"></a>
+<img src="../assets/readme/headers/guide-02.svg" width="100%" alt="02. Run it on real patents">
 
 1. Download the PatentsView tables listed in [docs/DATA.md](DATA.md) (several GB; the page has moved, see the note there).
 2. Build the small field-level files, then the store:
@@ -46,7 +49,8 @@ prometheus backtest data/prometheus.rl --out results
 The pipeline also writes `co_assigned.csv` (the first year a patent carried both classes of a pair, for the stalled-pair overlay) and `field_year.csv` (patents per field per year, for the patent-count size proxy). The pipeline reads column names from the file headers. If one differs from what is expected, it stops and prints the
 columns it found.
 
-## The commands
+<a id="the-commands"></a>
+<img src="../assets/readme/headers/guide-03.svg" width="100%" alt="03. The commands">
 
 ```
 prometheus toy | pipeline | build | info          make or load data
@@ -63,7 +67,8 @@ prometheus beyond STORE --weights-from F          A2: AUC on pairs preferential 
 prometheus pa-threshold CAPSULE [--write-brief F]  A4: eligibility threshold (and brief) for a capsule
 ```
 
-## Explore it (the tree of life)
+<a id="explore-it-the-tree-of-life"></a>
+<img src="../assets/readme/headers/guide-04.svg" width="100%" alt="04. Explore it">
 
 ```bash
 prometheus serve data/prometheus.rl --weights-from results/backtest.json --open     # http://127.0.0.1:8765/
@@ -117,7 +122,8 @@ Screenshots at 1985, 1998 and 2010 are in `docs/screenshots/`; the design and th
 
 ![The matrix view, 2005, beyond size](screenshots/matrix_2005.png)
 
-## How Relate is used, and why
+<a id="how-relate-is-used-and-why"></a>
+<img src="../assets/readme/headers/guide-05.svg" width="100%" alt="05. How Relate is used, and why">
 
 **Storage mode: a single `.rl` file** (`data/prometheus.rl`), plus one small `.rl` per year in `capsules/`. A judge can
 open any of them with the Relate CLI or the Python package, no server needed. A single file is the right fit because the
@@ -151,7 +157,8 @@ is naturally "one file per moment in time". The persistent data lives in `data/`
 A test checks that the Cypher common-neighbour query and the in-memory scorer agree on every pair, and every file in
 `queries/` is executed by the test suite.
 
-## The field slice
+<a id="the-field-slice"></a>
+<img src="../assets/readme/headers/guide-06.svg" width="100%" alt="06. The field slice">
 
 `--slice deeptech` keeps only fields in chosen CPC classes (AI and computing, semiconductors, biotechnology, medical devices,
 energy storage and power, robotics, photonics and sensing) and drops the cross-sectional Y tagging classes
@@ -160,7 +167,8 @@ fast, because choosing the winners would leak the answer into the backtest. Chec
 the file **before** the first backtest. Fields are subclasses, so a topic that lives inside a larger subclass (as far as I
 know, quantum computing is one) cannot be isolated. Run the backtest on `--slice all` too and compare.
 
-## Sealed capsules and the forecaster
+<a id="sealed-capsules-and-the-forecaster"></a>
+<img src="../assets/readme/headers/guide-07.svg" width="100%" alt="07. Sealed capsules and the forecaster">
 
 ```bash
 prometheus capsule data/csv --as-of 1995 --out capsules/1995.rl --seed 0
@@ -185,7 +193,8 @@ forecaster with random, preferential attachment and the graph predictor on the s
 graph; and ten forecasts is a small sample. Treat the agent result as an experiment. The graph predictor has no such leak and is
 the headline number. The MCP server was smoke-tested on the **toy** capsule on 2026-11-13 (Relate CLI v1.0.1, `relate serve --mcp stdio --read-only`): it exposes `read_cypher` and `get_schema`, runs MATCH queries, and rejects writes ("Only MATCH queries are allowed"). A forecaster (Claude in a coding session, using only queries against the 1995 capsule) returned ten pairs with Cypher and the grader accepted all ten. They scored 0 of 10 hits against 59 positives among 6,171 candidates, which on synthetic data and ten forecasts means nothing. The real-capsule experiment (A3) has since been run; see its result under Pre-declared analyses. It used a read-only Cypher helper over the same `relate serve --mcp stdio` server, not an MCP-native client.
 
-## Layout
+<a id="layout"></a>
+<img src="../assets/readme/headers/guide-08.svg" width="100%" alt="08. Layout">
 
 How the pieces fit, what runs on Relate and what does not, and the no-peeking rules are in [docs/ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -199,6 +208,6 @@ scripts/          ui_check.py: 91 browser checks across the three pages
 data/             prometheus.rl (the real store), narrow.rl, csv/ (the small CSVs); the raw TSVs are git-ignored
 capsules/         one sealed, blinded .rl per year for the forecaster experiments
 results/          backtest, sensitivity runs, A2/A2b, narrowed slice, forecaster prompts, forecasts and grades
-docs/             ARCHITECTURE.md  DESIGN.md  DATA.md  DEMO.md  AI_USE.md  screenshots/
+docs/             ARCHITECTURE.md  DESIGN.md  DATA.md  screenshots/
 ```
 
