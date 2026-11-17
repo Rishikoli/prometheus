@@ -7,6 +7,8 @@ Which technology fields will combine next, and can a graph predict it better tha
 Prometheus builds a graph of 123 technology fields from 9.45 million US patents, keeps it in one [Relate](https://relatedb.ai) file,
 and grades its own predictions against what actually happened. Built for the Relate by Neo4j hackathon.
 
+**▶ [Watch the 90-second demo](https://youtu.be/bhWl4FfIp-s)**
+
 <img src="assets/readme/proof-board.webp" width="100%" alt="Four views of the same graph: the tree of fields with arcs for pairs that combined, the landscape where hills show clusters of ranked gaps, the matrix of every pair of fields, and the profile of one field over time.">
 
 <a id="use-case"></a>
