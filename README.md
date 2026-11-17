@@ -38,7 +38,8 @@ The relationships that matter, each stamped with the year it first appeared:
   - **Vector search:** nearest relatives come from a vector index on the genome.
   - **Shared state for agents:** several agents write their forecasts into one ledger (`results/ledger/ledger.rl`) through a single
     `relate serve --mcp` server, each in one statement that Relate runs as one transaction; the grader writes the outcomes back into the same file.
-    See [results/ledger/REPORT.md](results/ledger/REPORT.md).
+    It tests shared writes, not forecasting: with no rule against easy big-field pairs, 28 of the 30 picks combined. The forecast result
+    is the blinded test's 9 of 30 in [docs/RESULTS.md](docs/RESULTS.md). See [results/ledger/REPORT.md](results/ledger/REPORT.md).
   - **Agents:** a sealed capsule is served with `relate serve --mcp stdio --read-only`. A forecaster agent gets only `get_schema` and
     `read_cypher`, and writes are refused.
 - **What it does not do:** the one-off reduction of the raw patent tables runs in DuckDB, and the scoring math runs in Python over snapshots

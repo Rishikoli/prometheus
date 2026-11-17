@@ -59,6 +59,10 @@ Three agents forecast at the same time and wrote into one Relate file through a 
 transaction: 30 forecasts about 17 distinct pairs, 5 picked by all three. The grader wrote the outcomes back into the same file.
 A stress test of 100 concurrent writes lost none and created no duplicates. Details: [results/ledger/REPORT.md](../results/ledger/REPORT.md).
 
+This run tests the shared writes, not forecasting. With no rule against easy big-field pairs, the agents took the top of the
+shared-partner ranking, where in 2005 almost every pair combines: 28 of the 30 picks did. The forecast result is the 9 of 30 above,
+where those easy pairs were not allowed.
+
 <a id="limitations"></a>
 <img src="../assets/readme/headers/results-05.svg" width="100%" alt="05. Limitations">
 
