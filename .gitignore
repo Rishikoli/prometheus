@@ -13,7 +13,7 @@ data/toy.rl
 results/toy/
 capsules/toy/
 
-# raw PatentsView downloads (see docs/DATA.md for source and checksums) and scratch space
+# raw PatentsView downloads (see docs/DATA.md for the source) and scratch space
 g_*.tsv
 *.zip
 data/tmp*/
@@ -26,11 +26,3 @@ agent/mcp.json
 
 # relate serve writes an access token next to a store it serves; never commit it
 *.auth-token
-
-# kept locally, not published
-docs/DEMO.md
-docs/DEMO_90.md
-docs/AI_USE.md
-docs/RESULTS_FULL.md
-docs/DESIGN.md
-video/
